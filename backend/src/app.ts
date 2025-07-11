@@ -1,0 +1,50 @@
+import express, { Request, Response, NextFunction } from "express";
+import dotenv from "dotenv";
+import path from "path";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import errorHandlerMiddleware from "./middlewares/errorMiddleware";
+import userRoutes from "./routes/user_routes";
+
+dotenv.config();
+
+const app = express();
+
+// Cors Setup
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+// Middleware
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+app.use(cookieParser());
+app.use(cors(corsOptions));
+app.use(bodyParser.json());
+
+app.use("/api/v1/auth", userRoutes);
+
+const __uploads_dirname = path.resolve();
+app.use("/uploads", express.static(path.join(__uploads_dirname, "/uploads")));
+
+// Routes
+app.use("/", (req, res) => {
+  res.send("Hello World");
+});
+
+// 404 Not Found handler (should come after all other routes)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(404).json({ message: "Resource Not Found!" });
+});
+
+app.use(errorHandlerMiddleware);
+
+export default app;

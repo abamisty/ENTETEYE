@@ -6,6 +6,9 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import errorHandlerMiddleware from "./middlewares/errorMiddleware";
 import userRoutes from "./routes/user_routes";
+import parentRoutes from "./routes/parent_routes";
+import courseRoutes from "./routes/course_routes";
+import childRoutes from "./routes/child_routes";
 
 dotenv.config();
 
@@ -31,6 +34,9 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 app.use("/api/v1/auth", userRoutes);
+app.use("/api/v1/parent", parentRoutes);
+app.use("/api/v1/courses", courseRoutes);
+app.use("/api/v1/child", childRoutes);
 
 const __uploads_dirname = path.resolve();
 app.use("/uploads", express.static(path.join(__uploads_dirname, "/uploads")));

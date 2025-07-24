@@ -8,12 +8,14 @@ import { Family } from "../models/family";
 import sendEmail from "../services/emailService";
 import { MoreThan } from "typeorm";
 import validator from "validator";
+import { Child } from "../models/children";
 
 const userRepository = AppDataSource.getRepository(User);
 const parentProfileRepository = AppDataSource.getRepository(ParentProfile);
+const childRepository = AppDataSource.getRepository(Child);
 const familyRepository = AppDataSource.getRepository(Family);
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || "qwertyuiopoiuytreeewq";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 const generateToken = (userId: string) => {
@@ -68,36 +70,51 @@ export const register = async (
         message: "Password must be at least 8 characters",
       });
     }
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const existingUser = await userRepository.findOne({ where: { email } });
-    if (existingUser) {
+    if (existingUser && existingUser.isEmailVerified) {
       return res
         .status(400)
         .json({ success: false, message: "Email already in use" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    if (existingUser && !existingUser.isEmailVerified) {
+      existingUser.firstName = firstName;
 
-    const user = userRepository.create({
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      phoneNumber,
-      role: UserRole.PARENT,
-    });
+      existingUser.lastName = lastName;
+      existingUser.password = password;
+      await sendVerificationEmail(existingUser);
+    } else {
+      // Start a transaction
+      await userRepository.manager.transaction(
+        async (transactionalEntityManager) => {
+          const family = new Family();
+          family.name = `${firstName}'s Family`;
+          family.familyCode = generateFamilyCode();
+          await transactionalEntityManager.save(Family, family);
 
-    await userRepository.save(user);
+          const user = new User();
+          user.firstName = firstName;
+          user.lastName = lastName;
+          user.email = email;
+          user.password = hashedPassword;
+          user.phoneNumber = phoneNumber;
+          user.role = UserRole.PARENT;
+          await transactionalEntityManager.save(User, user);
 
-    const parentProfile = parentProfileRepository.create({
-      user,
-      isFamilyOwner: true,
-    });
+          const parentProfile = new ParentProfile();
+          parentProfile.user = user;
+          parentProfile.family = family;
+          parentProfile.isFamilyOwner = true;
+          await transactionalEntityManager.save(ParentProfile, parentProfile);
 
-    await parentProfileRepository.save(parentProfile);
-    await userRepository.save(user);
-
-    await sendVerificationEmail(user);
+          family.owner = user;
+          await transactionalEntityManager.save(Family, family);
+          await sendVerificationEmail(user);
+        }
+      );
+    }
 
     res.status(201).json({
       success: true,
@@ -107,6 +124,11 @@ export const register = async (
     next(error);
   }
 };
+
+// Helper function to generate a family code
+function generateFamilyCode(): string {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
 export const login = async (
   req: Request,
@@ -140,13 +162,85 @@ export const login = async (
     res.status(200).json({
       success: true,
       message: `Welcome back, ${user.firstName}`,
-      token,
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        email: user.email,
-        role: user.role,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+        },
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+
+    // Try to find user first (parent)
+    const user = await userRepository.findOne({
+      where: { id: decoded.id },
+      select: ["id", "firstName", "lastName", "email", "role"],
+    });
+
+    if (user) {
+      const newToken = generateToken(user.id);
+      return res.status(200).json({
+        success: true,
+        token: newToken,
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          type: "parent",
+        },
+      });
+    }
+
+    // If not a user, try to find child
+    const child = await childRepository.findOne({
+      where: { id: decoded.id },
+      relations: ["family"],
+    });
+
+    if (child) {
+      const newToken = generateToken(child.id);
+      return res.status(200).json({
+        success: true,
+        token: newToken,
+        user: {
+          id: child.id,
+          displayName: child.displayName,
+          username: child.username,
+          avatarUrl: child.avatarUrl,
+          role: UserRole.CHILD,
+          familyId: child.family?.id,
+          type: "child",
+        },
+      });
+    }
+
+    // If neither found
+    return res.status(401).json({
+      success: false,
+      message: "User/Child not found",
     });
   } catch (error) {
     next(error);
@@ -304,55 +398,6 @@ export const resetPassword = async (
   } catch (error) {
     next(error);
   }
-};
-
-export const refreshToken = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-
-    const user = await userRepository.findOne({
-      where: { id: decoded.id },
-      select: ["id", "firstName", "email", "role"],
-    });
-
-    if (!user) {
-      return res
-        .status(401)
-        .json({ success: false, message: "User not found" });
-    }
-
-    const newToken = generateToken(user.id);
-
-    res.status(200).json({
-      success: true,
-      token: newToken,
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const logout = async (req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    message: "Logged out successfully",
-  });
 };
 
 export const changePassword = async (

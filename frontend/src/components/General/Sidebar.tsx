@@ -1,4 +1,3 @@
-// components/General/SideBar.tsx
 "use client";
 import React, { useState } from "react";
 import {
@@ -14,7 +13,12 @@ import {
   MessageCircle,
   Menu,
   X,
+  Settings2Icon,
+  BookAIcon,
 } from "lucide-react";
+import { UserRole } from "@/types/auth";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface NavigationItem {
   id: string;
@@ -22,54 +26,117 @@ interface NavigationItem {
   icon: React.ElementType;
   badge?: string;
   href?: string;
+  roles?: UserRole[]; // Specify which roles can see this item
 }
 
-const SideBar: React.FC<{ userRole: any }> = () => {
+const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [activeItem, setActiveItem] = useState("dashboard");
 
-  const navigationItems: NavigationItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: Home, href: "/dashboard" },
+  const commonItems: NavigationItem[] = [
     {
-      id: "courses",
-      label: "Courses",
-      icon: BookOpen,
-      badge: "3",
-      href: "/courses",
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      href: "/",
+      roles: [UserRole.ADMIN, UserRole.PARENT, UserRole.CHILD],
     },
-    {
-      id: "challenges",
-      label: "Challenges",
-      icon: Target,
-      href: "/challenges",
-    },
-    { id: "family", label: "Family", icon: Users, href: "/family" },
-    {
-      id: "achievements",
-      label: "Achievements",
-      icon: Trophy,
-      badge: "12",
-      href: "/achievements",
-    },
-    { id: "progress", label: "Progress", icon: BarChart3, href: "/progress" },
     {
       id: "messages",
       label: "Messages",
       icon: MessageCircle,
       badge: "2",
       href: "/messages",
+      roles: [UserRole.ADMIN, UserRole.PARENT, UserRole.CHILD],
     },
   ];
 
+  // Role-specific navigation items
+  const roleSpecificItems: Record<UserRole, NavigationItem[]> = {
+    [UserRole.ADMIN]: [
+      { id: "users", label: "Users", icon: Users, href: "/admin/users" },
+      {
+        id: "courses",
+        label: "Courses",
+        icon: BookOpen,
+        href: "/admin/courses",
+      },
+      {
+        id: "analytics",
+        label: "Analytics",
+        icon: BarChart3,
+        href: "/admin/analytics",
+      },
+    ],
+    [UserRole.PARENT]: [
+      { id: "family", label: "Family", icon: Users, href: "/family" },
+      {
+        id: "children",
+        label: "Children",
+        icon: Users,
+        href: "/parent/children",
+      },
+      {
+        id: "courses",
+        label: "Courses",
+        icon: BookOpen,
+        href: "/parent/courses",
+      },
+      {
+        id: "billing",
+        label: "Billing",
+        icon: CreditCard,
+        href: "/parent/billing",
+      },
+    ],
+    [UserRole.CHILD]: [
+      {
+        id: "courses",
+        label: "Courses",
+        icon: BookOpen,
+        badge: "3",
+        href: "/child/courses",
+      },
+      {
+        id: "challenges",
+        label: "Challenges",
+        icon: Target,
+        href: "/child/challenges",
+      },
+      {
+        id: "achievements",
+        label: "Achievements",
+        icon: Trophy,
+        badge: "12",
+        href: "/child/achievements",
+      },
+    ],
+  };
+
+  // Bottom items (settings is common to all)
   const bottomItems: NavigationItem[] = [
-    { id: "billing", label: "Billing", icon: CreditCard, href: "/billing" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: Settings,
+      href: "/settings",
+      roles: [UserRole.ADMIN, UserRole.PARENT, UserRole.CHILD],
+    },
+  ];
+
+  // Filter navigation items based on user role
+  const getFilteredItems = (items: NavigationItem[]) => {
+    return items.filter((item) => !item.roles || item.roles.includes(userRole));
+  };
+
+  // Combine common items with role-specific items
+  const navigationItems = [
+    ...getFilteredItems(commonItems),
+    ...(roleSpecificItems[userRole] || []),
   ];
 
   const handleItemClick = (itemId: string) => {
     setActiveItem(itemId);
-    // You can add navigation logic here
-    // Example: router.push(item.href)
   };
 
   const toggleSidebar = () => {
@@ -85,25 +152,6 @@ const SideBar: React.FC<{ userRole: any }> = () => {
       {/* Sidebar Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          {isOpen ? (
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#043873] to-[#4f9cf9] rounded-lg flex items-center justify-center">
-                <Star className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-[#043873]">
-                  FVLS Academy
-                </h1>
-                <p className="text-xs text-gray-500">Learning Platform</p>
-              </div>
-            </div>
-          ) : (
-            <div className="w-8 h-8 bg-gradient-to-r from-[#043873] to-[#4f9cf9] rounded-lg flex items-center justify-center mx-auto">
-              <Star className="w-5 h-5 text-white" />
-            </div>
-          )}
-
-          {/* Toggle Button */}
           <button
             onClick={toggleSidebar}
             className="p-1 rounded-md hover:bg-gray-100 transition-colors duration-200 ml-2"
@@ -122,10 +170,11 @@ const SideBar: React.FC<{ userRole: any }> = () => {
         {navigationItems.map((item) => {
           const Icon = item.icon;
           return (
-            <button
+            <Link
+              href={`${item.href}`}
               key={item.id}
               onClick={() => handleItemClick(item.id)}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
+              className={`w-full flex justify-center items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
                 activeItem === item.id
                   ? "bg-gradient-to-r from-[#043873] to-[#4f9cf9] text-white shadow-md"
                   : "text-gray-600 hover:bg-gray-100 hover:text-[#043873]"
@@ -153,27 +202,25 @@ const SideBar: React.FC<{ userRole: any }> = () => {
                   )}
                 </>
               )}
-              {!isOpen && item.badge && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-[#4f9cf9] rounded-full"></span>
-              )}
-            </button>
+            </Link>
           );
         })}
       </nav>
 
       {/* Bottom Section */}
       <div className="p-4 border-t border-gray-200 space-y-2">
-        {bottomItems.map((item) => {
+        {getFilteredItems(bottomItems).map((item) => {
           const Icon = item.icon;
           return (
             <button
               key={item.id}
               onClick={() => handleItemClick(item.id)}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
-                activeItem === item.id
-                  ? "bg-gradient-to-r from-[#043873] to-[#4f9cf9] text-white shadow-md"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-[#043873]"
-              }`}
+              className={`w-full flex items-center justify-center
+                   space-x-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
+                     activeItem === item.id
+                       ? "bg-gradient-to-r from-[#043873] to-[#4f9cf9] text-white shadow-md"
+                       : "text-gray-600 hover:bg-gray-100 hover:text-[#043873]"
+                   }`}
               title={!isOpen ? item.label : undefined}
             >
               <Icon
@@ -191,7 +238,9 @@ const SideBar: React.FC<{ userRole: any }> = () => {
       {!isOpen && (
         <div className="p-4 border-t border-gray-200">
           <div className="w-8 h-8 bg-gradient-to-r from-[#043873] to-[#4f9cf9] rounded-full flex items-center justify-center mx-auto">
-            <span className="text-white text-sm font-medium">SJ</span>
+            <span className="text-white text-sm font-medium">
+              {userRole.charAt(0)}
+            </span>
           </div>
         </div>
       )}

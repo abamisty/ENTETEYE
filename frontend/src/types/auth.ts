@@ -28,13 +28,17 @@ export interface ParentAdminUser extends BaseUser {
   parentProfile?: ParentProfile;
   adminProfile?: AdminProfile;
   family?: Family;
+  username?: string;
 }
 
 export interface ChildUser {
   id: string;
   username: string;
+  email?: string;
   displayName: string;
   avatarUrl?: string;
+  firstName: string;
+  lastName: string;
   birthDate: Date;
   gender: Gender;
   family: Family;

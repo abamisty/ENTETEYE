@@ -6,12 +6,16 @@ import { Child } from "../models/children";
 import { Family } from "../models/family";
 import { User } from "../models/user";
 import { FamilySubscription, SubscriptionStatus } from "../models/subscription";
+import { Enrollment } from "../models/enrollment";
+import { Course } from "../models/courses";
 
 const parentProfileRepository = AppDataSource.getRepository(ParentProfile);
 const childRepository = AppDataSource.getRepository(Child);
 const familyRepository = AppDataSource.getRepository(Family);
 const userRepository = AppDataSource.getRepository(User);
 const subscriptionRepository = AppDataSource.getRepository(FamilySubscription);
+const enrollmentRepository = AppDataSource.getRepository(Enrollment);
+const courseRepository = AppDataSource.getRepository(Course);
 
 // 1. UPDATE PARENT PROFILE
 export const updateParentProfile = async (
@@ -69,8 +73,21 @@ export const addChild = async (
 ) => {
   try {
     const userId = (req as any).user.id;
-    const { displayName, birthDate, gender, learningPreferences, username } =
-      req.body;
+    const {
+      displayName,
+      dateOfBirth,
+      gender,
+      learningPreferences,
+      username,
+      password,
+    } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
 
     const parentProfile = await parentProfileRepository.findOne({
       where: { user: { id: userId } },
@@ -83,32 +100,39 @@ export const addChild = async (
         .json({ success: false, message: "Parent must belong to a family" });
     }
 
-    const tempPassword = Math.random().toString(36).slice(-8);
-    const passwordHash = await bcrypt.hash(tempPassword, 12);
+    const existingChild = await childRepository.findOne({
+      where: { username },
+    });
+
+    if (existingChild) {
+      return res.status(400).json({
+        success: false,
+        message: "Username already exists",
+      });
+    }
 
     const child = childRepository.create({
       displayName,
-      birthDate: new Date(birthDate),
+      birthDate: new Date(dateOfBirth),
       gender,
       learningPreferences,
-      username: username,
-      passwordHash,
+      username,
+      password,
       family: parentProfile.family,
       addedBy: parentProfile,
     });
 
     await childRepository.save(child);
+    const { password: _, ...childData } = child;
 
     res.status(201).json({
       success: true,
       data: {
-        child: {
-          id: child.id,
-          displayName: child.displayName,
-          username: child.username,
-          familyId: child.family.id,
-        },
+        ...childData,
+        familyId: child.family.id,
       },
+
+      message: "Child account created successfully",
     });
   } catch (error) {
     next(error);
@@ -137,16 +161,7 @@ export const getAllChildren = async (
 
     res.status(200).json({
       success: true,
-      data: {
-        children: parentProfile.family.children.map((child) => ({
-          id: child.id,
-          displayName: child.displayName,
-          username: child.username,
-          avatarUrl: child.avatarUrl,
-          points: child.totalPoints,
-          streak: child.currentStreak,
-        })),
-      },
+      data: parentProfile.family.children,
     });
   } catch (error) {
     next(error);
@@ -386,6 +401,349 @@ export const getFamilySubscription = async (
           nextPaymentDate: activeSubscription.nextPaymentDate,
           amount: activeSubscription.amount,
           currency: activeSubscription.currency,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const enrollChildInCourse = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+    const { childId, courseId } = req.body;
+
+    // Verify parent has permission
+    const parentProfile = await parentProfileRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["family"],
+    });
+
+    if (!parentProfile || !parentProfile.family) {
+      return res.status(400).json({
+        success: false,
+        message: "Parent must belong to a family",
+      });
+    }
+
+    // Check family subscription status
+    const activeSubscription = await subscriptionRepository.findOne({
+      where: {
+        family: { id: parentProfile.family.id },
+        status: SubscriptionStatus.ACTIVE,
+      },
+    });
+
+    if (!activeSubscription) {
+      return res.status(403).json({
+        success: false,
+        message: "Active family subscription required to enroll in courses",
+      });
+    }
+
+    // Verify child belongs to parent's family
+    const child = await childRepository.findOne({
+      where: { id: childId, family: { id: parentProfile.family.id } },
+    });
+
+    if (!child) {
+      return res.status(404).json({
+        success: false,
+        message: "Child not found in your family",
+      });
+    }
+
+    // Verify course exists and is approved
+    const course = await courseRepository.findOne({
+      where: { id: courseId, isApproved: true },
+    });
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found or not approved",
+      });
+    }
+
+    // Check if child is already enrolled
+    const existingEnrollment = await enrollmentRepository.findOne({
+      where: { child: { id: childId }, course: { id: courseId } },
+    });
+
+    if (existingEnrollment) {
+      return res.status(400).json({
+        success: false,
+        message: "Child is already enrolled in this course",
+      });
+    }
+
+    // Create new enrollment
+    const enrollment = enrollmentRepository.create({
+      child,
+      course,
+      progressPercentage: 0,
+      isCompleted: false,
+      coursePreferences: {
+        difficulty: "medium",
+        notificationEnabled: true,
+        dailyGoalMinutes: 30,
+      },
+    });
+
+    await enrollmentRepository.save(enrollment);
+
+    res.status(201).json({
+      success: true,
+      message: "Child enrolled in course successfully",
+      data: {
+        enrollment: {
+          id: enrollment.id,
+          courseId: enrollment.course.id,
+          courseTitle: course.title,
+          childId: enrollment.child.id,
+          childName: child.displayName,
+          progressPercentage: enrollment.progressPercentage,
+          isCompleted: enrollment.isCompleted,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 2. GET CHILD'S ENROLLED COURSES
+export const getChildEnrollments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+    const { childId } = req.params;
+
+    // Verify parent has permission
+    const parentProfile = await parentProfileRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["family"],
+    });
+
+    if (!parentProfile || !parentProfile.family) {
+      return res.status(400).json({
+        success: false,
+        message: "Parent must belong to a family",
+      });
+    }
+
+    // Verify child belongs to parent's family
+    const child = await childRepository.findOne({
+      where: { id: childId, family: { id: parentProfile.family.id } },
+    });
+
+    if (!child) {
+      return res.status(404).json({
+        success: false,
+        message: "Child not found in your family",
+      });
+    }
+
+    // Get all enrollments for this child
+    const enrollments = await enrollmentRepository.find({
+      where: { child: { id: childId } },
+      relations: ["course"],
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        enrollments: enrollments.map((enrollment) => ({
+          id: enrollment.id,
+          courseId: enrollment.course.id,
+          title: enrollment.course.title,
+          description: enrollment.course.description,
+          thumbnailUrl: enrollment.course.thumbnailUrl,
+          progressPercentage: enrollment.progressPercentage,
+          isCompleted: enrollment.isCompleted,
+          createdAt: enrollment.createdAt,
+        })),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 3. UPDATE COURSE PROGRESS PREFERENCES
+export const updateCoursePreferences = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+    const { enrollmentId } = req.params;
+    const { difficulty, notificationEnabled, dailyGoalMinutes } = req.body;
+
+    // Verify parent has permission
+    const parentProfile = await parentProfileRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["family"],
+    });
+
+    if (!parentProfile || !parentProfile.family) {
+      return res.status(400).json({
+        success: false,
+        message: "Parent must belong to a family",
+      });
+    }
+
+    // Get the enrollment with child relationship
+    const enrollment = await enrollmentRepository.findOne({
+      where: { id: enrollmentId },
+      relations: ["child"],
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: "Enrollment not found",
+      });
+    }
+
+    // Verify child belongs to parent's family
+    const child = await childRepository.findOne({
+      where: {
+        id: enrollment.child.id,
+        family: { id: parentProfile.family.id },
+      },
+    });
+
+    if (!child) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to update this enrollment",
+      });
+    }
+
+    // Update preferences
+    enrollment.coursePreferences = {
+      difficulty: difficulty || enrollment.coursePreferences?.difficulty,
+      notificationEnabled:
+        notificationEnabled !== undefined
+          ? notificationEnabled
+          : enrollment.coursePreferences?.notificationEnabled,
+      dailyGoalMinutes:
+        dailyGoalMinutes || enrollment.coursePreferences?.dailyGoalMinutes,
+    };
+
+    await enrollmentRepository.save(enrollment);
+
+    res.status(200).json({
+      success: true,
+      message: "Course preferences updated successfully",
+      data: {
+        enrollment: {
+          id: enrollment.id,
+          courseId: enrollment.course.id,
+          preferences: enrollment.coursePreferences,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 4. GET CHILD'S COURSE PROGRESS
+export const getChildCourseProgress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+    const { childId, courseId } = req.params;
+
+    // Verify parent has permission
+    const parentProfile = await parentProfileRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["family"],
+    });
+
+    if (!parentProfile || !parentProfile.family) {
+      return res.status(400).json({
+        success: false,
+        message: "Parent must belong to a family",
+      });
+    }
+
+    // Verify child belongs to parent's family
+    const child = await childRepository.findOne({
+      where: { id: childId, family: { id: parentProfile.family.id } },
+    });
+
+    if (!child) {
+      return res.status(404).json({
+        success: false,
+        message: "Child not found in your family",
+      });
+    }
+
+    // Get the enrollment with progress details
+    const enrollment = await enrollmentRepository.findOne({
+      where: { child: { id: childId }, course: { id: courseId } },
+      relations: ["course", "progress", "progress.lesson"],
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: "Enrollment not found",
+      });
+    }
+
+    // Calculate overall progress
+    const totalLessons =
+      enrollment.course.modules?.reduce(
+        (total, module) => total + module.lessons.length,
+        0
+      ) || 0;
+
+    const completedLessons =
+      enrollment.progress?.filter((p) => p.isCompleted).length || 0;
+
+    const progressPercentage =
+      totalLessons > 0
+        ? Math.round((completedLessons / totalLessons) * 100)
+        : 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        enrollment: {
+          id: enrollment.id,
+          courseId: enrollment.course.id,
+          courseTitle: enrollment.course.title,
+          childId: enrollment.child.id,
+          childName: child.displayName,
+          progressPercentage,
+          isCompleted: enrollment.isCompleted,
+          preferences: enrollment.coursePreferences,
+          lessons: enrollment.course.modules?.flatMap((module) =>
+            module.lessons.map((lesson) => ({
+              lessonId: lesson.id,
+              title: lesson.title,
+              type: lesson.type,
+              isCompleted: enrollment.progress?.some(
+                (p) => p.lesson.id === lesson.id && p.isCompleted
+              ),
+            }))
+          ),
         },
       },
     });

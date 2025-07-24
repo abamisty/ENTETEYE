@@ -1,12 +1,12 @@
 import server from "./app";
 import { createServer } from "http";
-import { initializeDatabase } from "./config/database";
+import { createAdminUser, initializeDatabase } from "./config/database";
 
 const PORT = process.env.PORT || 8000;
 const httpServer = createServer(server);
 
 initializeDatabase();
-
+// createAdminUser();
 // Error handlers
 process.on("unhandledRejection", (reason: any, promise: Promise<any>) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);

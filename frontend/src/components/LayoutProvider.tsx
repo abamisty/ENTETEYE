@@ -6,6 +6,7 @@ import SideBar from "./General/Sidebar";
 import Loading from "@/app/loading";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
+import AuthRoute from "./AuthRoute";
 
 interface LayoutProviderProps {
   children: ReactNode;
@@ -23,12 +24,11 @@ const unprotectedRoutes = [
   "/privacy",
 ];
 
-// Routes specific to each user role
 const protectedRoutes = {
   common: ["/dashboard", "/profile", "/settings"],
   [UserRole.ADMIN]: ["/admin", "/users", "/analytics"],
-  [UserRole.PARENT]: ["/parent", "/children", "/reports"],
-  [UserRole.CHILD]: ["/child", "/games", "/rewards"],
+  [UserRole.PARENT]: ["/", "/children", "/reports"],
+  [UserRole.CHILD]: ["/child/dashboard", "/games", "/rewards"],
 };
 
 const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
@@ -37,7 +37,7 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
   const { user, isAuthenticated, loading } = useAuth();
   const [isProtected, setIsProtected] = useState<boolean>(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
-
+  console.log(user);
   useEffect(() => {
     if (!path) return;
 
@@ -82,15 +82,17 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
   return (
     <>
       {isProtected ? (
-        <div className="h-screen flex flex-col">
-          <Header user={user} />
-          <div className="flex flex-1 overflow-hidden">
-            <SideBar userRole={user?.role} />
-            <main className="flex-1 overflow-y-auto bg-[#FBFBFB] min-w-0">
-              <div className="h-full mb-[4rem] p-6">{children}</div>
-            </main>
+        <AuthRoute>
+          <div className="h-screen flex flex-col">
+            <Header user={user} />
+            <div className="flex flex-1 overflow-hidden">
+              <SideBar userRole={user?.role || UserRole.PARENT} />
+              <main className="flex-1 overflow-y-auto  bg-[#FBFBFB] min-w-0">
+                <div className="h-full mb-[4rem] p-6">{children}</div>
+              </main>
+            </div>
           </div>
-        </div>
+        </AuthRoute>
       ) : (
         <main className="w-full">{children}</main>
       )}

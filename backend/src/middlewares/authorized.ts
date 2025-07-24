@@ -2,7 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/database";
-import { User } from "../models/user";
+import { User, UserRole } from "../models/user";
 
 export const protect = async (
   req: Request,
@@ -35,5 +35,37 @@ export const protect = async (
     next();
   } catch (error) {
     res.status(401).json({ message: "Invalid token" });
+  }
+};
+
+export const requireAdmin = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // The user should be attached by your protect middleware
+    const user = (req as any).user;
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    if (user.role !== UserRole.ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: "Admin privileges required",
+      });
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };

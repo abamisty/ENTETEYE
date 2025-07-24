@@ -1,7 +1,7 @@
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 import path from "path";
-import { User } from "../models/user";
+import { User, UserRole } from "../models/user";
 import { ParentProfile } from "../models/parent";
 import { Family } from "../models/family";
 import { Child } from "../models/children";
@@ -10,6 +10,9 @@ import {
   SubscriptionPayment,
 } from "../models/subscription";
 import { AdminProfile } from "../models/admin";
+import bcrypt from "bcryptjs";
+import { Course, Lesson, Module } from "../models/courses";
+import { ChildProgress, Enrollment } from "../models/enrollment";
 
 dotenv.config();
 
@@ -31,6 +34,11 @@ export const AppDataSource = new DataSource({
     FamilySubscription,
     SubscriptionPayment,
     AdminProfile,
+    Lesson,
+    Course,
+    Module,
+    Enrollment,
+    ChildProgress,
   ],
   extra: {
     ssl:
@@ -53,5 +61,65 @@ export async function initializeDatabase(): Promise<DataSource> {
   } catch (error) {
     console.error("Error during database initialization:", error);
     throw error;
+  }
+}
+
+export async function createAdminUser() {
+  try {
+    // Initialize database connection
+    await initializeDatabase();
+
+    // Check if admin already exists
+    const userRepository = AppDataSource.getRepository(User);
+    const existingAdmin = await userRepository.findOne({
+      where: { email: "admin@gmail.com" },
+      relations: ["adminProfile"],
+    });
+
+    if (existingAdmin) {
+      console.log("Admin user already exists:");
+      console.log(existingAdmin);
+      return;
+    }
+
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash("admin123", saltRounds);
+
+    // Create the admin user
+    const adminUser = new User();
+    adminUser.firstName = "Admin";
+    adminUser.lastName = "User";
+    adminUser.email = "admin@gmail.com";
+    adminUser.password = hashedPassword;
+    adminUser.role = UserRole.ADMIN;
+    adminUser.isEmailVerified = true;
+
+    // Create the admin profile
+    const adminProfile = new AdminProfile();
+    adminProfile.permissions = ["all"]; // Grant all permissions
+
+    // Save the admin profile first
+    const adminProfileRepository = AppDataSource.getRepository(AdminProfile);
+    await adminProfileRepository.save(adminProfile);
+
+    // Associate the profile with the user
+    adminUser.adminProfile = adminProfile;
+
+    // Save the user
+    await userRepository.save(adminUser);
+
+    console.log("Admin user created successfully:");
+    console.log({
+      id: adminUser.id,
+      email: adminUser.email,
+      role: adminUser.role,
+      createdAt: adminUser.createdAt,
+    });
+  } catch (error) {
+    console.error("Error creating admin user:", error);
+  } finally {
+    // Close the database connection
+    await AppDataSource.destroy();
   }
 }

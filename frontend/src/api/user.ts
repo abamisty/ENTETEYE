@@ -115,16 +115,6 @@ export const authApi = {
     }
   },
 
-  async logout() {
-    try {
-      const response: ResponseInterface = await api.get("/auth/logout");
-      return response;
-    } catch (error) {
-      handleApiError(error, "Logout failed");
-      throw error;
-    }
-  },
-
   async changePassword(data: ChangePasswordData) {
     try {
       const response: ResponseInterface = await api.patch(

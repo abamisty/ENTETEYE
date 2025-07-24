@@ -45,9 +45,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ContextProvider>
-          <AuthRoute>
-            <LayoutProvider>{children}</LayoutProvider>
-          </AuthRoute>
+          <LayoutProvider>{children}</LayoutProvider>
         </ContextProvider>
         <Toaster />
       </body>

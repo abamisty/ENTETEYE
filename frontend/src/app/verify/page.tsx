@@ -16,12 +16,7 @@ const VerifyEmailPage = () => {
 
   useEffect(() => {
     const emailParam = searchParams.get("email");
-    if (!emailParam) {
-      toast.error("Email address required for verification");
-      router.push("/login");
-      return;
-    }
-    setEmail(emailParam);
+    setEmail(emailParam as string);
     setLoading(false);
   }, [searchParams, router]);
 

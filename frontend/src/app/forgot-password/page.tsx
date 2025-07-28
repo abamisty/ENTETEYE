@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { authApi } from "@/api/user";
 
 const ForgotPasswordPage: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -28,10 +29,12 @@ const ForgotPasswordPage: React.FC = () => {
       email: "",
     },
     validationSchema,
-    onSubmit: (values) => {
-      console.log("Reset request submitted:", values);
-      // Add your password reset logic here
-      setIsSubmitted(true);
+
+    onSubmit: async (values) => {
+      const data = await authApi.forgotPassword(values);
+      if (data.success) {
+        setIsSubmitted(true);
+      }
     },
   });
 

@@ -13,11 +13,14 @@ import {
 } from "@/components/ui/card";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { authApi } from "@/api/user";
 
 const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const searchParams = new URLSearchParams(window.location.search);
+  const token = searchParams.get("token") || "d";
 
   const validationSchema = Yup.object({
     password: Yup.string()
@@ -32,15 +35,14 @@ const ResetPasswordPage: React.FC = () => {
       .required("Please confirm your password"),
   });
 
-  const formik = useFormik({
+  const formik: any = useFormik({
     initialValues: {
       password: "",
       confirmPassword: "",
     },
     validationSchema,
-    onSubmit: (values) => {
-      console.log("Password reset submitted:", values);
-      // Add your password reset logic here
+    onSubmit: async (values: any) => {
+      await authApi.resetPassword({ token, newPassword: values.password });
       setIsSubmitted(true);
     },
   });
@@ -144,10 +146,10 @@ const ResetPasswordPage: React.FC = () => {
                         )}
                       </button>
                     </div>
-                    {formik.errors.confirmPassword &&
-                      formik.touched.confirmPassword && (
+                    {formik?.errors?.confirmPassword &&
+                      formik?.touched?.confirmPassword && (
                         <p className="text-sm text-red-500 mt-1">
-                          {formik.errors.confirmPassword}
+                          {formik?.errors?.confirmPassword}
                         </p>
                       )}
                   </div>

@@ -102,15 +102,7 @@ const CourseSchema = Yup.object().shape({
   ),
 });
 
-interface CreateCoursePageProps {
-  onSuccess?: () => void;
-  onCancel?: () => void;
-}
-
-const CreateCoursePage: React.FC<CreateCoursePageProps> = ({
-  onSuccess,
-  onCancel,
-}) => {
+const CreateCoursePage: React.FC<any> = ({ onSuccess, onCancel }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);

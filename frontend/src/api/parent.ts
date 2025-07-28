@@ -183,4 +183,16 @@ export const parentApi = {
       throw error;
     }
   },
+
+  async deleteChild(childId: string) {
+    try {
+      const response: ResponseInterface = await api.delete(
+        `/parent/children/${childId}`
+      );
+      toast.success("Child deleted successfully", successStyles);
+      return response;
+    } catch (error) {
+      handleApiError(error);
+    }
+  },
 };

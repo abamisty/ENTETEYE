@@ -51,7 +51,7 @@ export interface ChildUser {
   currentStreak: number;
 }
 
-export type AppUser = ParentAdminUser | ChildUser;
+export type AppUser = any;
 
 export interface AuthState {
   user: AppUser | null;

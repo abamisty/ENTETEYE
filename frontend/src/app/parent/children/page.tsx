@@ -48,10 +48,16 @@ const ChildrenDashboard = () => {
   };
 
   const handleDeleteChild = async (childId: string) => {
-    // Implement your delete logic here
-    console.log("Deleting child with ID:", childId);
-    // Example: await parentApi.deleteChild(childId);
-    // Then refresh the list: fetchChildren();
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this child? This action cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    const data = await parentApi.deleteChild(childId);
+    if (data?.success) {
+      await fetchChildren();
+    }
   };
 
   const fetchChildren = async () => {

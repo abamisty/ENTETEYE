@@ -41,14 +41,6 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
       href: "/",
       roles: [UserRole.ADMIN, UserRole.PARENT, UserRole.CHILD],
     },
-    {
-      id: "messages",
-      label: "Messages",
-      icon: MessageCircle,
-      badge: "2",
-      href: "/messages",
-      roles: [UserRole.ADMIN, UserRole.PARENT, UserRole.CHILD],
-    },
   ];
 
   // Role-specific navigation items
@@ -69,7 +61,7 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
       },
     ],
     [UserRole.PARENT]: [
-      { id: "family", label: "Family", icon: Users, href: "/family" },
+      // { id: "family", label: "Family", icon: Users, href: "/family" },
       {
         id: "children",
         label: "Children",

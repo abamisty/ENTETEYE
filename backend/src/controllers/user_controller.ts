@@ -21,17 +21,11 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 const generateToken = (userId: string) => {
   return jwt.sign({ id: userId }, JWT_SECRET);
 };
-
 const sendVerificationEmail = async (user: User) => {
   const verificationCode = Math.floor(
     100000 + Math.random() * 900000
   ).toString();
   const verificationExp = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-  await userRepository.update(user.id, {
-    emailVerificationCode: verificationCode,
-    emailVerificationExp: verificationExp,
-  });
 
   await sendEmail({
     to: user.email,
@@ -42,6 +36,12 @@ const sendVerificationEmail = async (user: User) => {
       <p>This code will expire in 24 hours.</p>
     `,
   });
+
+  // Return the verification details
+  return {
+    emailVerificationCode: verificationCode,
+    emailVerificationExp: verificationExp,
+  };
 };
 
 export const register = async (
@@ -70,9 +70,10 @@ export const register = async (
         message: "Password must be at least 8 characters",
       });
     }
-    const hashedPassword = await bcrypt.hash(password, 12);
 
+    const hashedPassword = await bcrypt.hash(password, 12);
     const existingUser = await userRepository.findOne({ where: { email } });
+
     if (existingUser && existingUser.isEmailVerified) {
       return res
         .status(400)
@@ -80,19 +81,30 @@ export const register = async (
     }
 
     if (existingUser && !existingUser.isEmailVerified) {
-      existingUser.firstName = firstName;
+      // Update existing unverified user
+      const verificationDetails = await sendVerificationEmail(existingUser);
 
-      existingUser.lastName = lastName;
-      existingUser.password = password;
-      await sendVerificationEmail(existingUser);
+      await userRepository.update(existingUser.id, {
+        firstName,
+        lastName,
+        password: hashedPassword,
+        phoneNumber,
+        ...verificationDetails, // Save the verification code and expiration
+      });
     } else {
-      // Start a transaction
+      // Create new user with transaction
       await userRepository.manager.transaction(
         async (transactionalEntityManager) => {
           const family = new Family();
           family.name = `${firstName}'s Family`;
           family.familyCode = generateFamilyCode();
           await transactionalEntityManager.save(Family, family);
+
+          const verificationDetails = await sendVerificationEmail({
+            email,
+            firstName,
+            lastName,
+          } as User);
 
           const user = new User();
           user.firstName = firstName;
@@ -101,6 +113,9 @@ export const register = async (
           user.password = hashedPassword;
           user.phoneNumber = phoneNumber;
           user.role = UserRole.PARENT;
+          user.emailVerificationCode =
+            verificationDetails.emailVerificationCode;
+          user.emailVerificationExp = verificationDetails.emailVerificationExp;
           await transactionalEntityManager.save(User, user);
 
           const parentProfile = new ParentProfile();
@@ -111,7 +126,6 @@ export const register = async (
 
           family.owner = user;
           await transactionalEntityManager.save(Family, family);
-          await sendVerificationEmail(user);
         }
       );
     }
@@ -150,7 +164,6 @@ export const login = async (
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
     }
-
     if (!user.isEmailVerified) {
       return res
         .status(403)
@@ -158,7 +171,7 @@ export const login = async (
     }
 
     const token = generateToken(user.id);
-
+    console.log(user);
     res.status(200).json({
       success: true,
       message: `Welcome back, ${user.firstName}`,
@@ -265,17 +278,16 @@ export const verifyEmail = async (
       where: {
         emailVerificationCode: code,
         emailVerificationExp: MoreThan(new Date()),
+        isEmailVerified: false,
       },
     });
-
     if (!user) {
       return res.status(400).json({
         success: false,
         message: "Invalid or expired verification code",
       });
     }
-
-    await userRepository.update(user.id, {
+    await userRepository.update(user?.id, {
       isEmailVerified: true,
       emailVerificationCode: undefined,
       emailVerificationExp: undefined,
@@ -408,7 +420,7 @@ export const changePassword = async (
   try {
     const { currentPassword, newPassword } = req.body;
     const userId = (req as any).user.id;
-
+    console.log("User ID:", userId);
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         success: false,

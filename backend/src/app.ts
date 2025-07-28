@@ -9,7 +9,7 @@ import userRoutes from "./routes/user_routes";
 import parentRoutes from "./routes/parent_routes";
 import courseRoutes from "./routes/course_routes";
 import childRoutes from "./routes/child_routes";
-
+import adminRoutes from "./routes/admin_routes";
 dotenv.config();
 
 const app = express();
@@ -22,7 +22,7 @@ const corsOptions = {
     "http://localhost:3002",
   ],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
@@ -37,6 +37,7 @@ app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/parent", parentRoutes);
 app.use("/api/v1/courses", courseRoutes);
 app.use("/api/v1/child", childRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 const __uploads_dirname = path.resolve();
 app.use("/uploads", express.static(path.join(__uploads_dirname, "/uploads")));

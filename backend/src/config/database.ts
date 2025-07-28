@@ -86,7 +86,7 @@ export async function createAdminUser() {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash("admin123", saltRounds);
 
-    // Create the admin user
+    // Create the admin
     const adminUser = new User();
     adminUser.firstName = "Admin";
     adminUser.lastName = "User";
@@ -95,9 +95,8 @@ export async function createAdminUser() {
     adminUser.role = UserRole.ADMIN;
     adminUser.isEmailVerified = true;
 
-    // Create the admin profile
     const adminProfile = new AdminProfile();
-    adminProfile.permissions = ["all"]; // Grant all permissions
+    adminProfile.permissions = ["all"];
 
     // Save the admin profile first
     const adminProfileRepository = AppDataSource.getRepository(AdminProfile);

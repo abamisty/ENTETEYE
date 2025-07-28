@@ -256,12 +256,7 @@ export const getFamilyDetails = async (
 
     const parentProfile = await parentProfileRepository.findOne({
       where: { user: { id: userId } },
-      relations: [
-        "family",
-        "family.parents",
-        "family.parents.user",
-        "family.children",
-      ],
+      relations: ["family", "family.parents", "family.children"],
     });
 
     if (!parentProfile || !parentProfile.family) {
@@ -439,12 +434,12 @@ export const enrollChildInCourse = async (
       },
     });
 
-    if (!activeSubscription) {
-      return res.status(403).json({
-        success: false,
-        message: "Active family subscription required to enroll in courses",
-      });
-    }
+    // if (!activeSubscription) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Active family subscription required to enroll in courses",
+    //   });
+    // }
 
     // Verify child belongs to parent's family
     const child = await childRepository.findOne({
@@ -746,6 +741,55 @@ export const getChildCourseProgress = async (
           ),
         },
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE CHILD
+export const deleteChild = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+    const { childId } = req.params;
+
+    const parentProfile = await parentProfileRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["family"],
+    });
+
+    if (!parentProfile || !parentProfile.family) {
+      return res.status(400).json({
+        success: false,
+        message: "Parent must belong to a family",
+      });
+    }
+
+    const child = await childRepository.findOne({
+      where: { id: childId, family: { id: parentProfile.family.id } },
+      relations: ["enrollments"],
+    });
+
+    if (!child) {
+      return res.status(404).json({
+        success: false,
+        message: "Child not found in your family",
+      });
+    }
+
+    if (child.enrollments && child.enrollments.length > 0) {
+      await enrollmentRepository.remove(child.enrollments);
+    }
+
+    await childRepository.remove(child);
+
+    res.status(200).json({
+      success: true,
+      message: "Child account deleted successfully",
     });
   } catch (error) {
     next(error);

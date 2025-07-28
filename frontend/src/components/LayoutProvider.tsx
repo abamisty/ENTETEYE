@@ -24,11 +24,17 @@ const unprotectedRoutes = [
   "/privacy",
 ];
 
-const protectedRoutes = {
+const protectedRoutes: any = {
   common: ["/dashboard", "/profile", "/settings"],
-  [UserRole.ADMIN]: ["/admin", "/users", "/analytics"],
-  [UserRole.PARENT]: ["/", "/children", "/reports"],
-  [UserRole.CHILD]: ["/child/dashboard", "/games", "/rewards"],
+  [UserRole.ADMIN]: ["/admin/dashboard", "/users", "/analytics", "/settings"],
+  [UserRole.PARENT]: ["/", "/children", "/reports", "/settings"],
+  [UserRole.CHILD]: [
+    "/child/dashboard",
+    "/games",
+    "/rewards",
+    "/child/courses",
+    "/settings",
+  ],
 };
 
 const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
@@ -83,12 +89,12 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     <>
       {isProtected ? (
         <AuthRoute>
-          <div className="h-screen flex flex-col">
+          <div className="h-screen overflow-hidden bg-black  flex flex-col">
             <Header user={user} />
             <div className="flex flex-1 overflow-hidden">
               <SideBar userRole={user?.role || UserRole.PARENT} />
-              <main className="flex-1 overflow-y-auto  bg-[#FBFBFB] min-w-0">
-                <div className="h-full mb-[4rem] p-6">{children}</div>
+              <main className="flex-1  pb-[5rem] min-h-screen overflow-auto bg-[#FBFBFB] min-w-0">
+                <div className="h-max p-6">{children}</div>
               </main>
             </div>
           </div>

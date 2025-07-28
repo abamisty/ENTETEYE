@@ -11,6 +11,7 @@ import {
   getChildEnrollments,
   updateCoursePreferences,
   getChildCourseProgress,
+  deleteChild,
 } from "../controllers/parent_controller";
 import { protect } from "../middlewares/authorized";
 
@@ -39,5 +40,7 @@ router.get(
   protect,
   getChildCourseProgress
 );
+
+router.delete("/children/:childId", protect, deleteChild);
 
 export default router;

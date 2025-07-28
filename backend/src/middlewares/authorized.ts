@@ -3,6 +3,8 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/database";
 import { User, UserRole } from "../models/user";
+import { Child } from "../models/children";
+import { chdir } from "process";
 
 export const protect = async (
   req: Request,
@@ -66,6 +68,45 @@ export const requireAdmin = (
     res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+};
+
+export const authenticateChild = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      id: string;
+    };
+    const child = await AppDataSource.getRepository(Child).findOneBy({
+      id: decoded.id,
+    });
+
+    if (!child) {
+      return res.status(401).json({
+        success: false,
+        message: "Child not found",
+      });
+    }
+
+    (req as any).user = child;
+    next();
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      message: "Invalid token",
     });
   }
 };

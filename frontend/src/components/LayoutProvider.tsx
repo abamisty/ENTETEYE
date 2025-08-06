@@ -7,6 +7,7 @@ import Loading from "@/app/loading";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import AuthRoute from "./AuthRoute";
+import { parentApi } from "@/api/parent";
 
 interface LayoutProviderProps {
   children: ReactNode;
@@ -22,11 +23,17 @@ const unprotectedRoutes = [
   "/setup/company",
   "/terms",
   "/privacy",
+  "/subscription", // Add subscription page to unprotected routes
 ];
 
 const protectedRoutes: any = {
   common: ["/dashboard", "/profile", "/settings"],
-  [UserRole.ADMIN]: ["/admin/dashboard", "/users", "/analytics", "/settings"],
+  [UserRole.ADMIN]: [
+    "/admin/dashboard",
+    "/admin/users",
+    "/analytics",
+    "/settings",
+  ],
   [UserRole.PARENT]: ["/", "/children", "/reports", "/settings"],
   [UserRole.CHILD]: [
     "/child/dashboard",
@@ -43,7 +50,9 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
   const { user, isAuthenticated, loading } = useAuth();
   const [isProtected, setIsProtected] = useState<boolean>(false);
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
-  console.log(user);
+  const [subscriptionCheckComplete, setSubscriptionCheckComplete] =
+    useState<boolean>(false);
+
   useEffect(() => {
     if (!path) return;
 
@@ -79,7 +88,40 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     }
   }, [path, isAuthenticated, loading, user, router]);
 
-  if (!path || loading) return <Loading />;
+  // Check for parent subscription
+  useEffect(() => {
+    const checkParentSubscription = async () => {
+      if (
+        user?.role === UserRole.PARENT &&
+        isAuthenticated &&
+        !unprotectedRoutes.includes(path || "")
+      ) {
+        try {
+          const response = await parentApi.getMockSubscriptionDetails();
+          if (!response.data?.subscription) {
+            router.push("/subscription");
+          }
+        } catch (error) {
+          router.push("/subscription");
+          console.error("Error checking parent subscription:", error);
+        } finally {
+          setSubscriptionCheckComplete(true);
+        }
+      } else {
+        setSubscriptionCheckComplete(true);
+      }
+    };
+
+    checkParentSubscription();
+  }, [user, isAuthenticated, path, router]);
+
+  if (
+    !path ||
+    loading ||
+    (user?.role === UserRole.PARENT && !subscriptionCheckComplete)
+  ) {
+    return <Loading />;
+  }
 
   if (isProtected && (!isAuthenticated || !isAuthorized)) {
     return <Loading />;

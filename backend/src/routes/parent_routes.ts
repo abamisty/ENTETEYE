@@ -12,6 +12,9 @@ import {
   updateCoursePreferences,
   getChildCourseProgress,
   deleteChild,
+  createMockSubscription,
+  cancelMockSubscription,
+  getMockSubscriptionDetails,
 } from "../controllers/parent_controller";
 import { protect } from "../middlewares/authorized";
 
@@ -27,6 +30,11 @@ router.get("/family", protect, getFamilyDetails);
 
 router.post("/subscription", protect, activateFamilySubscription);
 router.get("/subscription", protect, getFamilySubscription);
+
+// New subscription routes
+router.post("/subscription/mock", protect, createMockSubscription);
+router.delete("/subscription/mock", protect, cancelMockSubscription);
+router.get("/subscription/mock", protect, getMockSubscriptionDetails);
 
 router.post("/enrollments", protect, enrollChildInCourse);
 router.get("/children/:childId/enrollments", protect, getChildEnrollments);

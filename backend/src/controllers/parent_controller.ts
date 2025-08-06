@@ -5,7 +5,13 @@ import { ParentProfile } from "../models/parent";
 import { Child } from "../models/children";
 import { Family } from "../models/family";
 import { User } from "../models/user";
-import { FamilySubscription, SubscriptionStatus } from "../models/subscription";
+import {
+  BillingFrequency,
+  FamilySubscription,
+  SubscriptionPlan,
+  SubscriptionProduct,
+  SubscriptionStatus,
+} from "../models/subscription";
 import { Enrollment } from "../models/enrollment";
 import { Course } from "../models/courses";
 
@@ -80,9 +86,10 @@ export const addChild = async (
       learningPreferences,
       username,
       password,
+      avatarUrl,
     } = req.body;
 
-    if (!password || password.length < 6) {
+    if (!password) {
       return res.status(400).json({
         success: false,
         message: "Password must be at least 6 characters long",
@@ -117,6 +124,7 @@ export const addChild = async (
       gender,
       learningPreferences,
       username,
+      avatarUrl,
       password,
       family: parentProfile.family,
       addedBy: parentProfile,
@@ -168,7 +176,6 @@ export const getAllChildren = async (
   }
 };
 
-// 4. ADD ANOTHER PARENT TO FAMILY
 export const addParentToFamily = async (
   req: Request,
   res: Response,
@@ -790,6 +797,296 @@ export const deleteChild = async (
     res.status(200).json({
       success: true,
       message: "Child account deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createMockSubscription = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+    const { plan, product } = req.body;
+
+    // Validate input
+    if (!plan || !Object.values(BillingFrequency).includes(plan)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid plan. Must be one of: monthly, yearly, lifetime",
+      });
+    }
+
+    if (!product || !Object.values(SubscriptionProduct).includes(product)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product. Must be one of: basic, professional",
+      });
+    }
+
+    // Get the user and check if they already have a family
+    const user = await userRepository.findOne({
+      where: { id: userId },
+      relations: ["parentProfile", "parentProfile.family"],
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    let family = user.parentProfile?.family;
+
+    // If user doesn't have a family, create one
+    if (!family) {
+      family = familyRepository.create({
+        name: `${user.firstName}'s Family`,
+        owner: user,
+      });
+
+      await familyRepository.save(family);
+
+      // Update parent profile to be family owner
+      if (!user.parentProfile) {
+        const parentProfile = parentProfileRepository.create({
+          user,
+          isFamilyOwner: true,
+          family,
+        });
+        await parentProfileRepository.save(parentProfile);
+      } else {
+        user.parentProfile.isFamilyOwner = true;
+        user.parentProfile.family = family;
+        await parentProfileRepository.save(user.parentProfile);
+      }
+    }
+
+    // Check if family already has an active subscription
+    const existingSubscription = await subscriptionRepository.findOne({
+      where: {
+        family: { id: family.id },
+        status: SubscriptionStatus.ACTIVE,
+      },
+    });
+
+    if (existingSubscription) {
+      return res.status(400).json({
+        success: false,
+        message: "Family already has an active subscription",
+      });
+    }
+
+    // Calculate subscription details based on plan and product
+    let amount = 0;
+    let trialDays = 14;
+    let description = "";
+
+    if (product === SubscriptionProduct.BASIC) {
+      amount =
+        plan === BillingFrequency.MONTHLY
+          ? 999
+          : plan === BillingFrequency.YEARLY
+          ? 9999
+          : 29999;
+      description = "Basic Plan - Character Building Essentials";
+    } else {
+      amount =
+        plan === BillingFrequency.MONTHLY
+          ? 1999
+          : plan === BillingFrequency.YEARLY
+          ? 19999
+          : 49999;
+      description = "Professional Plan - Complete Family Values Education";
+      trialDays = 30;
+    }
+
+    // Create mock subscription
+    const subscription = subscriptionRepository.create({
+      plan: SubscriptionPlan.MONTHLY,
+      product: product as SubscriptionProduct,
+      status: SubscriptionStatus.TRIAL,
+      startDate: new Date(),
+      trialEndDate: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
+      nextPaymentDate:
+        plan === BillingFrequency.LIFETIME
+          ? undefined
+          : new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
+      amount,
+      currency: "USD",
+      isAutoRenew: plan !== BillingFrequency.LIFETIME,
+      family,
+      managedBy: user,
+    });
+
+    await subscriptionRepository.save(subscription);
+
+    res.status(201).json({
+      success: true,
+      message: `Mock ${product} subscription created successfully with ${trialDays}-day free trial`,
+      data: {
+        subscription: {
+          id: subscription.id,
+          plan: subscription.plan,
+          product: subscription.product,
+          status: subscription.status,
+          startDate: subscription.startDate,
+          trialEndDate: subscription.trialEndDate,
+          nextPaymentDate: subscription.nextPaymentDate,
+          amount: subscription.amount,
+          currency: subscription.currency,
+          description,
+        },
+        family: {
+          id: family.id,
+          name: family.name,
+          isNewFamily: !user.parentProfile?.family,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const cancelMockSubscription = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+
+    // Get user's family
+    const user = await userRepository.findOne({
+      where: { id: userId },
+      relations: ["parentProfile", "parentProfile.family"],
+    });
+
+    if (!user?.parentProfile?.family) {
+      return res.status(400).json({
+        success: false,
+        message: "User does not belong to a family",
+      });
+    }
+
+    // Find active subscription
+    const subscription = await subscriptionRepository.findOne({
+      where: {
+        family: { id: user.parentProfile.family.id },
+        status: SubscriptionStatus.ACTIVE,
+      },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: "No active subscription found",
+      });
+    }
+
+    // Cancel the subscription
+    subscription.status = SubscriptionStatus.CANCELLED;
+    subscription.endDate = new Date();
+    subscription.isAutoRenew = false;
+    await subscriptionRepository.save(subscription);
+
+    res.status(200).json({
+      success: true,
+      message: "Subscription cancelled successfully",
+      data: {
+        subscription: {
+          id: subscription.id,
+          status: subscription.status,
+          endDate: subscription.endDate,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMockSubscriptionDetails = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+
+    // Get user's family
+    const user = await userRepository.findOne({
+      where: { id: userId },
+      relations: ["parentProfile", "parentProfile.family"],
+    });
+
+    if (!user?.parentProfile?.family) {
+      return res.status(400).json({
+        success: false,
+        message: "User does not belong to a family",
+      });
+    }
+
+    // Find active or trial subscription
+    const subscription = await subscriptionRepository.findOne({
+      where: [
+        {
+          family: { id: user.parentProfile.family.id },
+          status: SubscriptionStatus.ACTIVE,
+        },
+        {
+          family: { id: user.parentProfile.family.id },
+          status: SubscriptionStatus.TRIAL,
+        },
+      ],
+      order: { createdAt: "DESC" },
+    });
+
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: "No active or trial subscription found",
+      });
+    }
+
+    // Calculate days remaining in trial if applicable
+    let trialDaysRemaining = 0;
+    if (
+      subscription.status === SubscriptionStatus.TRIAL &&
+      subscription.trialEndDate
+    ) {
+      trialDaysRemaining = Math.ceil(
+        (subscription.trialEndDate.getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24)
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        subscription: {
+          id: subscription.id,
+          plan: subscription.plan,
+          product: subscription.product,
+          status: subscription.status,
+          startDate: subscription.startDate,
+          trialEndDate: subscription.trialEndDate,
+          trialDaysRemaining: trialDaysRemaining > 0 ? trialDaysRemaining : 0,
+          nextPaymentDate: subscription.nextPaymentDate,
+          amount: subscription.amount,
+          currency: subscription.currency,
+          isAutoRenew: subscription.isAutoRenew,
+        },
+        family: {
+          id: user.parentProfile.family.id,
+          name: user.parentProfile.family.name,
+        },
+      },
     });
   } catch (error) {
     next(error);

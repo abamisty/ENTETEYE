@@ -31,6 +31,11 @@ interface SubscriptionData {
   // Add other subscription fields as needed
 }
 
+interface MockSubscriptionData {
+  plan: "monthly" | "yearly" | "lifetime";
+  product: "basic" | "professional";
+}
+
 interface EnrollmentData {
   childId: string;
   courseId: string;
@@ -125,6 +130,49 @@ export const parentApi = {
       return response;
     } catch (error) {
       handleApiError(error, "Failed to fetch subscription details");
+      throw error;
+    }
+  },
+
+  // New mock subscription functions
+  async createMockSubscription(data: MockSubscriptionData) {
+    try {
+      const response: ResponseInterface = await api.post(
+        "/parent/subscription/mock",
+        data
+      );
+      toast.success(
+        `Mock ${data.product} subscription created with free trial`,
+        successStyles
+      );
+      return response;
+    } catch (error) {
+      handleApiError(error, "Failed to create mock subscription");
+      throw error;
+    }
+  },
+
+  async cancelMockSubscription() {
+    try {
+      const response: ResponseInterface = await api.delete(
+        "/parent/subscription/mock"
+      );
+      toast.success("Mock subscription cancelled", successStyles);
+      return response;
+    } catch (error) {
+      handleApiError(error, "Failed to cancel mock subscription");
+      throw error;
+    }
+  },
+
+  async getMockSubscriptionDetails() {
+    try {
+      const response: ResponseInterface = await api.get(
+        "/parent/subscription/mock"
+      );
+      return response;
+    } catch (error) {
+      handleApiError(error, "Failed to fetch mock subscription details");
       throw error;
     }
   },

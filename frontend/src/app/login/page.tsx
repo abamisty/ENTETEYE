@@ -131,9 +131,7 @@ const LoginPage: React.FC = () => {
         .required("Username is required")
         .min(3, "Username must be at least 3 characters"),
     }),
-    password: Yup.string()
-      .required("Password is required")
-      .min(8, "Password must be at least 8 characters"),
+    password: Yup.string().required("Password is required"),
     ...(!isLogin && {
       name: Yup.string().required("Full name is required"),
       confirmPassword: Yup.string()
@@ -222,6 +220,15 @@ const LoginPage: React.FC = () => {
       // window.location.href = `${BASE_URL}/auth/${provider}`;
     } catch (error) {
       toast.error(`Failed to initiate ${provider} login`);
+    }
+  };
+
+  // Handle PIN input for child login
+  const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow numbers and limit to 4 digits
+    if (/^\d*$/.test(value) && value.length <= 4) {
+      formik.setFieldValue("password", value);
     }
   };
 
@@ -408,31 +415,55 @@ const LoginPage: React.FC = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-slate-700">
-                    Password
+                    {activeTab === "child" && isLogin
+                      ? "4-digit PIN"
+                      : "Password"}
                   </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                    <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      className="pl-10 pr-10 h-12 text-base border-slate-200 focus:border-primary-secondary focus:ring-primary-secondary"
-                      value={formik.values.password}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
+                    {activeTab === "child" && isLogin ? (
+                      <Input
+                        id="password"
+                        name="password"
+                        type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="Enter your 4-digit PIN"
+                        className="pl-10 h-12 text-base border-slate-200 focus:border-primary-secondary focus:ring-primary-secondary"
+                        value={formik.values.password}
+                        onChange={handlePinChange}
+                        onBlur={formik.handleBlur}
+                        maxLength={4}
+                      />
+                    ) : (
+                      <>
+                        <Input
+                          id="password"
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder={
+                            activeTab === "child"
+                              ? "Set your 4-digit PIN"
+                              : "Enter your password"
+                          }
+                          className="pl-10 pr-10 h-12 text-base border-slate-200 focus:border-primary-secondary focus:ring-primary-secondary"
+                          value={formik.values.password}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </button>
+                      </>
+                    )}
                   </div>
                   {formik.errors.password && formik.touched.password && (
                     <p className="text-sm text-red-500 mt-1">
@@ -444,33 +475,56 @@ const LoginPage: React.FC = () => {
                 {!isLogin && (
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword" className="text-slate-700">
-                      Confirm Password
+                      Confirm {activeTab === "child" ? "PIN" : "Password"}
                     </Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                      <Input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your password"
-                        className="pl-10 pr-10 h-12 text-base border-slate-200 focus:border-primary-secondary focus:ring-primary-secondary"
-                        value={formik.values.confirmPassword}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </button>
+                      {activeTab === "child" ? (
+                        <Input
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          type="number"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="Confirm your 4-digit PIN"
+                          className="pl-10 h-12 text-base border-slate-200 focus:border-primary-secondary focus:ring-primary-secondary"
+                          value={formik.values.confirmPassword}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (/^\d*$/.test(value) && value.length <= 4) {
+                              formik.setFieldValue("confirmPassword", value);
+                            }
+                          }}
+                          onBlur={formik.handleBlur}
+                          maxLength={4}
+                        />
+                      ) : (
+                        <>
+                          <Input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirm your password"
+                            className="pl-10 pr-10 h-12 text-base border-slate-200 focus:border-primary-secondary focus:ring-primary-secondary"
+                            value={formik.values.confirmPassword}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </>
+                      )}
                     </div>
                     {formik.errors.confirmPassword &&
                       formik.touched.confirmPassword && (

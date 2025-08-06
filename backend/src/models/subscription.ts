@@ -17,6 +17,17 @@ export enum SubscriptionPlan {
   LIFETIME = "lifetime",
 }
 
+export enum SubscriptionProduct {
+  BASIC = "basic",
+  PROFESSIONAL = "professional",
+}
+
+export enum BillingFrequency {
+  MONTHLY = "monthly",
+  YEARLY = "yearly",
+  LIFETIME = "lifetime",
+}
+
 export enum SubscriptionStatus {
   TRIAL = "trial",
   ACTIVE = "active",
@@ -30,7 +41,7 @@ export class FamilySubscription {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   paystackSubscriptionCode!: string;
 
   @Column({ unique: true, nullable: true })
@@ -63,6 +74,20 @@ export class FamilySubscription {
 
   @Column({ type: "int" })
   amount!: number;
+
+  @Column({
+    type: "enum",
+    enum: SubscriptionProduct,
+    default: SubscriptionProduct.BASIC,
+  })
+  product!: SubscriptionProduct;
+
+  @Column({
+    type: "enum",
+    enum: BillingFrequency,
+    default: BillingFrequency.MONTHLY,
+  })
+  billingFrequency!: BillingFrequency;
 
   @Column({ default: "NGN" })
   currency!: string;

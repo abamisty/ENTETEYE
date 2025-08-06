@@ -14,12 +14,13 @@ import {
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { authApi } from "@/api/user";
+import { useSearchParams } from "next/navigation";
 
 const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const searchParams = new URLSearchParams(window.location.search);
+  const searchParams = useSearchParams();
   const token = searchParams.get("token") || "d";
 
   const validationSchema = Yup.object({

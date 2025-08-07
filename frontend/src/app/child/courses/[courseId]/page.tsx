@@ -10,125 +10,124 @@ import {
   BookOpen,
   Video,
   Brain,
-  FileText,
-  Activity,
   ArrowRight,
   ArrowLeft,
   RotateCcw,
+  Activity,
 } from "lucide-react";
+import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
+import { childCourseApi } from "@/api/child";
 
-// Mock data - replace with actual API calls
-const mockCourse = {
-  id: "course-1",
-  title: "Amazing Space Adventures",
-  description:
-    "Explore the wonders of space and learn about planets, stars, and galaxies!",
-  ageGroup: "10-12",
-  thumbnailUrl:
-    "https://videos.pexels.com/video-files/9714260/9714260-uhd_2560_1440_30fps.mp4",
-  modules: [
-    {
-      id: "module-1",
-      title: "Our Solar System",
-      description: "Learn about planets and the sun",
-      order: 1,
-      lessons: [
-        {
-          id: "lesson-1",
-          title: "Introduction to Space",
-          type: "video",
-          durationMinutes: 5,
-          pointsReward: 50,
-          videoUrl: "https://example.com/video1.mp4",
-          order: 1,
-        },
-        {
-          id: "lesson-2",
-          title: "Planet Quiz",
-          type: "quiz",
-          durationMinutes: 10,
-          pointsReward: 100,
-          quiz: {
-            questions: [
-              {
-                id: "q1",
-                questionText: "Which planet is closest to the Sun?",
-                questionType: "multiple-choice",
-                options: [
-                  { id: "a", text: "Venus", isCorrect: false },
-                  { id: "b", text: "Mercury", isCorrect: true },
-                  { id: "c", text: "Earth", isCorrect: false },
-                  { id: "d", text: "Mars", isCorrect: false },
-                ],
-                points: 50,
-              },
-              {
-                id: "q2",
-                questionText: "How many planets are in our solar system?",
-                questionType: "multiple-choice",
-                options: [
-                  { id: "a", text: "7", isCorrect: false },
-                  { id: "b", text: "8", isCorrect: true },
-                  { id: "c", text: "9", isCorrect: false },
-                  { id: "d", text: "10", isCorrect: false },
-                ],
-                points: 50,
-              },
-            ],
-            passingScore: 70,
-          },
-          order: 2,
-        },
-        {
-          id: "lesson-3",
-          title: "Space Facts",
-          type: "reading",
-          durationMinutes: 8,
-          pointsReward: 75,
-          readingContent:
-            "Space is vast and full of amazing phenomena. Did you know that one day on Venus equals 243 Earth days? And Jupiter is so big that all other planets could fit inside it!",
-          order: 3,
-        },
-      ],
-    },
-  ],
-};
+interface Lesson {
+  id: string;
+  title: string;
+  type: string;
+  durationMinutes: number;
+  pointsReward: number;
+  quiz?: {
+    questions: {
+      id: string;
+      questionText: string;
+      options: {
+        id: string;
+        text: string;
+        isCorrect: boolean;
+      }[];
+    }[];
+    passingScore: number;
+  };
+  readingContent?: string;
+  isCompleted?: boolean;
+  completedAt?: Date;
+  timeSpentMinutes?: number;
+  quizResults?: any;
+  activityResults?: any;
+}
 
-const mockEnrollment = {
-  id: "enrollment-1",
-  progressPercentage: 33,
-  coursePreferences: {
-    difficulty: "medium",
-    dailyGoalMinutes: 30,
-  },
-};
+interface Module {
+  id: string;
+  title: string;
+  order: number;
+  lessons: Lesson[];
+}
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  modules: Module[];
+}
+
+interface Enrollment {
+  id: string;
+  progressPercentage: number;
+  isCompleted: boolean;
+  completedAt?: Date;
+  updatedAt: Date;
+}
 
 const CoursePlayer = () => {
+  const { courseId } = useParams();
+  const [course, setCourse] = useState<Course | null>(null);
+  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
+  const [loading, setLoading] = useState(true);
   const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
-  const [lessonProgress, setLessonProgress] = useState<any>({});
-  const [totalPoints, setTotalPoints] = useState(150);
+  const [totalPoints, setTotalPoints] = useState(0);
   const [timeSpent, setTimeSpent] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [quizAnswers, setQuizAnswers] = useState<any>({});
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const [showCelebration, setShowCelebration] = useState(false);
 
-  const timeRef = useRef<any>(null);
+  const timeRef = useRef<NodeJS.Timeout | null>(null);
 
-  const currentModule = mockCourse.modules[currentModuleIndex];
-  const currentLesson: any = currentModule?.lessons[currentLessonIndex];
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      try {
+        setLoading(true);
+        const courseResponse = await childCourseApi.getCourseDetails(
+          courseId as string
+        );
 
+        console.log(courseResponse);
+        setCourse(courseResponse.data);
+        setEnrollment(courseResponse.data.enrollment);
+
+        const points = courseResponse.data.modules
+          .flatMap((module: Module) => module.lessons)
+          .filter((lesson: Lesson) => lesson.isCompleted)
+          .reduce(
+            (sum: number, lesson: Lesson) =>
+              sum + (lesson.activityResults?.pointsEarned || 0),
+            0
+          );
+
+        setTotalPoints(points);
+      } catch (error) {
+        console.error("Failed to fetch course data:", error);
+        toast.error("Failed to load course data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (courseId) {
+      fetchCourseData();
+    }
+  }, [courseId]);
+
+  console.log(course);
   // Time tracking
   useEffect(() => {
     if (isPlaying) {
       timeRef.current = setInterval(() => {
         setTimeSpent((prev) => prev + 1);
       }, 1000);
-    } else {
-      if (timeRef.current) {
-        clearInterval(timeRef.current);
-      }
+    } else if (timeRef.current) {
+      clearInterval(timeRef.current);
     }
+
     return () => {
       if (timeRef.current) {
         clearInterval(timeRef.current);
@@ -142,22 +141,71 @@ const CoursePlayer = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const completeLesson = (lessonId: string, pointsEarned = 0) => {
-    setLessonProgress((prev: any) => ({
-      ...prev,
-      [lessonId]: { completed: true, timeSpent, pointsEarned },
-    }));
-    setTotalPoints((prev) => prev + pointsEarned);
-    setShowCelebration(true);
-    setTimeout(() => setShowCelebration(false), 2000);
+  const completeLesson = async (pointsEarned = 0) => {
+    try {
+      if (!course || !currentLesson) return;
+
+      await childCourseApi.updateLessonProgress(
+        courseId as string,
+        currentLesson.id,
+        {
+          isCompleted: true,
+          timeSpentMinutes: Math.ceil(timeSpent / 60),
+          activityResults: {
+            activityType: currentLesson.type,
+            data: {},
+            pointsEarned,
+          },
+        }
+      );
+
+      // Update local state
+      setTotalPoints((prev) => prev + pointsEarned);
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 2000);
+
+      // Update course structure to mark lesson as completed
+      setCourse((prev) => {
+        if (!prev) return null;
+
+        const updatedModules = prev.modules.map((module, mIndex) => {
+          if (mIndex === currentModuleIndex) {
+            const updatedLessons = module.lessons.map((lesson, lIndex) => {
+              if (lIndex === currentLessonIndex) {
+                return {
+                  ...lesson,
+                  isCompleted: true,
+                  timeSpentMinutes: Math.ceil(timeSpent / 60),
+                  activityResults: {
+                    activityType: lesson.type,
+                    data: {},
+                    pointsEarned,
+                  },
+                };
+              }
+              return lesson;
+            });
+            return { ...module, lessons: updatedLessons };
+          }
+          return module;
+        });
+
+        return { ...prev, modules: updatedModules };
+      });
+    } catch (error) {
+      console.error("Failed to update lesson progress:", error);
+      toast.error("Failed to save your progress");
+    }
   };
 
   const nextLesson = () => {
+    if (!course) return;
+
     if (currentLessonIndex < currentModule.lessons.length - 1) {
       setCurrentLessonIndex((prev) => prev + 1);
       setTimeSpent(0);
       setQuizAnswers({});
-    } else if (currentModuleIndex < mockCourse.modules.length - 1) {
+    } else if (currentModuleIndex < course.modules.length - 1) {
       setCurrentModuleIndex((prev) => prev + 1);
       setCurrentLessonIndex(0);
       setTimeSpent(0);
@@ -166,32 +214,36 @@ const CoursePlayer = () => {
   };
 
   const prevLesson = () => {
+    if (!course) return;
+
     if (currentLessonIndex > 0) {
       setCurrentLessonIndex((prev) => prev - 1);
       setTimeSpent(0);
     } else if (currentModuleIndex > 0) {
       setCurrentModuleIndex((prev) => prev - 1);
-      const prevModule = mockCourse.modules[currentModuleIndex - 1];
+      const prevModule = course.modules[currentModuleIndex - 1];
       setCurrentLessonIndex(prevModule.lessons.length - 1);
       setTimeSpent(0);
     }
   };
 
   const handleQuizAnswer = (questionId: string, answerId: string) => {
-    setQuizAnswers((prev: any) => ({
+    setQuizAnswers((prev) => ({
       ...prev,
       [questionId]: answerId,
     }));
   };
 
-  const submitQuiz = () => {
-    const quiz: any = currentLesson.quiz;
+  const submitQuiz = async () => {
+    if (!currentLesson?.quiz) return;
+
+    const quiz = currentLesson.quiz;
     let correctAnswers = 0;
 
-    quiz.questions.forEach((question: any) => {
+    quiz.questions.forEach((question) => {
       const selectedAnswer = quizAnswers[question.id];
-      const correctOption = question.options.find((opt: any) => opt.isCorrect);
-      if (selectedAnswer === correctOption.id) {
+      const correctOption = question.options.find((opt) => opt.isCorrect);
+      if (selectedAnswer === correctOption?.id) {
         correctAnswers++;
       }
     });
@@ -202,7 +254,7 @@ const CoursePlayer = () => {
         ? currentLesson.pointsReward
         : Math.floor(currentLesson.pointsReward * 0.5);
 
-    completeLesson(currentLesson.id, pointsEarned);
+    await completeLesson(pointsEarned);
   };
 
   const renderLessonContent = () => {
@@ -219,31 +271,37 @@ const CoursePlayer = () => {
                 Duration: {currentLesson.durationMinutes} minutes
               </p>
               <div className="bg-black/20 rounded-xl p-6 mb-6">
-                <div className="w-full h-48 bg-gray-800 rounded-lg overflow-hidden">
+                <div className="w-full h-[65  vh] bg-gray-800 rounded-lg overflow-hidden">
                   <video
                     src="https://videos.pexels.com/video-files/9714260/9714260-uhd_2560_1440_30fps.mp4"
                     controls
                     className="w-full h-full object-cover"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
                   />
                 </div>
               </div>
               <button
                 onClick={() => {
-                  setIsPlaying(!isPlaying);
-                  if (!isPlaying)
-                    completeLesson(
-                      currentLesson.id,
-                      currentLesson.pointsReward
-                    );
+                  if (!currentLesson.isCompleted) {
+                    completeLesson(currentLesson.pointsReward);
+                  }
                 }}
-                className="bg-white text-purple-600 px-8 py-3 rounded-full font-bold hover:bg-purple-50 transition-colors flex items-center gap-2 mx-auto"
+                disabled={currentLesson.isCompleted}
+                className={`px-8 py-3 rounded-full font-bold flex items-center gap-2 mx-auto ${
+                  currentLesson.isCompleted
+                    ? "bg-green-500 text-white"
+                    : "bg-white text-purple-600 hover:bg-purple-50"
+                }`}
               >
-                {isPlaying ? (
-                  <Pause className="w-5 h-5" />
+                {currentLesson.isCompleted ? (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    Completed
+                  </>
                 ) : (
-                  <Play className="w-5 h-5" />
+                  "Mark as Completed"
                 )}
-                {isPlaying ? "Pause" : "Play"}
               </button>
             </div>
           </div>
@@ -258,43 +316,50 @@ const CoursePlayer = () => {
               <p className="text-green-100">Test your knowledge!</p>
             </div>
 
-            {currentLesson.quiz.questions.map(
-              (question: any, qIndex: number) => (
-                <div
-                  key={question.id}
-                  className="bg-white rounded-2xl p-6 shadow-lg border-2 border-blue-100"
-                >
-                  <h4 className="text-lg font-bold text-gray-800 mb-4">
-                    Question {qIndex + 1}: {question.questionText}
-                  </h4>
-                  <div className="space-y-3">
-                    {question.options.map((option: any) => (
-                      <button
-                        key={option.id}
-                        onClick={() => handleQuizAnswer(question.id, option.id)}
-                        className={`w-full p-4 text-left rounded-xl border-2 transition-all ${
-                          quizAnswers[question.id] === option.id
-                            ? "bg-blue-100 border-blue-400 text-blue-800"
-                            : "bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
-                        }`}
-                      >
-                        {option.text}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            )}
-
-            {Object.keys(quizAnswers).length ===
-              currentLesson.quiz.questions.length && (
-              <button
-                onClick={submitQuiz}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-4 rounded-2xl font-bold text-lg hover:from-green-600 hover:to-blue-600 transition-all transform hover:scale-105"
+            {currentLesson.quiz?.questions.map((question, qIndex) => (
+              <div
+                key={question.id}
+                className="bg-white rounded-2xl p-6 shadow-lg border-2 border-blue-100"
               >
-                Submit Quiz! 🎯
-              </button>
-            )}
+                <h4 className="text-lg font-bold text-gray-800 mb-4">
+                  Question {qIndex + 1}: {question.questionText}
+                </h4>
+                <div className="space-y-3">
+                  {question.options.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleQuizAnswer(question.id, option.id)}
+                      disabled={currentLesson.isCompleted}
+                      className={`w-full p-4 text-left rounded-xl border-2 transition-all ${
+                        quizAnswers[question.id] === option.id
+                          ? "bg-blue-100 border-blue-400 text-blue-800"
+                          : "bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
+                      }`}
+                    >
+                      {option.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {currentLesson.quiz &&
+              Object.keys(quizAnswers).length ===
+                currentLesson.quiz.questions.length && (
+                <button
+                  onClick={submitQuiz}
+                  disabled={currentLesson.isCompleted}
+                  className={`w-full text-white py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 ${
+                    currentLesson.isCompleted
+                      ? "bg-green-500"
+                      : "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+                  }`}
+                >
+                  {currentLesson.isCompleted
+                    ? "Quiz Completed ✓"
+                    : "Submit Quiz! 🎯"}
+                </button>
+              )}
           </div>
         );
 
@@ -315,12 +380,17 @@ const CoursePlayer = () => {
               </div>
 
               <button
-                onClick={() =>
-                  completeLesson(currentLesson.id, currentLesson.pointsReward)
-                }
-                className="mt-6 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-3 rounded-full font-bold hover:from-orange-600 hover:to-pink-600 transition-all transform hover:scale-105"
+                onClick={() => completeLesson(currentLesson.pointsReward)}
+                disabled={currentLesson.isCompleted}
+                className={`mt-6 px-8 py-3 rounded-full font-bold transition-all transform hover:scale-105 ${
+                  currentLesson.isCompleted
+                    ? "bg-green-500 text-white"
+                    : "bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:from-orange-600 hover:to-pink-600"
+                }`}
               >
-                I've Read This! 📚
+                {currentLesson.isCompleted
+                  ? "Reading Completed ✓"
+                  : "I've Read This! 📚"}
               </button>
             </div>
           </div>
@@ -336,8 +406,22 @@ const CoursePlayer = () => {
     }
   };
 
+  if (loading || !course || !enrollment) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading course...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentModule = course.modules[currentModuleIndex];
+  const currentLesson = currentModule?.lessons[currentLessonIndex];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen ">
       {/* Celebration Modal */}
       {showCelebration && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -359,7 +443,7 @@ const CoursePlayer = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">
-                {mockCourse.title}
+                {course.title}
               </h1>
               <p className="text-gray-600 mt-2">
                 {currentModule?.title} - {currentLesson?.title}
@@ -383,11 +467,11 @@ const CoursePlayer = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mx-auto px-0 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar - Module Progress */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-8">
+          <div className="lg:col-span-1 w-full  ">
+            <div className="bg-white h-full rounded-lg w-full shadow-lg p-6 sticky top-8">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Award className="w-6 h-6 text-purple-600" />
                 Progress
@@ -397,12 +481,12 @@ const CoursePlayer = () => {
               <div className="mb-6">
                 <div className="flex justify-between text-sm text-gray-600 mb-2">
                   <span>Course Progress</span>
-                  <span>{mockEnrollment.progressPercentage}%</span>
+                  <span>{enrollment.progressPercentage}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
                     className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${mockEnrollment.progressPercentage}%` }}
+                    style={{ width: `${enrollment.progressPercentage}%` }}
                   ></div>
                 </div>
               </div>
@@ -420,7 +504,7 @@ const CoursePlayer = () => {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      {lessonProgress[lesson.id]?.completed ? (
+                      {lesson.isCompleted ? (
                         <CheckCircle className="w-5 h-5 text-green-500" />
                       ) : (
                         <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
@@ -430,7 +514,8 @@ const CoursePlayer = () => {
                           {lesson.title}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {lesson.durationMinutes} min
+                          {lesson.durationMinutes} min ·{" "}
+                          {lesson.isCompleted ? "Completed" : "Not started"}
                         </p>
                       </div>
                     </div>
@@ -471,7 +556,7 @@ const CoursePlayer = () => {
                 <button
                   onClick={nextLesson}
                   disabled={
-                    currentModuleIndex === mockCourse.modules.length - 1 &&
+                    currentModuleIndex === course.modules.length - 1 &&
                     currentLessonIndex === currentModule?.lessons.length - 1
                   }
                   className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"

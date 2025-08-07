@@ -10,7 +10,7 @@ export default function Loading() {
       <div className="text-center">
         {/* Animated Logo */}
         <div className="relative mb-8">
-          <div className="w-20 h-20 bg-gradient-to-r from-[#043873] to-[#4f9cf9] rounded-2xl flex items-center justify-center mx-auto animate-pulse">
+          <div className="w-20 h-20 bg-gradient-to-r from-primary-main to-primary-secondary rounded-2xl flex items-center justify-center mx-auto animate-pulse">
             <Star className="w-10 h-10 text-white" />
           </div>
         </div>

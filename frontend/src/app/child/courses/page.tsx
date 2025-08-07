@@ -209,7 +209,7 @@ const ChildCoursesPage = () => {
         `/child/courses/${course.id}/learn?moduleId=${course.progress?.currentModuleId}&lessonId=${course.progress?.currentLessonId}`
       );
     } else {
-      router.push(`/child/courses/${course.id}/learn`);
+      router.push(`/child/courses/${course.id}`);
     }
   };
 
@@ -325,7 +325,7 @@ const ChildCoursesPage = () => {
                 return (
                   <div
                     key={course.id}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex justify-between items-center flex-col w-full hover:shadow-lg transition-shadow duration-300"
                   >
                     {/* Course Thumbnail */}
                     <div className="h-48 bg-gray-200 dark:bg-gray-700 relative">
@@ -336,7 +336,7 @@ const ChildCoursesPage = () => {
                           className="w-full h-full object-cover"
                         />
                       )}
-                      <div className="absolute top-2 left-2">
+                      <div className="absolute top-2 left-2 ">
                         <span
                           className={`text-white text-xs px-2 py-1 rounded-md ${
                             status === "Completed"
@@ -357,8 +357,8 @@ const ChildCoursesPage = () => {
                     </div>
 
                     {/* Course Content */}
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
+                    <div className="p-4 w-full">
+                      <div className="flex w-full justify-between items-start mb-2">
                         <h3 className="text-lg font-semibold line-clamp-1">
                           {course.title}
                         </h3>

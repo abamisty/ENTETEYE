@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Search,
   Bell,
@@ -17,12 +17,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import Image from "next/image";
+import Link from "next/link";
 
 const Header: React.FC<{ user: any }> = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { user } = useAuth();
+  const [home, setHome] = useState("/parent/dashboard");
   const dispatch = useDispatch();
   const notifications = [
     {
@@ -56,7 +58,15 @@ const Header: React.FC<{ user: any }> = () => {
     dispatch(logout());
     router.push("/login");
   };
-
+  useEffect(() => {
+    if (user.role === UserRole.PARENT) {
+      setHome("/parent/dashboard");
+    } else if (user.role === UserRole.CHILD) {
+      setHome("/child/dashboard");
+    } else {
+      setHome("/admin/dashboard");
+    }
+  }, []);
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-6 relative z-30">
       {/* Mobile menu button */}
@@ -69,16 +79,18 @@ const Header: React.FC<{ user: any }> = () => {
 
       {/* Logo and search */}
       <div className="flex items-center space-x-4 flex-1">
-        <div className="flex items-center h-full space-x-3 mr-[3rem]">
-          <div className="w-max h-max rounded-lg flex items-center justify-center">
-            <Image src={"/logo.png"} alt="Enteteye" width={70} height={70} />
+        <Link href={home}>
+          <div className="flex items-center h-full space-x-3 mr-[3rem]">
+            <div className="w-max h-max rounded-lg flex items-center justify-center">
+              <Image src={"/logo.jpg"} alt="Enteteye" width={60} height={60} />
+            </div>
+            <div className="hidden  justify-center items-center   h-full  sm:flex">
+              <h1 className="text-lg h-full font-bold relative top-[6px] text-primary-main">
+                ENTETEYE
+              </h1>
+            </div>
           </div>
-          <div className="hidden  justify-center items-center   h-full  sm:flex">
-            <h1 className="text-lg h-full font-bold relative top-[6px] text-primary-main">
-              ENTETEYE
-            </h1>
-          </div>
-        </div>
+        </Link>
         <div className="relative max-w-md w-full hidden md:block">
           <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
           <input
@@ -158,7 +170,7 @@ const Header: React.FC<{ user: any }> = () => {
             onClick={() => setShowProfileDropdown(!showProfileDropdown)}
             className="flex items-center space-x-3 pl-4 border-l border-gray-200 hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200"
           >
-            <div className="w-8 h-8 bg-gradient-to-r from-[#043873] to-[#4f9cf9] rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-primary-main to-primary-secondary rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
             <div className="text-left hidden lg:block">
@@ -184,7 +196,7 @@ const Header: React.FC<{ user: any }> = () => {
                     ? user?.email
                     : user?.username}
                 </p>
-                <p className="text-xs text-[#4f9cf9] mt-1">Premium Plan</p>
+                <p className="text-xs text-primary-main mt-1">Premium Plan</p>
               </div>
 
               <div className="py-2">
@@ -219,7 +231,7 @@ const Header: React.FC<{ user: any }> = () => {
             onClick={() => setShowProfileDropdown(!showProfileDropdown)}
             className="p-2 rounded-full hover:bg-gray-100"
           >
-            <div className="w-8 h-8 bg-gradient-to-r from-[#043873] to-[#4f9cf9] rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-primary-main to-primary-secondary rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
           </button>
@@ -236,7 +248,9 @@ const Header: React.FC<{ user: any }> = () => {
                     ? user?.email
                     : user?.username}
                 </p>
-                <p className="text-xs text-[#4f9cf9] mt-1">Premium Plan</p>
+                <p className="text-xs text-primary-secondary mt-1">
+                  Premium Plan
+                </p>
               </div>
 
               <div className="py-2">

@@ -175,7 +175,7 @@ export const getCourseDetails = async (
 
     return res.status(200).json({
       success: true,
-      data: courseWithProgress,
+      data: { ...courseWithProgress, enrollment },
     });
   } catch (error) {
     next(error);
@@ -301,7 +301,7 @@ export const updateLessonProgress = async (
     // Verify lesson exists in this course
     const lesson = await lessonRepository.findOne({
       where: { id: lessonId },
-      relations: ["module"],
+      relations: ["module", "module.course"],
     });
 
     if (!lesson || lesson.module.course.id !== courseId) {
@@ -432,6 +432,61 @@ export const getRecommendedCourses = async (
     return res.status(200).json({
       success: true,
       data: recommendedCourses,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getChildProgress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { courseId } = req.params;
+    const childId = (req as any).user.id;
+
+    // Check enrollment
+    const enrollment = await enrollmentRepository.findOne({
+      where: { child: { id: childId }, course: { id: courseId } },
+      relations: ["child"],
+    });
+
+    if (!enrollment) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not enrolled in this course",
+      });
+    }
+
+    // Get all progress records for this course
+    const progressRecords = await progressRepository.find({
+      where: {
+        child: { id: childId },
+        enrollment: { id: enrollment.id },
+      },
+      relations: ["lesson"],
+    });
+
+    // Calculate total points earned in this course
+    const totalPoints = progressRecords.reduce((sum, record) => {
+      return sum + (record.activityResults?.pointsEarned || 0);
+    }, 0);
+
+    // Get completed lesson IDs
+    const completedLessons = progressRecords
+      .filter((record) => record.isCompleted)
+      .map((record) => record.lesson.id);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalPoints,
+        completedLessons,
+        progressPercentage: enrollment.progressPercentage,
+        lastAccessed: enrollment.updatedAt,
+      },
     });
   } catch (error) {
     next(error);

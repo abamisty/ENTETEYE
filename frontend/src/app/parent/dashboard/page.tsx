@@ -41,6 +41,8 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { useAuth } from "@/hooks/useAuth";
+import { Avatar } from "@/components/ui/avatar";
+import Image from "next/image";
 
 interface Child {
   id: string;
@@ -48,8 +50,9 @@ interface Child {
   lastName: string;
   displayName: string;
   username: string;
-  dateOfBirth: string;
+  birthDate: string;
   gender: string;
+  avatarUrl: string;
   enrollments?: Enrollment[];
 }
 
@@ -293,7 +296,7 @@ const ParentDashboard = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-[#043873] to-[#4f9cf9] rounded-xl p-6 text-white mb-6">
+        <div className="bg-gradient-to-r from-primary-main to-primary-secondary rounded-xl p-6 text-white mb-6">
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold mb-2">
@@ -475,15 +478,20 @@ const ParentDashboard = () => {
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                              {child.firstName}
-                              {child?.lastName}
+                              <img
+                                src={child.avatarUrl}
+                                alt="Avatar"
+                                width={70}
+                                height={70}
+                                className="rounded-full"
+                              />
                             </div>
                             <div>
                               <h4 className="font-medium text-gray-800 dark:text-white">
                                 {child.displayName}
                               </h4>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Age {getChildAge(child.dateOfBirth)} •{" "}
+                                Age {getChildAge(child.birthDate)} •{" "}
                                 {enrollments.length} courses
                               </p>
                             </div>

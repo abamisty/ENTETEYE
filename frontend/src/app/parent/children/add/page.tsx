@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,6 +71,7 @@ const avatarOptions = [
 const PINInput: React.FC<{
   value: string;
   onChange: (value: string) => void;
+
   onBlur: () => void;
 }> = ({ value, onChange, onBlur }) => {
   const handleInputChange = (
@@ -134,7 +135,7 @@ const AvatarSelector: React.FC<{
   };
 
   const selectedAvatarData = avatarOptions.find(
-    (avatar) => avatar.id === selectedAvatar
+    (avatar) => avatar.src === selectedAvatar
   );
 
   return (
@@ -167,7 +168,7 @@ const AvatarSelector: React.FC<{
           {avatarOptions.map((avatar) => (
             <div
               key={avatar.id}
-              onClick={() => handleSelect(avatar.id)}
+              onClick={() => handleSelect(avatar.src)}
               className={`relative cursor-pointer rounded-full w-full flex justify-center h-max  p-2 transition-all duration-200 hover:shadow-lg`}
             >
               <img
@@ -198,9 +199,12 @@ const AvatarSelector: React.FC<{
   );
 };
 
-const AddChildPage = () => {
+const ChildFormPage = () => {
   const router = useRouter();
-
+  const searchParams = useSearchParams();
+  const childId = searchParams.get("childId");
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!childId);
   const validationSchema = Yup.object({
     firstName: Yup.string()
       .required("First name is required")
@@ -228,7 +232,6 @@ const AddChildPage = () => {
       .oneOf(["Male", "Female", "Other"], "Please select a valid gender"),
     avatarUrl: Yup.string().required("Please select an avatar for your child"),
   });
-
   const formik = useFormik<ChildFormValues>({
     initialValues: {
       firstName: "",
@@ -242,14 +245,63 @@ const AddChildPage = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        const response = await parentApi.addChild(values);
+        let response;
 
-        if (response.success) {
+        if (isEditing && childId) {
+          response = await parentApi.updateChild(childId, values);
+        } else {
+          response = await parentApi.addChild(values);
+        }
+
+        if (response?.success) {
           router.push("/parent/children");
         }
-      } catch (error) {}
+      } catch (error: any) {
+        toast.error(
+          error?.response?.data?.message || "Something went wrong!",
+          errorStyles
+        );
+      }
     },
   });
+
+  useEffect(() => {
+    if (childId) {
+      const fetchChildData = async () => {
+        try {
+          const response = await parentApi.getChild(childId);
+          if (response.success) {
+            const childData = response.data;
+            formik.setValues({
+              firstName: childData.displayName.split(" ")[0],
+              lastName: childData.displayName.split(" ")[1],
+              username: childData.username,
+              password: "",
+              dateOfBirth: childData.birthDate.split("T")[0],
+              gender: childData.gender,
+              avatarUrl: childData.avatarUrl,
+            });
+            setIsEditing(true);
+          }
+        } catch (error) {
+          console.log(error);
+          toast.error("Failed to fetch child data", errorStyles);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchChildData();
+    }
+  }, [childId]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-main"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -263,26 +315,32 @@ const AddChildPage = () => {
           Back
         </button>
         <span className="mx-2">/</span>
-        <span className="text-slate-500">Add Child</span>
+        <span className="text-slate-500">
+          {isEditing ? "Edit Child" : "Add Child"}
+        </span>
       </nav>
 
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-primary-main mb-2">
-          Add a Child
+          {isEditing ? "Edit Child Profile" : "Add a Child"}
         </h1>
         <p className="text-slate-600">
-          Fill in your child's details to create their profile
+          {isEditing
+            ? "Update your child's details"
+            : "Fill in your child's details to create their profile"}
         </p>
       </div>
 
       <Card className="shadow-lg border border-slate-200 backdrop-blur-sm bg-white">
         <CardHeader>
           <CardTitle className="text-2xl text-primary-main">
-            Child Information
+            {isEditing ? "Edit Child Information" : "Child Information"}
           </CardTitle>
           <CardDescription>
-            Please provide your child's personal details
+            {isEditing
+              ? "Update your child's personal details"
+              : "Please provide your child's personal details"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -471,7 +529,11 @@ const AddChildPage = () => {
                 className="h-12 text-base font-semibold bg-primary-secondary text-white hover:bg-primary-main transition-colors duration-200 shadow-sm"
                 disabled={formik.isSubmitting}
               >
-                {formik.isSubmitting ? "Saving..." : "Add Child"}
+                {formik.isSubmitting
+                  ? "Saving..."
+                  : isEditing
+                  ? "Update Child"
+                  : "Add Child"}
               </Button>
             </div>
           </form>
@@ -481,4 +543,4 @@ const AddChildPage = () => {
   );
 };
 
-export default AddChildPage;
+export default ChildFormPage;

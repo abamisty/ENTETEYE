@@ -13,8 +13,8 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          main: "#043873",
-          secondary: "#4f9cf9",
+          main: "#26A370",
+          secondary: "#13C432",
         },
         text1: "white",
         text2: "black",

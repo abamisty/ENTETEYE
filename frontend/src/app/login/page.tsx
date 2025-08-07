@@ -233,7 +233,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center w-screen p-4">
+    <div className="min-h-screen  flex items-center justify-center w-screen p-4">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-br from-pink-400/20 to-yellow-400/20 rounded-full blur-3xl animate-pulse delay-700"></div>
@@ -246,7 +246,7 @@ const LoginPage: React.FC = () => {
           <div className="relative">
             <div className="w-32 h-32  rounded-3xl flex items-center justify-center  transform rotate-6 hover:rotate-12 transition-transform duration-300">
               <Image
-                src={"/logo.png"}
+                src={"/logo.jpg"}
                 alt="Enteteye Logo"
                 width={150}
                 height={150}

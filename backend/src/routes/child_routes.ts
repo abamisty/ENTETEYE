@@ -7,6 +7,7 @@ import {
   enrollInCourse,
   updateLessonProgress,
   getRecommendedCourses,
+  getChildProgress,
 } from "../controllers/child_controller";
 import { authenticateChild } from "../middlewares/authorized";
 
@@ -32,5 +33,7 @@ router.patch(
   "/courses/:courseId/lessons/:lessonId/progress",
   updateLessonProgress
 );
+
+router.get("/courses/:courseId/progress", authenticateChild, getChildProgress);
 
 export default router;

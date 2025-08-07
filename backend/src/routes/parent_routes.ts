@@ -3,6 +3,8 @@ import {
   updateParentProfile,
   addChild,
   getAllChildren,
+  getChild,
+  updateChild,
   addParentToFamily,
   getFamilyDetails,
   activateFamilySubscription,
@@ -24,6 +26,8 @@ router.patch("/profile", protect, updateParentProfile);
 
 router.post("/children", protect, addChild);
 router.get("/children", protect, getAllChildren);
+router.get("/children/:childId", protect, getChild);
+router.patch("/children/:childId", protect, updateChild);
 
 router.post("/family/parents", protect, addParentToFamily);
 router.get("/family", protect, getFamilyDetails);

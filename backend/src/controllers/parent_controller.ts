@@ -1092,3 +1092,99 @@ export const getMockSubscriptionDetails = async (
     next(error);
   }
 };
+
+export const getChild = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+    const { childId } = req.params;
+
+    const parentProfile = await parentProfileRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["family"],
+    });
+
+    if (!parentProfile || !parentProfile.family) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Parent must belong to a family" });
+    }
+
+    const child = await childRepository.findOne({
+      where: { id: childId, family: { id: parentProfile.family.id } },
+      relations: ["family"],
+    });
+
+    if (!child) {
+      return res.status(404).json({
+        success: false,
+        message: "Child not found in your family",
+      });
+    }
+
+    // Remove sensitive data before sending
+
+    res.status(200).json({
+      success: true,
+      data: child,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateChild = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req as any).user.id;
+    const { childId } = req.params;
+    const { displayName, dateOfBirth, gender, learningPreferences, avatarUrl } =
+      req.body;
+
+    const parentProfile = await parentProfileRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ["family"],
+    });
+
+    if (!parentProfile || !parentProfile.family) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Parent must belong to a family" });
+    }
+
+    const child = await childRepository.findOne({
+      where: { id: childId, family: { id: parentProfile.family.id } },
+    });
+
+    if (!child) {
+      return res.status(404).json({
+        success: false,
+        message: "Child not found in your family",
+      });
+    }
+
+    if (displayName) child.displayName = displayName;
+    if (dateOfBirth) child.birthDate = new Date(dateOfBirth);
+    if (gender) child.gender = gender;
+    if (learningPreferences) child.learningPreferences = learningPreferences;
+    if (avatarUrl) child.avatarUrl = avatarUrl;
+
+    await childRepository.save(child);
+
+    const { password, ...childData } = child;
+
+    res.status(200).json({
+      success: true,
+      message: "Child updated successfully",
+      data: childData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

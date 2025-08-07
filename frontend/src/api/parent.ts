@@ -243,4 +243,33 @@ export const parentApi = {
       handleApiError(error);
     }
   },
+
+  async getChild(childId: string) {
+    try {
+      const response: ResponseInterface = await api.get(
+        `/parent/children/${childId}`
+      );
+      return response;
+    } catch (error) {
+      handleApiError(error, "Failed to fetch child details");
+      throw error;
+    }
+  },
+
+  async updateChild(childId: string, childData: ChildData) {
+    try {
+      const response: ResponseInterface = await api.patch(
+        `/parent/children/${childId}`,
+        {
+          ...childData,
+          displayName: `${childData.firstName} ${childData.lastName}`,
+        }
+      );
+      toast.success("Child updated successfully", successStyles);
+      return response;
+    } catch (error) {
+      handleApiError(error, "Failed to update child");
+      throw error;
+    }
+  },
 };

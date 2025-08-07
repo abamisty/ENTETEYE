@@ -212,7 +212,7 @@ const ChildrenDashboard = () => {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       onClick={() =>
-                        router.push(`/parent/children/${child.id}/edit`)
+                        router.push(`/parent/children/add?childId=${child.id}`)
                       }
                     >
                       Edit Profile

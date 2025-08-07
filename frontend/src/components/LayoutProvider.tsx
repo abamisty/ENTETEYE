@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/types/auth";
 import AuthRoute from "./AuthRoute";
 import { parentApi } from "@/api/parent";
+import Navbar from "./General/Navbar";
 
 interface LayoutProviderProps {
   children: ReactNode;
@@ -23,7 +24,8 @@ const unprotectedRoutes = [
   "/setup/company",
   "/terms",
   "/privacy",
-  "/subscription", // Add subscription page to unprotected routes
+  "/subscription",
+  "/",
 ];
 
 const protectedRoutes: any = {
@@ -131,18 +133,21 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
     <>
       {isProtected ? (
         <AuthRoute>
-          <div className="h-screen overflow-hidden bg-black  flex flex-col">
+          <div className="h-screen overflow-hidden  flex flex-col">
             <Header user={user} />
             <div className="flex flex-1 overflow-hidden">
               <SideBar userRole={user?.role || UserRole.PARENT} />
-              <main className="flex-1  pb-[5rem] min-h-screen overflow-auto bg-[#FBFBFB] min-w-0">
+              <main className="flex-1  pb-[5rem] min-h-screen overflow-auto bg-[#eff6f2] min-w-0">
                 <div className="h-max p-6">{children}</div>
               </main>
             </div>
           </div>
         </AuthRoute>
       ) : (
-        <main className="w-full">{children}</main>
+        <>
+          <Navbar />
+          <main className="w-full bg-[#eff6f2]">{children}</main>
+        </>
       )}
     </>
   );

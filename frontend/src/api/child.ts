@@ -16,7 +16,7 @@ interface LessonProgressData {
     }[];
   };
   activityResults?: {
-    activityType: string;
+    activityType: any;
     data: any;
     pointsEarned: number;
   };

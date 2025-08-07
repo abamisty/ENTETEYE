@@ -168,7 +168,7 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
               onClick={() => handleItemClick(item.id)}
               className={`w-full flex justify-center items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 ${
                 activeItem === item.id
-                  ? "bg-gradient-to-r from-[#043873] to-[#4f9cf9] text-white shadow-md"
+                  ? "bg-gradient-to-r from-primary-main to-primary-secondary text-white shadow-md"
                   : "text-gray-600 hover:bg-gray-100 hover:text-[#043873]"
               }`}
               title={!isOpen ? item.label : undefined}
@@ -186,7 +186,7 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
                       className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
                         activeItem === item.id
                           ? "bg-white/20 text-white"
-                          : "bg-[#4f9cf9] text-white"
+                          : "bg-primary-secondary text-white"
                       }`}
                     >
                       {item.badge}

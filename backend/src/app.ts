@@ -19,6 +19,7 @@ const corsOptions = {
   origin: [
     "http://localhost:3000",
     "http://localhost:3001",
+    "https:enteteye.com",
     "http://localhost:3002",
   ],
   credentials: true,

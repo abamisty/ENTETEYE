@@ -1,22 +1,24 @@
+// store/store.ts (FINAL SIMPLE VERSION)
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import authReducer from "./slices/authSlice";
 import parentAdminReducer from "./slices/parentAdminSlice";
 import childReducer from "./slices/childSlice";
-import { AppUser } from "../types/auth";
+import musicReducer from "./slices/musicSlice";
 
 // Combine reducers first
 const rootReducer = combineReducers({
   auth: authReducer,
   parentAdmin: parentAdminReducer,
   child: childReducer,
+  music: musicReducer, // Add music reducer
 });
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth"],
+  whitelist: ["auth", "music"], // Persist music settings
 };
 
 // Then pass the combined reducer to persistReducer

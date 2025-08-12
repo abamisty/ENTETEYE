@@ -20,7 +20,7 @@ const Navbar = () => {
                   className="rounded-lg"
                 />
                 <span className="text-primary-main relative top-1">
-                  ENTETEYE
+                  ENTETEYE ACADEMY
                 </span>
               </div>
             </Link>

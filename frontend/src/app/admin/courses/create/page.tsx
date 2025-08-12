@@ -1745,12 +1745,16 @@ const CreateCoursePage: React.FC<any> = ({ onSuccess, onCancel }) => {
                           {isSubmitting ? (
                             <>
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              Creating Course...
+                              {isEditMode
+                                ? "Updating Course..."
+                                : "Creating Course..."}{" "}
                             </>
                           ) : (
                             <>
                               <CheckCircle2 className="w-4 h-4 mr-2" />
-                              Create Course
+                              {isEditMode
+                                ? "Update Course"
+                                : "Create Course"}{" "}
                             </>
                           )}
                         </Button>

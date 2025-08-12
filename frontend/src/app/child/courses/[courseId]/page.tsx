@@ -14,10 +14,41 @@ import {
   ArrowLeft,
   RotateCcw,
   Activity,
+  Zap,
+  Heart,
+  Trophy,
+  Volume2,
+  VolumeX,
+  SkipForward,
+  SkipBack,
+  Maximize,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { childCourseApi } from "@/api/child";
+
+interface QuizQuestion {
+  id: string;
+  questionText: string;
+  questionType: "multiple-choice" | "true-false" | "matching" | "short-answer";
+  options?: Array<{
+    id: string;
+    text: string;
+    isCorrect: boolean;
+  }>;
+  correctAnswer?: string;
+  points: number;
+  explanation?: string;
+}
+
+interface Quiz {
+  questions: QuizQuestion[];
+  passingScore?: number;
+  maxAttempts?: number;
+  timeLimitMinutes?: number;
+}
 
 interface Lesson {
   id: string;
@@ -25,18 +56,8 @@ interface Lesson {
   type: string;
   durationMinutes: number;
   pointsReward: number;
-  quiz?: {
-    questions: {
-      id: string;
-      questionText: string;
-      options: {
-        id: string;
-        text: string;
-        isCorrect: boolean;
-      }[];
-    }[];
-    passingScore: number;
-  };
+  quiz?: Quiz;
+  content?: any;
   readingContent?: string;
   isCompleted?: boolean;
   completedAt?: Date;
@@ -67,7 +88,378 @@ interface Enrollment {
   updatedAt: Date;
 }
 
-const CoursePlayer = () => {
+interface Character {
+  mood:
+    | "happy"
+    | "encouraging"
+    | "thinking"
+    | "celebrating"
+    | "sad"
+    | "warning";
+  message: string;
+  visible: boolean;
+}
+
+// Character Guide Component with Image
+const CharacterGuide = ({
+  character,
+  onClose,
+}: {
+  character: Character;
+  onClose: () => void;
+}) => {
+  if (!character.visible) return null;
+
+  const getCharacterImage = () => {
+    return "/logo.jpg";
+  };
+
+  const getBubbleStyle = () => {
+    switch (character.mood) {
+      case "happy":
+        return "bg-blue-500 border-blue-600";
+      case "encouraging":
+        return "bg-green-500 border-green-600";
+      case "thinking":
+        return "bg-yellow-500 border-yellow-600";
+      case "celebrating":
+        return "bg-purple-500 border-purple-600";
+      case "sad":
+        return "bg-red-500 border-red-600";
+      case "warning":
+        return "bg-orange-500 border-orange-600";
+      default:
+        return "bg-blue-500 border-blue-600";
+    }
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50">
+      <div className="flex items-end gap-4 animate-bounce">
+        {/* Speech Bubble */}
+        <div
+          className={`${getBubbleStyle()} text-white p-4 rounded-2xl rounded-br-none max-w-xs shadow-2xl border-2 relative animate-pulse`}
+        >
+          <p className="font-bold text-sm">{character.message}</p>
+          <div className="absolute bottom-0 right-0 w-0 h-0 border-l-[12px] border-l-transparent border-t-[12px] border-t-current"></div>
+        </div>
+
+        {/* Character Image */}
+        <div
+          onClick={onClose}
+          className="w-20 h-20 cursor-pointer hover:scale-110 transition-transform animate-bounce bg-white rounded-full border-4 border-yellow-400 shadow-xl overflow-hidden"
+        >
+          <img
+            src={getCharacterImage()}
+            alt="Learning Buddy"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Sound Effects Hook
+const useSoundEffects = () => {
+  const playSound = (
+    type: "correct" | "wrong" | "complete" | "click" | "warning"
+  ) => {
+    // Create audio context for sound effects
+    const audioContext = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
+
+    const frequencies = {
+      correct: [523, 659, 784], // C5, E5, G5 - Happy chord
+      wrong: [220, 196], // A3, G3 - Descending sad notes
+      complete: [523, 659, 784, 1047], // Victory fanfare
+      click: [800], // Simple click
+      warning: [400, 350], // Warning tone
+    };
+
+    const freqs = frequencies[type];
+    freqs.forEach((freq, index) => {
+      setTimeout(() => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+        oscillator.type =
+          type === "correct" || type === "complete" ? "triangle" : "sine";
+
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.01,
+          audioContext.currentTime + 0.3
+        );
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      }, index * 100);
+    });
+  };
+
+  return { playSound };
+};
+
+// Enhanced Video Player
+const EnhancedVideoPlayer = ({
+  onComplete,
+  isCompleted,
+}: {
+  onComplete: () => void;
+  isCompleted: boolean;
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [watchedPercentage, setWatchedPercentage] = useState(0);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleProgress = () => {
+    if (videoRef.current) {
+      const progress =
+        (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setProgress(progress);
+      setWatchedPercentage(Math.max(watchedPercentage, progress));
+
+      // Complete when 95% watched
+      if (progress >= 95 && !isCompleted) {
+        onComplete();
+      }
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (videoRef.current) {
+      if (!isFullscreen) {
+        videoRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  const skipTime = (seconds: number) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime += seconds;
+    }
+  };
+
+  return (
+    <div className="relative bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden shadow-2xl">
+      <video
+        ref={videoRef}
+        src="https://videos.pexels.com/video-files/9714260/9714260-uhd_2560_1440_30fps.mp4"
+        className="w-full h-[450px] object-cover"
+        onTimeUpdate={handleProgress}
+        onEnded={() => onComplete()}
+      />
+
+      {/* Video Completion Overlay */}
+      {watchedPercentage < 95 && (
+        <div className="absolute top-4 left-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-bold">
+          {Math.round(watchedPercentage)}% watched
+        </div>
+      )}
+
+      {/* Enhanced Controls */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6">
+        {/* Progress Bar */}
+        <div className="w-full bg-white/20 rounded-full h-3 mb-6">
+          <div
+            className="bg-gradient-to-r from-yellow-400 to-orange-400 h-3 rounded-full transition-all duration-300 relative"
+            style={{ width: `${progress}%` }}
+          >
+            <div className="absolute right-0 top-0 w-3 h-3 bg-white rounded-full shadow-lg"></div>
+          </div>
+        </div>
+
+        {/* Control Buttons */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => skipTime(-10)}
+              className="text-white hover:text-yellow-400 transition-colors hover:scale-110"
+            >
+              <SkipBack className="w-6 h-6" />
+            </button>
+
+            <button
+              onClick={togglePlay}
+              className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-black rounded-full p-4 transition-all transform hover:scale-110 shadow-lg"
+            >
+              {isPlaying ? (
+                <Pause className="w-8 h-8" />
+              ) : (
+                <Play className="w-8 h-8" />
+              )}
+            </button>
+
+            <button
+              onClick={() => skipTime(10)}
+              className="text-white hover:text-yellow-400 transition-colors hover:scale-110"
+            >
+              <SkipForward className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="text-white hover:text-yellow-400 transition-colors"
+            >
+              {isMuted ? (
+                <VolumeX className="w-6 h-6" />
+              ) : (
+                <Volume2 className="w-6 h-6" />
+              )}
+            </button>
+
+            <button
+              onClick={toggleFullscreen}
+              className="text-white hover:text-yellow-400 transition-colors"
+            >
+              <Maximize className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Enhanced Audio Player
+const EnhancedAudioPlayer = ({
+  text,
+  onComplete,
+}: {
+  text: string;
+  onComplete?: () => void;
+}) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  const toggleAudio = () => {
+    if ("speechSynthesis" in window) {
+      if (isPlaying) {
+        window.speechSynthesis.pause();
+        setIsPlaying(false);
+      } else {
+        if (speechRef.current) {
+          window.speechSynthesis.resume();
+        } else {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.8;
+          utterance.pitch = 1.1;
+          utterance.onstart = () => setIsPlaying(true);
+          utterance.onend = () => {
+            setIsPlaying(false);
+            setProgress(100);
+            setIsCompleted(true);
+            onComplete?.();
+          };
+          utterance.onboundary = (event) => {
+            const progressPercent = (event.charIndex / text.length) * 100;
+            setProgress(progressPercent);
+          };
+          speechRef.current = utterance;
+          window.speechSynthesis.speak(utterance);
+        }
+        setIsPlaying(true);
+      }
+    }
+  };
+
+  const stopAudio = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      setProgress(0);
+      speechRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  return (
+    <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-2xl">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-xl font-bold flex items-center gap-2">
+          🎧 Listen to the Story
+        </h4>
+        <div className="flex items-center gap-2">
+          {isCompleted && <CheckCircle className="w-6 h-6 text-green-300" />}
+          <div className="text-2xl animate-bounce">🔊</div>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full bg-white/20 rounded-full h-4 mb-6">
+        <div
+          className="bg-gradient-to-r from-green-400 to-blue-400 h-4 rounded-full transition-all duration-300 relative"
+          style={{ width: `${progress}%` }}
+        >
+          <div className="absolute right-0 top-0 w-4 h-4 bg-white rounded-full shadow-lg"></div>
+        </div>
+      </div>
+
+      {/* Audio Controls */}
+      <div className="flex items-center justify-center gap-6">
+        <button
+          onClick={toggleAudio}
+          className="bg-gradient-to-r from-green-400 to-blue-400 hover:from-green-500 hover:to-blue-500 text-white rounded-full p-4 transition-all transform hover:scale-110 font-bold shadow-lg"
+        >
+          {isPlaying ? (
+            <Pause className="w-6 h-6" />
+          ) : (
+            <Play className="w-6 h-6" />
+          )}
+        </button>
+
+        <button
+          onClick={stopAudio}
+          className="bg-red-500 hover:bg-red-600 text-white rounded-full p-3 transition-all transform hover:scale-110 shadow-lg"
+        >
+          <RotateCcw className="w-5 h-5" />
+        </button>
+      </div>
+
+      {!isCompleted && (
+        <p className="text-center mt-4 text-sm text-white/80">
+          Listen to the complete story to continue!
+        </p>
+      )}
+    </div>
+  );
+};
+
+const GameifiedCoursePlayer = () => {
   const { courseId } = useParams();
   const [course, setCourse] = useState<Course | null>(null);
   const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
@@ -75,13 +467,37 @@ const CoursePlayer = () => {
   const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [lives, setLives] = useState(3);
+  const [streak, setStreak] = useState(0);
   const [timeSpent, setTimeSpent] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
+
+  // Quiz states
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+
+  // Audio/Reading states
+  const [audioCompleted, setAudioCompleted] = useState(false);
+
+  const [character, setCharacter] = useState<Character>({
+    mood: "happy",
+    message:
+      "Welcome to your learning adventure! I'm here to help you succeed! 🌟",
+    visible: true,
+  });
+  const [showPointsExplosion, setShowPointsExplosion] = useState(false);
+  const [lastPointsEarned, setLastPointsEarned] = useState(0);
+  const [questionTimer, setQuestionTimer] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
 
   const timeRef = useRef<NodeJS.Timeout | null>(null);
+  const questionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const { playSound } = useSoundEffects();
 
+  // Fetch course data
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
@@ -90,7 +506,6 @@ const CoursePlayer = () => {
           courseId as string
         );
 
-        console.log(courseResponse);
         setCourse(courseResponse.data);
         setEnrollment(courseResponse.data.enrollment);
 
@@ -117,29 +532,90 @@ const CoursePlayer = () => {
     }
   }, [courseId]);
 
-  console.log(course);
-  // Time tracking
+  const currentModule = course?.modules[currentModuleIndex];
+  const currentLesson = currentModule?.lessons[currentLessonIndex];
+
+  // Character interaction system
+  const showCharacterMessage = (mood: Character["mood"], message: string) => {
+    setCharacter({
+      mood,
+      message,
+      visible: true,
+    });
+
+    // Play appropriate sound
+    switch (mood) {
+      case "celebrating":
+        playSound("correct");
+        break;
+      case "sad":
+        playSound("wrong");
+        break;
+      case "warning":
+        playSound("warning");
+        break;
+      default:
+        playSound("click");
+    }
+  };
+
+  // Check if lesson is unlocked
+  const isLessonUnlocked = (moduleIndex: number, lessonIndex: number) => {
+    if (moduleIndex === 0 && lessonIndex === 0) return true; // First lesson always unlocked
+
+    // Check if previous lesson is completed
+    if (lessonIndex > 0) {
+      const prevLesson = course?.modules[moduleIndex]?.lessons[lessonIndex - 1];
+      return prevLesson?.isCompleted || false;
+    }
+
+    // Check if previous module's last lesson is completed
+    if (moduleIndex > 0) {
+      const prevModule = course?.modules[moduleIndex - 1];
+      const lastLesson = prevModule?.lessons[prevModule.lessons.length - 1];
+      return lastLesson?.isCompleted || false;
+    }
+
+    return false;
+  };
+
+  // Question timer for encouragement
   useEffect(() => {
-    if (isPlaying) {
-      timeRef.current = setInterval(() => {
-        setTimeSpent((prev) => prev + 1);
+    if (
+      currentLesson?.type === "quiz" &&
+      !currentLesson.isCompleted &&
+      !showResult
+    ) {
+      questionTimerRef.current = setInterval(() => {
+        setQuestionTimer((prev) => {
+          const newTime = prev + 1;
+          if (newTime === 15) {
+            showCharacterMessage(
+              "thinking",
+              "Take your time! Think carefully about your answer 🤔"
+            );
+          } else if (newTime === 30) {
+            showCharacterMessage(
+              "encouraging",
+              "You can do this! Read the question again 💪"
+            );
+          }
+          return newTime;
+        });
       }, 1000);
-    } else if (timeRef.current) {
-      clearInterval(timeRef.current);
+    } else {
+      if (questionTimerRef.current) {
+        clearInterval(questionTimerRef.current);
+        setQuestionTimer(0);
+      }
     }
 
     return () => {
-      if (timeRef.current) {
-        clearInterval(timeRef.current);
+      if (questionTimerRef.current) {
+        clearInterval(questionTimerRef.current);
       }
     };
-  }, [isPlaying]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
+  }, [currentLesson, currentLessonIndex, showResult]);
 
   const completeLesson = async (pointsEarned = 0) => {
     try {
@@ -159,15 +635,34 @@ const CoursePlayer = () => {
         }
       );
 
-      // Update local state
       setTotalPoints((prev) => prev + pointsEarned);
+      setStreak((prev) => prev + 1);
+      setLastPointsEarned(pointsEarned);
+      setShowPointsExplosion(true);
       setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 2000);
 
-      // Update course structure to mark lesson as completed
+      playSound("complete");
+
+      setTimeout(() => {
+        setShowPointsExplosion(false);
+        setShowCelebration(false);
+      }, 3000);
+
+      const messages = [
+        "Outstanding work! You're becoming a learning superstar! ⭐",
+        "Incredible! You've mastered this lesson perfectly! 🌟",
+        "Brilliant performance! You should be proud of yourself! 🔥",
+        "Amazing job! You're on your way to greatness! 🎯",
+      ];
+
+      showCharacterMessage(
+        "celebrating",
+        messages[Math.floor(Math.random() * messages.length)]
+      );
+
+      // Update local course structure
       setCourse((prev) => {
         if (!prev) return null;
-
         const updatedModules = prev.modules.map((module, mIndex) => {
           if (mIndex === currentModuleIndex) {
             const updatedLessons = module.lessons.map((lesson, lIndex) => {
@@ -189,7 +684,6 @@ const CoursePlayer = () => {
           }
           return module;
         });
-
         return { ...prev, modules: updatedModules };
       });
     } catch (error) {
@@ -198,63 +692,137 @@ const CoursePlayer = () => {
     }
   };
 
+  const handleQuizAnswer = (questionId: string, answerId: string) => {
+    if (showResult) return;
+
+    playSound("click");
+    setSelectedAnswer(answerId);
+    setQuestionTimer(0);
+
+    // Access quiz data correctly according to schema
+    const currentQuestion =
+      currentLesson?.quiz?.questions[currentQuestionIndex];
+    const correctOption = currentQuestion?.options?.find(
+      (opt: any) => opt.isCorrect
+    );
+    const isAnswerCorrect = answerId === correctOption?.id;
+
+    setIsCorrect(isAnswerCorrect);
+    setShowResult(true);
+
+    if (isAnswerCorrect) {
+      setCorrectAnswers((prev) => prev + 1);
+      showCharacterMessage(
+        "celebrating",
+        "Perfect! You're absolutely right! Well done! 🎉"
+      );
+    } else {
+      showCharacterMessage(
+        "sad",
+        "Oops! That's not quite right. Don't worry, learning takes practice! 💪"
+      );
+      setLives((prev) => Math.max(0, prev - 1));
+    }
+
+    // Auto-advance after 2.5 seconds
+    setTimeout(() => {
+      if (
+        currentQuestionIndex <
+        (currentLesson?.quiz?.questions?.length || 0) - 1
+      ) {
+        setCurrentQuestionIndex((prev) => prev + 1);
+        setSelectedAnswer(null);
+        setShowResult(false);
+      } else {
+        // Quiz completed
+        setQuizCompleted(true);
+        const totalQuestions = currentLesson?.quiz?.questions?.length || 1;
+        const score = (correctAnswers / totalQuestions) * 100;
+        const passingScore = currentLesson?.quiz?.passingScore || 70;
+
+        if (score >= passingScore) {
+          completeLesson(currentLesson?.pointsReward || 0);
+          showCharacterMessage(
+            "celebrating",
+            `Fantastic! You scored ${Math.round(score)}%! Quiz completed! 🏆`
+          );
+        } else {
+          showCharacterMessage(
+            "encouraging",
+            "Good effort! You can retry this quiz to improve your score! 📚"
+          );
+        }
+      }
+    }, 2500);
+  };
+
   const nextLesson = () => {
     if (!course) return;
 
-    if (currentLessonIndex < currentModule.lessons.length - 1) {
-      setCurrentLessonIndex((prev) => prev + 1);
-      setTimeSpent(0);
-      setQuizAnswers({});
-    } else if (currentModuleIndex < course.modules.length - 1) {
-      setCurrentModuleIndex((prev) => prev + 1);
-      setCurrentLessonIndex(0);
-      setTimeSpent(0);
-      setQuizAnswers({});
-    }
-  };
+    const nextLessonIndex = currentLessonIndex + 1;
+    const nextModuleIndex = currentModuleIndex + 1;
 
-  const prevLesson = () => {
-    if (!course) return;
-
-    if (currentLessonIndex > 0) {
-      setCurrentLessonIndex((prev) => prev - 1);
-      setTimeSpent(0);
-    } else if (currentModuleIndex > 0) {
-      setCurrentModuleIndex((prev) => prev - 1);
-      const prevModule = course.modules[currentModuleIndex - 1];
-      setCurrentLessonIndex(prevModule.lessons.length - 1);
-      setTimeSpent(0);
-    }
-  };
-
-  const handleQuizAnswer = (questionId: string, answerId: string) => {
-    setQuizAnswers((prev) => ({
-      ...prev,
-      [questionId]: answerId,
-    }));
-  };
-
-  const submitQuiz = async () => {
-    if (!currentLesson?.quiz) return;
-
-    const quiz = currentLesson.quiz;
-    let correctAnswers = 0;
-
-    quiz.questions.forEach((question) => {
-      const selectedAnswer = quizAnswers[question.id];
-      const correctOption = question.options.find((opt) => opt.isCorrect);
-      if (selectedAnswer === correctOption?.id) {
-        correctAnswers++;
+    if (nextLessonIndex < currentModule!.lessons.length) {
+      if (isLessonUnlocked(currentModuleIndex, nextLessonIndex)) {
+        setCurrentLessonIndex(nextLessonIndex);
+        resetLessonState();
+        showCharacterMessage(
+          "happy",
+          "Great! Let's continue with the next lesson! 🚀"
+        );
+      } else {
+        showCharacterMessage(
+          "warning",
+          "You need to complete the current lesson first! 🔒"
+        );
       }
-    });
+    } else if (nextModuleIndex < course.modules.length) {
+      if (isLessonUnlocked(nextModuleIndex, 0)) {
+        setCurrentModuleIndex(nextModuleIndex);
+        setCurrentLessonIndex(0);
+        resetLessonState();
+        showCharacterMessage(
+          "celebrating",
+          "Module completed! Welcome to the next adventure! 🏆"
+        );
+      } else {
+        showCharacterMessage(
+          "warning",
+          "Complete the current lesson to unlock the next module! 🔒"
+        );
+      }
+    }
+  };
 
-    const score = (correctAnswers / quiz.questions.length) * 100;
-    const pointsEarned =
-      score >= quiz.passingScore
-        ? currentLesson.pointsReward
-        : Math.floor(currentLesson.pointsReward * 0.5);
+  const selectLesson = (moduleIndex: number, lessonIndex: number) => {
+    if (isLessonUnlocked(moduleIndex, lessonIndex)) {
+      setCurrentModuleIndex(moduleIndex);
+      setCurrentLessonIndex(lessonIndex);
+      resetLessonState();
+      playSound("click");
+    } else {
+      showCharacterMessage(
+        "warning",
+        "Complete the previous lessons first to unlock this one! 🔒"
+      );
+      playSound("warning");
+    }
+  };
 
-    await completeLesson(pointsEarned);
+  const resetLessonState = () => {
+    setTimeSpent(0);
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setCurrentQuestionIndex(0);
+    setQuizCompleted(false);
+    setCorrectAnswers(0);
+    setAudioCompleted(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const renderLessonContent = () => {
@@ -264,143 +832,274 @@ const CoursePlayer = () => {
       case "video":
         return (
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-purple-400 to-blue-500 rounded-2xl p-8 text-white text-center">
-              <Video className="w-16 h-16 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">{currentLesson.title}</h3>
-              <p className="text-purple-100 mb-6">
-                Duration: {currentLesson.durationMinutes} minutes
-              </p>
-              <div className="bg-black/20 rounded-xl p-6 mb-6">
-                <div className="w-full h-[65  vh] bg-gray-800 rounded-lg overflow-hidden">
-                  <video
-                    src="https://videos.pexels.com/video-files/9714260/9714260-uhd_2560_1440_30fps.mp4"
-                    controls
-                    className="w-full h-full object-cover"
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                  />
-                </div>
+            <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 rounded-3xl p-8 text-white relative overflow-hidden">
+              <div className="absolute top-4 right-4 animate-spin text-2xl">
+                🎬
               </div>
-              <button
-                onClick={() => {
+              <div className="absolute bottom-4 left-4 animate-bounce text-2xl">
+                📺
+              </div>
+
+              <div className="text-center relative z-10 mb-6">
+                <Video className="w-16 h-16 mx-auto mb-4 animate-pulse" />
+                <h3 className="text-2xl font-bold mb-2">
+                  {currentLesson.title}
+                </h3>
+                <p className="text-blue-100 mb-4 text-lg">
+                  🕐 {currentLesson.durationMinutes} minutes of exciting
+                  content!
+                </p>
+              </div>
+
+              <EnhancedVideoPlayer
+                onComplete={() => {
                   if (!currentLesson.isCompleted) {
                     completeLesson(currentLesson.pointsReward);
                   }
                 }}
-                disabled={currentLesson.isCompleted}
-                className={`px-8 py-3 rounded-full font-bold flex items-center gap-2 mx-auto ${
-                  currentLesson.isCompleted
-                    ? "bg-green-500 text-white"
-                    : "bg-white text-purple-600 hover:bg-purple-50"
-                }`}
-              >
-                {currentLesson.isCompleted ? (
-                  <>
-                    <CheckCircle className="w-5 h-5" />
-                    Completed
-                  </>
-                ) : (
-                  "Mark as Completed"
-                )}
-              </button>
+                isCompleted={currentLesson.isCompleted || false}
+              />
             </div>
           </div>
         );
 
       case "quiz":
+        // Check if quiz exists and has questions
+        if (
+          !currentLesson.quiz ||
+          !currentLesson.quiz.questions ||
+          quizCompleted
+        ) {
+          return (
+            <div className="bg-white rounded-3xl p-8 shadow-xl border-4 border-green-200 text-center">
+              <div className="text-6xl mb-4">🏆</div>
+              <h3 className="text-2xl font-bold text-green-600 mb-4">
+                Quiz Completed!
+              </h3>
+              <p className="text-gray-600">
+                You got {correctAnswers} out of{" "}
+                {currentLesson.quiz?.questions?.length || 0} correct!
+              </p>
+            </div>
+          );
+        }
+
+        // Access quiz data correctly according to schema
+        const currentQuestion =
+          currentLesson.quiz.questions[currentQuestionIndex];
+        const totalQuestions = currentLesson.quiz.questions.length;
+
         return (
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl p-8 text-white text-center">
-              <Brain className="w-16 h-16 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">{currentLesson.title}</h3>
-              <p className="text-green-100">Test your knowledge!</p>
-            </div>
+            {/* Quiz Header */}
+            <div className="bg-white rounded-3xl p-6 shadow-xl border-4 border-blue-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {currentQuestionIndex + 1}
+                  </div>
+                  <span className="text-gray-600 font-semibold">
+                    of {totalQuestions}
+                  </span>
+                </div>
 
-            {currentLesson.quiz?.questions.map((question, qIndex) => (
-              <div
-                key={question.id}
-                className="bg-white rounded-2xl p-6 shadow-lg border-2 border-blue-100"
-              >
-                <h4 className="text-lg font-bold text-gray-800 mb-4">
-                  Question {qIndex + 1}: {question.questionText}
-                </h4>
-                <div className="space-y-3">
-                  {question.options.map((option) => (
-                    <button
-                      key={option.id}
-                      onClick={() => handleQuizAnswer(question.id, option.id)}
-                      disabled={currentLesson.isCompleted}
-                      className={`w-full p-4 text-left rounded-xl border-2 transition-all ${
-                        quizAnswers[question.id] === option.id
-                          ? "bg-blue-100 border-blue-400 text-blue-800"
-                          : "bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300"
-                      }`}
-                    >
-                      {option.text}
-                    </button>
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: lives }).map((_, i) => (
+                    <Heart
+                      key={i}
+                      className="w-6 h-6 text-red-500 fill-current"
+                    />
                   ))}
                 </div>
               </div>
-            ))}
 
-            {currentLesson.quiz &&
-              Object.keys(quizAnswers).length ===
-                currentLesson.quiz.questions.length && (
-                <button
-                  onClick={submitQuiz}
-                  disabled={currentLesson.isCompleted}
-                  className={`w-full text-white py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 ${
-                    currentLesson.isCompleted
-                      ? "bg-green-500"
-                      : "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
-                  }`}
-                >
-                  {currentLesson.isCompleted
-                    ? "Quiz Completed ✓"
-                    : "Submit Quiz! 🎯"}
-                </button>
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${
+                      ((currentQuestionIndex + 1) / totalQuestions) * 100
+                    }%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Question Card */}
+            <div className="bg-white rounded-3xl p-8 shadow-xl border-4 border-purple-200">
+              <div className="text-center mb-8">
+                <div className="text-4xl mb-4">🧠</div>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">
+                  {currentQuestion.questionText}
+                </h2>
+                {questionTimer > 0 && (
+                  <div className="text-orange-600 font-bold">
+                    ⏱️ {questionTimer}s
+                  </div>
+                )}
+              </div>
+
+              {/* Answer Options */}
+              <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
+                {currentQuestion.options?.map((option: any, index: number) => {
+                  let buttonClass =
+                    "w-full p-4 text-left rounded-xl border-3 transition-all transform hover:scale-105 font-semibold ";
+
+                  if (showResult && selectedAnswer === option.id) {
+                    if (option.isCorrect) {
+                      buttonClass +=
+                        "bg-green-100 border-green-500 text-green-800";
+                    } else {
+                      buttonClass += "bg-red-100 border-red-500 text-red-800";
+                    }
+                  } else if (showResult && option.isCorrect) {
+                    buttonClass +=
+                      "bg-green-100 border-green-500 text-green-800";
+                  } else if (selectedAnswer === option.id) {
+                    buttonClass += "bg-blue-100 border-blue-500 text-blue-800";
+                  } else {
+                    buttonClass +=
+                      "bg-gray-50 border-gray-300 hover:bg-blue-50 hover:border-blue-300 text-gray-800";
+                  }
+
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() =>
+                        handleQuizAnswer(currentQuestion.id, option.id)
+                      }
+                      disabled={showResult}
+                      className={buttonClass}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+                          {String.fromCharCode(65 + index)}
+                        </span>
+                        <span>{option.text}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Result Feedback */}
+              {showResult && (
+                <div className="mt-8 text-center">
+                  <div
+                    className={`text-4xl mb-4 ${
+                      isCorrect ? "animate-bounce" : "animate-pulse"
+                    }`}
+                  >
+                    {isCorrect ? "🎉" : "💭"}
+                  </div>
+                  <p
+                    className={`text-xl font-bold ${
+                      isCorrect ? "text-green-600" : "text-orange-600"
+                    }`}
+                  >
+                    {isCorrect
+                      ? "Excellent work!"
+                      : "Not quite right, but keep trying!"}
+                  </p>
+                  {/* Show explanation if available */}
+                  {currentQuestion.explanation && (
+                    <p className="text-gray-600 mt-2 text-sm">
+                      {currentQuestion.explanation}
+                    </p>
+                  )}
+                </div>
               )}
+            </div>
           </div>
         );
 
       case "reading":
+        const readingContent =
+          currentLesson.content || currentLesson.readingContent || "";
+
         return (
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-orange-400 to-pink-500 rounded-2xl p-8 text-white text-center">
-              <BookOpen className="w-16 h-16 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-2">{currentLesson.title}</h3>
-              <p className="text-orange-100">Let's read and learn!</p>
+            <div className="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 rounded-3xl p-8 text-white relative overflow-hidden">
+              <div className="absolute top-4 right-4 animate-bounce text-2xl">
+                📖
+              </div>
+              <div className="absolute bottom-4 left-4 animate-spin text-2xl">
+                ✨
+              </div>
+
+              <div className="text-center relative z-10">
+                <BookOpen className="w-16 h-16 mx-auto mb-4 animate-pulse" />
+                <h3 className="text-2xl font-bold mb-2">
+                  {currentLesson.title}
+                </h3>
+                <p className="text-emerald-100 text-lg">
+                  Let's explore this amazing story together! 📚
+                </p>
+              </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 shadow-lg border-2 border-orange-100">
+            {/* Audio Player */}
+            <EnhancedAudioPlayer
+              text={readingContent}
+              onComplete={() => {
+                setAudioCompleted(true);
+                showCharacterMessage(
+                  "celebrating",
+                  "Wonderful! You listened to the whole story! 🎧"
+                );
+              }}
+            />
+
+            {/* Reading Content */}
+            <div className="bg-white rounded-3xl p-8 shadow-xl border-4 border-emerald-200 relative overflow-hidden">
+              <div className="absolute top-4 right-4 text-3xl animate-bounce">
+                🌟
+              </div>
+
               <div className="prose prose-lg max-w-none">
-                <p className="text-gray-700 leading-relaxed text-lg">
-                  {currentLesson.readingContent}
+                <p className="text-gray-800 leading-relaxed text-lg font-medium">
+                  {readingContent}
                 </p>
               </div>
 
-              <button
-                onClick={() => completeLesson(currentLesson.pointsReward)}
-                disabled={currentLesson.isCompleted}
-                className={`mt-6 px-8 py-3 rounded-full font-bold transition-all transform hover:scale-105 ${
-                  currentLesson.isCompleted
-                    ? "bg-green-500 text-white"
-                    : "bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:from-orange-600 hover:to-pink-600"
-                }`}
-              >
-                {currentLesson.isCompleted
-                  ? "Reading Completed ✓"
-                  : "I've Read This! 📚"}
-              </button>
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => {
+                    if (audioCompleted) {
+                      completeLesson(currentLesson.pointsReward);
+                    } else {
+                      showCharacterMessage(
+                        "warning",
+                        "Please listen to the audio story first! 🎧"
+                      );
+                    }
+                  }}
+                  disabled={currentLesson.isCompleted}
+                  className={`px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-lg ${
+                    currentLesson.isCompleted
+                      ? "bg-green-500 text-white"
+                      : audioCompleted
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  {currentLesson.isCompleted
+                    ? "📚 Story Completed! ⭐"
+                    : audioCompleted
+                    ? "🎉 Mark Story as Read! 📖"
+                    : "🎧 Listen to Audio First!"}
+                </button>
+              </div>
             </div>
           </div>
         );
 
       default:
         return (
-          <div className="bg-gray-100 rounded-2xl p-8 text-center">
-            <Activity className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-600">Lesson type not yet implemented</p>
+          <div className="bg-gradient-to-br from-gray-500 to-gray-700 rounded-3xl p-8 text-center text-white">
+            <Activity className="w-16 h-16 mx-auto mb-4" />
+            <p className="text-xl">New learning experience coming soon! 🚀</p>
           </div>
         );
     }
@@ -410,56 +1109,106 @@ const CoursePlayer = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading course...</p>
+          <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-purple-500 border-opacity-50 mx-auto mb-6"></div>
+          <p className="text-gray-600 text-xl font-semibold">
+            Loading your learning adventure...
+          </p>
         </div>
       </div>
     );
   }
 
-  const currentModule = course.modules[currentModuleIndex];
-  const currentLesson = currentModule?.lessons[currentLessonIndex];
-
   return (
-    <div className="min-h-screen ">
-      {/* Celebration Modal */}
-      {showCelebration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-3xl p-8 text-center animate-bounce">
-            <div className="text-6xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-green-600 mb-2">
-              Awesome Job!
-            </h2>
-            <p className="text-gray-600">
-              You earned {currentLesson?.pointsReward} points!
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 text-3xl animate-bounce opacity-20">
+          ⭐
+        </div>
+        <div className="absolute top-20 right-20 text-2xl animate-pulse opacity-20">
+          🌟
+        </div>
+        <div className="absolute bottom-20 left-20 text-4xl animate-bounce opacity-20">
+          🎈
+        </div>
+        <div className="absolute bottom-10 right-10 text-3xl animate-spin opacity-20">
+          🎯
+        </div>
+        <div className="absolute top-1/2 left-10 text-2xl animate-pulse opacity-20">
+          ✨
+        </div>
+        <div className="absolute top-1/3 right-10 text-3xl animate-bounce opacity-20">
+          🚀
+        </div>
+      </div>
+
+      {/* Character Guide */}
+      <CharacterGuide
+        character={character}
+        onClose={() => setCharacter((prev) => ({ ...prev, visible: false }))}
+      />
+
+      {/* Points Explosion */}
+      {showPointsExplosion && (
+        <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center">
+          <div className="animate-ping">
+            <div className="text-6xl font-bold text-yellow-400 drop-shadow-2xl">
+              +{lastPointsEarned} ⭐
+            </div>
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white shadow-lg border-b-4 border-blue-200">
-        <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* Celebration Modal */}
+      {showCelebration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-3xl p-12 text-center animate-bounce max-w-md shadow-2xl">
+            <div className="text-8xl mb-6">🎉</div>
+            <h2 className="text-3xl font-bold text-green-600 mb-4">
+              Amazing Achievement!
+            </h2>
+            <p className="text-gray-600 text-xl mb-4">
+              You earned {lastPointsEarned} points!
+            </p>
+            <div className="flex justify-center gap-4">
+              <div className="text-4xl animate-spin">🏆</div>
+              <div className="text-4xl animate-bounce">⭐</div>
+              <div className="text-4xl animate-pulse">🌟</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game Header */}
+      <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                {course.title}
+              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                🎓 {course.title}
               </h1>
-              <p className="text-gray-600 mt-2">
-                {currentModule?.title} - {currentLesson?.title}
+              <p className="text-purple-100 mt-2 text-lg">
+                📚 {currentModule?.title} - {currentLesson?.title}
               </p>
             </div>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-full">
-                <Star className="w-5 h-5 text-yellow-600" />
-                <span className="font-bold text-yellow-800">
-                  {totalPoints} points
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 bg-yellow-400 px-4 py-2 rounded-full shadow-lg">
+                <Star className="w-5 h-5 text-yellow-800" />
+                <span className="font-bold text-yellow-800 text-lg">
+                  {totalPoints}
                 </span>
               </div>
-              <div className="flex items-center gap-2 bg-blue-100 px-4 py-2 rounded-full">
-                <Clock className="w-5 h-5 text-blue-600" />
-                <span className="font-bold text-blue-800">
-                  {formatTime(timeSpent)}
+
+              <div className="flex items-center gap-2 bg-red-400 px-4 py-2 rounded-full shadow-lg">
+                <Heart className="w-5 h-5 text-red-800" />
+                <span className="font-bold text-red-800 text-lg">{lives}</span>
+              </div>
+
+              <div className="flex items-center gap-2 bg-orange-400 px-4 py-2 rounded-full shadow-lg">
+                <Zap className="w-5 h-5 text-orange-800" />
+                <span className="font-bold text-orange-800 text-lg">
+                  {streak}
                 </span>
               </div>
             </div>
@@ -467,101 +1216,113 @@ const CoursePlayer = () => {
         </div>
       </div>
 
-      <div className="mx-auto px-0 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar - Module Progress */}
-          <div className="lg:col-span-1 w-full  ">
-            <div className="bg-white h-full rounded-lg w-full shadow-lg p-6 sticky top-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Award className="w-6 h-6 text-purple-600" />
-                Progress
+          {/* Enhanced Game Map Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-3xl shadow-2xl p-6 sticky top-8 border-4 border-purple-200">
+              <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                <Trophy className="w-6 h-6 text-yellow-500" />
+                Learning Path
               </h3>
 
-              {/* Overall Progress */}
-              <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>Course Progress</span>
-                  <span>{enrollment.progressPercentage}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${enrollment.progressPercentage}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Module Lessons */}
               <div className="space-y-3">
-                {currentModule?.lessons.map((lesson, index) => (
-                  <button
-                    key={lesson.id}
-                    onClick={() => setCurrentLessonIndex(index)}
-                    className={`w-full p-3 rounded-xl text-left transition-all ${
-                      index === currentLessonIndex
-                        ? "bg-blue-100 border-2 border-blue-300"
-                        : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {lesson.isCompleted ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
-                      )}
-                      <div>
-                        <p className="font-medium text-gray-800">
-                          {lesson.title}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {lesson.durationMinutes} min ·{" "}
-                          {lesson.isCompleted ? "Completed" : "Not started"}
-                        </p>
+                {currentModule?.lessons.map((lesson, index) => {
+                  const isUnlocked = isLessonUnlocked(
+                    currentModuleIndex,
+                    index
+                  );
+                  const isCurrent = index === currentLessonIndex;
+
+                  return (
+                    <button
+                      key={lesson.id}
+                      onClick={() => selectLesson(currentModuleIndex, index)}
+                      disabled={!isUnlocked}
+                      className={`w-full p-3 rounded-2xl text-left transition-all transform hover:scale-105 relative ${
+                        isCurrent
+                          ? "bg-gradient-to-r from-blue-400 to-purple-400 text-white shadow-lg"
+                          : lesson.isCompleted
+                          ? "bg-gradient-to-r from-green-300 to-emerald-400 text-white"
+                          : isUnlocked
+                          ? "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                          : "bg-gray-50 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-2xl">
+                          {lesson.isCompleted ? (
+                            <div className="animate-bounce">🏆</div>
+                          ) : isCurrent ? (
+                            <div className="animate-pulse">🎯</div>
+                          ) : isUnlocked ? (
+                            "📝"
+                          ) : (
+                            <Lock className="w-5 h-5" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm">{lesson.title}</p>
+                          <p className="text-xs opacity-75">
+                            ⏱️ {lesson.durationMinutes} min · ⭐{" "}
+                            {lesson.pointsReward}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                ))}
+
+                      {lesson.isCompleted && (
+                        <div className="absolute top-2 right-2 animate-spin text-lg">
+                          ✨
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
+          {/* Main Game Area */}
           <div className="lg:col-span-3">
             <div className="space-y-6">
               {renderLessonContent()}
 
-              {/* Navigation */}
-              <div className="flex justify-between items-center">
+              {/* Enhanced Navigation */}
+              <div className="flex justify-between items-center bg-white rounded-3xl p-6 shadow-xl border-4 border-blue-200">
                 <button
-                  onClick={prevLesson}
+                  onClick={() => {
+                    if (currentLessonIndex > 0) {
+                      selectLesson(currentModuleIndex, currentLessonIndex - 1);
+                    } else if (currentModuleIndex > 0) {
+                      const prevModule = course.modules[currentModuleIndex - 1];
+                      selectLesson(
+                        currentModuleIndex - 1,
+                        prevModule.lessons.length - 1
+                      );
+                    }
+                  }}
                   disabled={
                     currentModuleIndex === 0 && currentLessonIndex === 0
                   }
-                  className="flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-full hover:from-gray-500 hover:to-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 font-bold shadow-lg"
                 >
                   <ArrowLeft className="w-5 h-5" />
                   Previous
                 </button>
 
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setTimeSpent(0)}
-                    className="p-3 bg-orange-100 text-orange-600 rounded-full hover:bg-orange-200 transition-all"
-                    title="Reset Timer"
-                  >
-                    <RotateCcw className="w-5 h-5" />
-                  </button>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-purple-500 animate-pulse" />
+                  <span className="text-purple-600 font-bold">
+                    Keep Learning!
+                  </span>
+                  <Sparkles className="w-6 h-6 text-purple-500 animate-pulse" />
                 </div>
 
                 <button
                   onClick={nextLesson}
-                  disabled={
-                    currentModuleIndex === course.modules.length - 1 &&
-                    currentLessonIndex === currentModule?.lessons.length - 1
-                  }
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 font-bold shadow-lg"
                 >
-                  Next
+                  Next Lesson
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
@@ -573,4 +1334,4 @@ const CoursePlayer = () => {
   );
 };
 
-export default CoursePlayer;
+export default GameifiedCoursePlayer;

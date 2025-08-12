@@ -437,7 +437,7 @@ const LandingPage = () => {
             <div>
               <div className="text-2xl font-bold mb-4">
                 <span className="text-primary-main relative top-1">
-                  ENTETEYE
+                  ENTETEYE ACADEMY
                 </span>
               </div>
               <p className="text-gray-400 mb-4">

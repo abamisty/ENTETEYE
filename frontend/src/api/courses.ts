@@ -50,6 +50,7 @@ export const courseApi = {
 
   async updateCourse(id: string, updates: any) {
     try {
+      console.log(updates);
       const response: ResponseInterface = await api.put(
         `/courses/${id}`,
         updates,

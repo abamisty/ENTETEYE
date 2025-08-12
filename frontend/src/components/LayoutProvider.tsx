@@ -32,6 +32,7 @@ const protectedRoutes: any = {
   common: ["/dashboard", "/profile", "/settings"],
   [UserRole.ADMIN]: [
     "/admin/dashboard",
+    "/admin/courses",
     "/admin/users",
     "/analytics",
     "/settings",
@@ -114,7 +115,9 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
       }
     };
 
-    checkParentSubscription();
+    if (user?.role === UserRole.PARENT) {
+      checkParentSubscription();
+    }
   }, [user, isAuthenticated, path, router]);
 
   if (
@@ -134,7 +137,7 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
       {isProtected ? (
         <AuthRoute>
           <div className="h-screen overflow-hidden  flex flex-col">
-            <Header user={user} />
+            <Header />
             <div className="flex flex-1 overflow-hidden">
               <SideBar userRole={user?.role || UserRole.PARENT} />
               <main className="flex-1  pb-[5rem] min-h-screen overflow-auto bg-[#eff6f2] min-w-0">

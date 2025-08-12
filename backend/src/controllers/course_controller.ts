@@ -129,14 +129,13 @@ export const updateCourse = async (
     const { id } = req.params;
     const { title, description, ageGroup, tags, learningObjectives, modules } =
       JSON.parse(req.body.data);
-    console.log(title, modules);
     if (!id) {
       return res.status(400).json({
         success: false,
         message: "Course ID is required",
       });
     }
-
+    console.log(modules[0].lessons[0]);
     // Start transaction for course, modules, and lessons
     const result = await AppDataSource.transaction(
       async (transactionalEntityManager) => {
@@ -164,7 +163,6 @@ export const updateCourse = async (
           learningObjectives || course.learningObjectives;
 
         const updatedCourse = await transactionalEntityManager.save(course);
-
         // Handle modules and lessons updates
         if (modules && Array.isArray(modules)) {
           // First collect all existing module and lesson IDs for cleanup
@@ -225,7 +223,7 @@ export const updateCourse = async (
                   lesson = new Lesson();
                   lesson.module = savedModule;
                 }
-
+                console.log(lessonData);
                 lesson.title = lessonData.title || lesson.title;
                 lesson.description =
                   lessonData.description || lesson.description;
@@ -249,8 +247,8 @@ export const updateCourse = async (
                       lesson.activity || { instructions: "" };
                     break;
                   case "reading":
-                    lesson.readingContent =
-                      lessonData.content || lesson.readingContent || "";
+                    lesson.content =
+                      lessonData.readingContent || lesson.readingContent;
                     break;
                 }
 

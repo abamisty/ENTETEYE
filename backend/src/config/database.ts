@@ -1,4 +1,4 @@
-import { DataSource } from "typeorm";
+import { Admin, DataSource } from "typeorm";
 import dotenv from "dotenv";
 import path from "path";
 import { User, UserRole } from "../models/user";
@@ -11,9 +11,13 @@ import {
 } from "../models/subscription";
 import { AdminProfile } from "../models/admin";
 import bcrypt from "bcryptjs";
-import { Course, Lesson, Module } from "../models/courses";
-import { ChildProgress, Enrollment } from "../models/enrollment";
-
+import { Course, LearningPath, LearningSegment } from "../models/courses";
+import {
+  Enrollment,
+  PathProgress,
+  SegmentProgress,
+} from "../models/enrollment";
+import { Character } from "../models/character";
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -25,20 +29,21 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || "enteteye",
   synchronize: true,
   logging: false,
-
   entities: [
     User,
     ParentProfile,
     Family,
     Child,
+    Character,
     FamilySubscription,
     SubscriptionPayment,
     AdminProfile,
-    Lesson,
     Course,
-    Module,
+    LearningPath,
+    LearningSegment,
     Enrollment,
-    ChildProgress,
+    PathProgress,
+    SegmentProgress,
   ],
   extra: {
     ssl:

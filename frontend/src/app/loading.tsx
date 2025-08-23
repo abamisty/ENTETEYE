@@ -20,7 +20,7 @@ export default function Loading() {
           {[BookOpen, Trophy, Users].map((Icon, index) => (
             <div
               key={index}
-              className="w-8 h-8 text-[#4f9cf9] animate-bounce"
+              className="w-8 h-8 text-primary-secondary animate-bounce"
               style={{
                 animationDelay: `${index * 0.2}s`,
                 animationDuration: "1s",
@@ -32,8 +32,8 @@ export default function Loading() {
         </div>
 
         {/* Loading Text */}
-        <h2 className="text-xl font-semibold text-[#043873] mb-2">
-          FVLS Academy
+        <h2 className="text-xl font-semibold text-primary-main mb-2">
+          ENTETEYE Academy
         </h2>
         <p className="text-gray-600 animate-pulse">
           Loading your learning journey...

@@ -15,6 +15,7 @@ import {
   X,
   Settings2Icon,
   BookAIcon,
+  PersonStanding,
 } from "lucide-react";
 import { UserRole } from "@/types/auth";
 import { useRouter } from "next/navigation";
@@ -30,7 +31,7 @@ interface NavigationItem {
 }
 
 const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("dashboard");
 
   const commonItems: NavigationItem[] = [
@@ -52,6 +53,12 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
         label: "Courses",
         icon: BookOpen,
         href: "/admin/courses",
+      },
+      {
+        id: "characters",
+        label: "Characters",
+        icon: PersonStanding,
+        href: "/admin/characters",
       },
       {
         id: "analytics",

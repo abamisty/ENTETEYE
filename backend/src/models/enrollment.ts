@@ -8,9 +8,8 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import { User } from "./user";
-import { Course, Lesson } from "./courses";
+import { Course, LearningPath, LearningSegment } from "./courses";
 import { Child } from "./children";
-
 @Entity("enrollments")
 export class Enrollment {
   @PrimaryGeneratedColumn("uuid")
@@ -31,15 +30,18 @@ export class Enrollment {
   @Column({ default: 0 })
   progressPercentage!: number;
 
+  @Column({ default: 0 })
+  totalPointsEarned!: number;
+
   @Column({ type: "jsonb", nullable: true })
-  coursePreferences?: {
+  preferences?: {
     difficulty?: "easy" | "medium" | "hard";
     notificationEnabled?: boolean;
     dailyGoalMinutes?: number;
   };
 
-  @OneToMany(() => ChildProgress, (progress) => progress.enrollment)
-  progress!: ChildProgress[];
+  @OneToMany(() => PathProgress, (progress) => progress.enrollment)
+  pathProgress!: PathProgress[];
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -48,20 +50,49 @@ export class Enrollment {
   updatedAt!: Date;
 }
 
-// child-progress.entity.ts
-@Entity("child_progress")
-export class ChildProgress {
+@Entity("path_progress")
+export class PathProgress {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @ManyToOne(() => Child, (child) => child.progressRecords)
-  child!: Child;
-
-  @ManyToOne(() => Enrollment, (enrollment) => enrollment.progress)
+  @ManyToOne(() => Enrollment, (enrollment) => enrollment.pathProgress)
   enrollment!: Enrollment;
 
-  @ManyToOne(() => Lesson, (lesson) => lesson.progressRecords)
-  lesson!: Lesson;
+  @ManyToOne(() => LearningPath, (path) => path.pathProgressRecords)
+  learningPath!: LearningPath;
+
+  @Column({ default: false })
+  isCompleted!: boolean;
+
+  @Column({ nullable: true })
+  completedAt!: Date;
+
+  @Column({ default: 0 })
+  progressPercentage!: number;
+
+  @Column({ default: 0 })
+  pointsEarned!: number;
+
+  @OneToMany(() => SegmentProgress, (progress) => progress.pathProgress)
+  segmentProgress!: SegmentProgress[];
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
+}
+
+@Entity("segment_progress")
+export class SegmentProgress {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
+  @ManyToOne(() => PathProgress, (progress) => progress.segmentProgress)
+  pathProgress!: PathProgress;
+
+  @ManyToOne(() => LearningSegment, (segment) => segment.progressRecords)
+  segment!: LearningSegment;
 
   @Column({ default: false })
   isCompleted!: boolean;
@@ -70,25 +101,31 @@ export class ChildProgress {
   completedAt!: Date;
 
   @Column({ type: "jsonb", nullable: true })
-  quizResults?: {
-    score: number;
-    totalQuestions: number;
-    answers: {
-      questionId: string;
-      selectedAnswer: string;
+  interactionData?: {
+    // For dialogue segments
+    dialogue?: {
+      listenedFully: boolean;
+      interactions: number;
+    };
+
+    question?: {
+      answer: string;
       isCorrect: boolean;
-    }[];
+      attempts: number;
+    };
+
+    practice?: {
+      score: number;
+      attempts: number;
+      details: any;
+    };
   };
 
-  @Column({ type: "jsonb", nullable: true })
-  activityResults?: {
-    activityType: string;
-    data: any;
-    pointsEarned: number;
-  };
+  @Column({ default: 0 })
+  pointsEarned!: number;
 
-  @Column({ type: "int", default: 0 })
-  timeSpentMinutes!: number;
+  @Column({ default: 0 })
+  timeSpentSeconds!: number;
 
   @CreateDateColumn()
   createdAt!: Date;

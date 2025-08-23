@@ -5,14 +5,12 @@ import storage from "redux-persist/lib/storage";
 import authReducer from "./slices/authSlice";
 import parentAdminReducer from "./slices/parentAdminSlice";
 import childReducer from "./slices/childSlice";
-import musicReducer from "./slices/musicSlice";
 
 // Combine reducers first
 const rootReducer = combineReducers({
   auth: authReducer,
   parentAdmin: parentAdminReducer,
   child: childReducer,
-  music: musicReducer, // Add music reducer
 });
 
 const persistConfig = {

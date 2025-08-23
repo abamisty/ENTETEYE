@@ -1,24 +1,25 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
-  Star,
+  BarChart,
+  Book,
+  Clock,
   Trophy,
-  Zap,
+  Target,
+  TrendingUp,
+  Calendar,
+  Star,
+  Award,
   BookOpen,
   Play,
-  Award,
-  Target,
-  Clock,
+  CheckCircle,
+  RotateCcw,
+  ChevronRight,
   Flame,
   Brain,
-  Heart,
-  Sparkles,
-  ChevronRight,
-  RotateCcw,
-  CheckCircle,
-  Gift,
-  Crown,
-  Gamepad2,
+  Users,
+  Activity,
+  PieChart,
 } from "lucide-react";
 
 import { toast } from "react-hot-toast";
@@ -33,10 +34,53 @@ interface ChildProfile {
   lastName: string;
   dateOfBirth: string;
   avatar?: string;
+  totalPoints: number;
+  currentStreak: number;
+  level: number;
   family: {
     id: string;
     name: string;
   };
+}
+
+interface DashboardStats {
+  totalCourses: number;
+  completedCourses: number;
+  inProgressCourses: number;
+  totalLessons: number;
+  completedLessons: number;
+  totalPoints: number;
+  currentStreak: number;
+  level: number;
+  nextLevelPoints: number;
+  badges: number;
+  timeSpentMinutes: number;
+  avgProgressPerCourse: number;
+  coursesThisWeek: number;
+  pointsThisWeek: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type:
+    | "course_completed"
+    | "lesson_completed"
+    | "achievement_earned"
+    | "streak_milestone";
+  courseTitle?: string;
+  achievementTitle?: string;
+  pointsEarned: number;
+  timestamp: string;
+}
+
+interface UpcomingGoal {
+  id: string;
+  title: string;
+  description: string;
+  targetValue: number;
+  currentValue: number;
+  deadline?: string;
+  type: "daily" | "weekly" | "monthly";
 }
 
 interface Course {
@@ -45,9 +89,6 @@ interface Course {
   description: string;
   ageGroup: string;
   thumbnailUrl?: string;
-  totalModules: number;
-  totalLessons: number;
-  totalDuration: number;
   tags?: string[];
   progress?: {
     percentage: number;
@@ -57,39 +98,17 @@ interface Course {
     currentModuleId?: string;
     currentLessonId?: string;
     lastAccessedAt?: string;
+    totalPointsEarned: number;
   };
-}
-
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  badge: string;
-  earnedAt: string;
-  type: string;
-}
-
-interface DashboardStats {
-  totalCourses: number;
-  completedCourses: number;
-  totalLessons: number;
-  completedLessons: number;
-  totalPoints: number;
-  currentStreak: number;
-  level: number;
-  nextLevelPoints: number;
-  badges: number;
-  timeSpent: number;
 }
 
 const ChildDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ChildProfile | null>(null);
-  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
-  const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalCourses: 0,
     completedCourses: 0,
+    inProgressCourses: 0,
     totalLessons: 0,
     completedLessons: 0,
     totalPoints: 0,
@@ -97,9 +116,14 @@ const ChildDashboard = () => {
     level: 1,
     nextLevelPoints: 1000,
     badges: 0,
-    timeSpent: 0,
+    timeSpentMinutes: 0,
+    avgProgressPerCourse: 0,
+    coursesThisWeek: 0,
+    pointsThisWeek: 0,
   });
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [recentCourses, setRecentCourses] = useState<Course[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [upcomingGoals, setUpcomingGoals] = useState<UpcomingGoal[]>([]);
   const router = useRouter();
 
   // Fetch dashboard data
@@ -107,24 +131,17 @@ const ChildDashboard = () => {
     try {
       setLoading(true);
 
-      // Fetch child profile
-      const profileRes = await childCourseApi.getChildProfile();
-      setProfile(profileRes?.data);
+      // This will call the new dashboard endpoint
+      const dashboardRes = await childCourseApi.getDashboardData();
+      const data = dashboardRes?.data;
 
-      // Fetch enrolled courses
-      const enrolledRes = await childCourseApi.getEnrolledCourses();
-      const enrolledData = enrolledRes?.data || [];
-      setEnrolledCourses(enrolledData);
-
-      // Fetch recommended courses
-      const recommendedRes = await childCourseApi.getRecommendedCourses();
-      setRecommendedCourses(recommendedRes?.data || []);
-
-      // Calculate stats from enrolled courses
-      calculateStats(enrolledData);
-
-      // Generate achievements (in real app, this would come from backend)
-      generateAchievements(enrolledData);
+      if (data) {
+        setProfile(data.profile);
+        setStats(data.stats);
+        setRecentCourses(data.recentCourses);
+        setRecentActivity(data.recentActivity);
+        setUpcomingGoals(data.upcomingGoals);
+      }
     } catch (error) {
       toast.error("Failed to load your dashboard");
       console.error("Dashboard fetch error:", error);
@@ -133,132 +150,13 @@ const ChildDashboard = () => {
     }
   };
 
-  // Calculate statistics from course data
-  const calculateStats = (courses: Course[]) => {
-    const totalCourses = courses.length;
-    const completedCourses = courses.filter(
-      (course) => course.progress?.isCompleted
-    ).length;
-    const totalLessons = courses.reduce(
-      (sum, course) => sum + (course.progress?.totalLessons || 0),
-      0
-    );
-    const completedLessons = courses.reduce(
-      (sum, course) => sum + (course.progress?.completedLessons || 0),
-      0
-    );
-
-    // Calculate points based on progress
-    const totalPoints = completedLessons * 50 + completedCourses * 200;
-
-    // Calculate level (every 1000 points = 1 level)
-    const level = Math.floor(totalPoints / 1000) + 1;
-    const nextLevelPoints = 1000 - (totalPoints % 1000);
-
-    // Calculate streak (simulated)
-    const currentStreak = Math.min(7, Math.floor(completedLessons / 3));
-
-    // Calculate badges
-    const badges = Math.floor(completedCourses / 2) + Math.floor(level / 2);
-
-    // Calculate time spent (estimated)
-    const timeSpent = completedLessons * 30; // 30 minutes per lesson
-
-    setStats({
-      totalCourses,
-      completedCourses,
-      totalLessons,
-      completedLessons,
-      totalPoints,
-      currentStreak,
-      level,
-      nextLevelPoints,
-      badges,
-      timeSpent,
-    });
-  };
-
-  // Generate achievements based on progress
-  const generateAchievements = (courses: Course[]) => {
-    const sampleAchievements: Achievement[] = [];
-
-    if (courses.length > 0) {
-      sampleAchievements.push({
-        id: "1",
-        title: "First Steps",
-        description: "Started your first course!",
-        badge: "🌟",
-        earnedAt: new Date().toISOString(),
-        type: "milestone",
-      });
-    }
-
-    const completedCourses = courses.filter(
-      (course) => course.progress?.isCompleted
-    );
-    if (completedCourses.length > 0) {
-      sampleAchievements.push({
-        id: "2",
-        title: "Course Conqueror",
-        description: "Completed your first course!",
-        badge: "🏆",
-        earnedAt: new Date().toISOString(),
-        type: "completion",
-      });
-    }
-
-    if (stats.currentStreak >= 3) {
-      sampleAchievements.push({
-        id: "3",
-        title: "Learning Streak",
-        description: "Learned for 3 days in a row!",
-        badge: "🔥",
-        earnedAt: new Date().toISOString(),
-        type: "streak",
-      });
-    }
-
-    setAchievements(sampleAchievements);
-  };
-
-  // Get child's age
-  const getAge = (dateOfBirth: string) => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-
-    return age;
-  };
-
-  // Get motivational messages based on progress
-  const getMotivationalMessage = () => {
-    if (stats.completedCourses === 0) {
-      return "Ready to start your learning adventure? Let's go!";
-    }
-    if (stats.completedCourses < 3) {
-      return "Great start! Keep up the amazing work!";
-    }
-    if (stats.completedCourses < 5) {
-      return "You're becoming a learning superstar! ⭐";
-    }
-    return "Wow! You're an incredible learner! Keep exploring!";
-  };
-
   // Get course status info
   const getCourseStatus = (course: Course) => {
     if (!course.progress) {
       return {
         status: "Not Started",
         action: "Start Learning",
-        buttonClass: "bg-green-500 hover:bg-green-600",
+        buttonClass: "bg-green-600 hover:bg-green-700",
         icon: Play,
       };
     }
@@ -267,7 +165,7 @@ const ChildDashboard = () => {
       return {
         status: "Completed",
         action: "Review",
-        buttonClass: "bg-blue-500 hover:bg-blue-600",
+        buttonClass: "bg-blue-600 hover:bg-blue-700",
         icon: CheckCircle,
       };
     }
@@ -275,7 +173,7 @@ const ChildDashboard = () => {
     return {
       status: "In Progress",
       action: "Continue",
-      buttonClass: "bg-orange-500 hover:bg-orange-600",
+      buttonClass: "bg-primary-main hover:bg-primary-secondary",
       icon: RotateCcw,
     };
   };
@@ -301,17 +199,47 @@ const ChildDashboard = () => {
     return `${mins}m`;
   };
 
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "course_completed":
+        return Trophy;
+      case "lesson_completed":
+        return CheckCircle;
+      case "achievement_earned":
+        return Award;
+      case "streak_milestone":
+        return Flame;
+      default:
+        return Activity;
+    }
+  };
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case "course_completed":
+        return "text-yellow-600 bg-yellow-100";
+      case "lesson_completed":
+        return "text-green-600 bg-green-100";
+      case "achievement_earned":
+        return "text-purple-600 bg-purple-100";
+      case "streak_milestone":
+        return "text-orange-600 bg-orange-100";
+      default:
+        return "text-blue-600 bg-blue-100";
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-500 to-green-400 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white border-opacity-80 mx-auto mb-4"></div>
-          <p className="text-white text-lg font-medium">
-            Loading your adventure...
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-main mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Loading dashboard...
           </p>
         </div>
       </div>
@@ -319,125 +247,235 @@ const ChildDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-500 to-green-400">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Welcome Header */}
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 text-white mb-6 border border-white/20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header */}
+      <header className="bg-primary-main rounded-tr-lg rounded-tl-lg text-white p-6 shadow-md">
+        <div className="container mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                 {profile?.avatar ? (
                   <img
                     src={profile.avatar}
                     alt={profile.displayName}
-                    className="w-16 h-16 rounded-full object-cover"
+                    className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (
-                  profile?.firstName?.[0] || "😊"
+                  <span className="text-xl font-bold">
+                    {profile?.firstName?.[0] || "📚"}
+                  </span>
                 )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold mb-1">
-                  Welcome back, {profile?.displayName || profile?.firstName}! 👋
+                <h1 className="text-2xl font-bold">
+                  Welcome back, {profile?.firstName}!
                 </h1>
-                <p className="text-white/90">{getMotivationalMessage()}</p>
+                <p className="text-primary-light">
+                  Ready to continue your learning journey?
+                </p>
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <div className="bg-white/20 rounded-2xl p-3 text-center">
-                <Crown className="w-6 h-6 mx-auto mb-1" />
-                <div className="text-lg font-bold">Level {stats.level}</div>
-                <div className="text-xs opacity-90">
-                  {stats.nextLevelPoints} to next
-                </div>
+            <div className="flex gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold">Level {stats.level}</div>
+                <div className="text-sm text-primary-light">Learning Level</div>
               </div>
-              <div className="bg-white/20 rounded-2xl p-3 text-center">
-                <Flame className="w-6 h-6 mx-auto mb-1" />
-                <div className="text-lg font-bold">{stats.currentStreak}</div>
-                <div className="text-xs opacity-90">day streak</div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">{stats.currentStreak}</div>
+                <div className="text-sm text-primary-light">Day Streak</div>
               </div>
-              <div className="bg-white/20 rounded-2xl p-3 text-center">
-                <Star className="w-6 h-6 mx-auto mb-1" />
-                <div className="text-lg font-bold">{stats.totalPoints}</div>
-                <div className="text-xs opacity-90">points</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto p-6">
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Total Courses
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {stats.totalCourses}
+                </p>
+                <p className="text-sm text-green-600 mt-1">
+                  {stats.completedCourses} completed
+                </p>
+              </div>
+              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                <Book className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Total Points
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {stats.totalPoints.toLocaleString()}
+                </p>
+                <p className="text-sm text-purple-600 mt-1">
+                  +{stats.pointsThisWeek} this week
+                </p>
+              </div>
+              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
+                <Star className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Progress
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {stats.avgProgressPerCourse}%
+                </p>
+                <p className="text-sm text-green-600 mt-1">
+                  {stats.completedLessons} lessons done
+                </p>
+              </div>
+              <div className="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                <Target className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Time Spent
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {formatTimeSpent(stats.timeSpentMinutes)}
+                </p>
+                <p className="text-sm text-orange-600 mt-1">Learning time</p>
+              </div>
+              <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900">
+                <Clock className="w-6 h-6 text-orange-600" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg border border-white/50">
-            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
-              <BookOpen className="w-6 h-6 text-white" />
-            </div>
-            <div className="text-2xl font-bold text-gray-800 mb-1">
-              {stats.totalCourses}
-            </div>
-            <div className="text-sm text-gray-600">Courses Enrolled</div>
-            <div className="text-xs text-green-600 mt-1">
-              {stats.completedCourses} completed
+        {/* Progress Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Level Progress */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Brain className="w-5 h-5 text-indigo-600" />
+              Level Progress
+            </h3>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-indigo-600 mb-2">
+                Level {stats.level}
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
+                <div
+                  className="bg-indigo-600 h-3 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${((1000 - stats.nextLevelPoints) / 1000) * 100}%`,
+                  }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {stats.nextLevelPoints} points to Level {stats.level + 1}
+              </p>
             </div>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg border border-white/50">
-            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Trophy className="w-6 h-6 text-white" />
+          {/* Learning Streak */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Flame className="w-5 h-5 text-orange-600" />
+              Learning Streak
+            </h3>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-orange-600 mb-2">
+                {stats.currentStreak}
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Days in a row
+              </p>
+              <div className="flex justify-center gap-1">
+                {Array.from({ length: 7 }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full ${
+                      i < stats.currentStreak
+                        ? "bg-orange-600"
+                        : "bg-gray-200 dark:bg-gray-700"
+                    }`}
+                  ></div>
+                ))}
+              </div>
             </div>
-            <div className="text-2xl font-bold text-gray-800 mb-1">
-              {stats.badges}
-            </div>
-            <div className="text-sm text-gray-600">Badges Earned</div>
-            <div className="text-xs text-purple-600 mt-1">Keep learning!</div>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg border border-white/50">
-            <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <div className="text-2xl font-bold text-gray-800 mb-1">
-              {formatTimeSpent(stats.timeSpent)}
-            </div>
-            <div className="text-sm text-gray-600">Time Learning</div>
-            <div className="text-xs text-blue-600 mt-1">Amazing effort!</div>
-          </div>
-
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg border border-white/50">
-            <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Target className="w-6 h-6 text-white" />
-            </div>
-            <div className="text-2xl font-bold text-gray-800 mb-1">
-              {stats.completedLessons}
-            </div>
-            <div className="text-sm text-gray-600">Lessons Done</div>
-            <div className="text-xs text-pink-600 mt-1">
-              of {stats.totalLessons} total
+          {/* Weekly Progress */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-green-600" />
+              This Week
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Courses Accessed
+                </span>
+                <span className="font-semibold">{stats.coursesThisWeek}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Points Earned
+                </span>
+                <span className="font-semibold text-green-600">
+                  +{stats.pointsThisWeek}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Average Progress
+                </span>
+                <span className="font-semibold">
+                  {stats.avgProgressPerCourse}%
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* My Courses */}
+          {/* Continue Learning */}
           <div className="lg:col-span-2">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <Gamepad2 className="w-6 h-6 text-blue-600" />
-                  My Learning Adventures
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <BookOpen className="w-6 h-6 text-primary-main" />
+                  Continue Learning
                 </h2>
                 <button
                   onClick={() => router.push("/child/courses")}
-                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+                  className="text-primary-main hover:text-primary-secondary text-sm font-medium flex items-center gap-1"
                 >
-                  View All <ChevronRight className="w-4 h-4" />
+                  View All Courses <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="space-y-4">
-                {enrolledCourses.length > 0 ? (
-                  enrolledCourses.slice(0, 3).map((course) => {
+                {recentCourses?.length > 0 ? (
+                  recentCourses.slice(0, 3).map((course) => {
                     const {
                       status,
                       action,
@@ -449,52 +487,67 @@ const ChildDashboard = () => {
                     return (
                       <div
                         key={course.id}
-                        className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-4 border border-blue-200"
+                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center text-white text-2xl font-bold">
+                          <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
                             {course.thumbnailUrl ? (
                               <img
                                 src={course.thumbnailUrl}
                                 alt={course.title}
-                                className="w-16 h-16 rounded-xl object-cover"
+                                className="w-16 h-16 object-cover"
                               />
                             ) : (
-                              "📚"
+                              <Book className="w-8 h-8 text-gray-400" />
                             )}
                           </div>
 
                           <div className="flex-1">
-                            <h3 className="font-bold text-gray-800 mb-1">
-                              {course.title}
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-2 line-clamp-1">
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-gray-900 dark:text-white">
+                                {course.title}
+                              </h3>
+                              <span className="bg-primary-main/10 text-primary-main text-xs px-2 py-1 rounded-md">
+                                {course.ageGroup}
+                              </span>
+                            </div>
+
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-1">
                               {course.description}
                             </p>
 
                             {status !== "Not Started" && (
-                              <div className="mb-2">
+                              <div className="mb-3">
                                 <div className="flex justify-between items-center mb-1">
-                                  <span className="text-xs text-gray-600">
-                                    Progress
+                                  <span className="text-xs text-gray-500">
+                                    Progress:{" "}
+                                    {course.progress?.completedLessons}/
+                                    {course.progress?.totalLessons} lessons
                                   </span>
-                                  <span className="text-xs font-bold text-blue-600">
+                                  <span className="text-xs font-medium text-primary-main">
                                     {Math.round(progress)}%
                                   </span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                   <div
-                                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                                    className="bg-primary-main h-2 rounded-full transition-all duration-500"
                                     style={{ width: `${progress}%` }}
                                   ></div>
                                 </div>
+                              </div>
+                            )}
+
+                            {course.progress && (
+                              <div className="text-xs text-gray-500 mb-2">
+                                Points earned:{" "}
+                                {course.progress.totalPointsEarned}
                               </div>
                             )}
                           </div>
 
                           <button
                             onClick={() => handleCourseAction(course)}
-                            className={`${buttonClass} text-white px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105`}
+                            className={`${buttonClass} text-white px-4 py-2 rounded-md font-medium text-sm flex items-center gap-2 transition-colors`}
                           >
                             <ActionIcon className="w-4 h-4" />
                             {action}
@@ -506,15 +559,15 @@ const ChildDashboard = () => {
                 ) : (
                   <div className="text-center py-8">
                     <BookOpen className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">
-                      No courses yet!
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      No courses enrolled yet
                     </h3>
-                    <p className="text-gray-600 mb-4">
-                      Ask your parents to enroll you in some exciting courses!
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                      Start your learning journey by exploring available courses
                     </p>
                     <button
                       onClick={() => router.push("/child/courses/explore")}
-                      className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                      className="bg-primary-main hover:bg-primary-secondary text-white px-6 py-3 rounded-md font-medium"
                     >
                       Explore Courses
                     </button>
@@ -526,125 +579,190 @@ const ChildDashboard = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Achievements */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Award className="w-5 h-5 text-yellow-500" />
-                Recent Achievements
+            {/* Recent Activity */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-600" />
+                Recent Activity
               </h3>
 
               <div className="space-y-3">
-                {achievements.length > 0 ? (
-                  achievements.slice(0, 3).map((achievement) => (
-                    <div
-                      key={achievement.id}
-                      className="flex items-center gap-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200"
-                    >
-                      <div className="text-2xl">{achievement.badge}</div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-gray-800 text-sm">
-                          {achievement.title}
-                        </h4>
-                        <p className="text-xs text-gray-600">
-                          {achievement.description}
-                        </p>
+                {recentActivity?.length > 0 ? (
+                  recentActivity.slice(0, 4).map((activity) => {
+                    const IconComponent = getActivityIcon(activity.type);
+                    const colorClass = getActivityColor(activity.type);
+
+                    return (
+                      <div
+                        key={activity.id}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <div className={`p-2 rounded-full ${colorClass}`}>
+                          <IconComponent className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {activity.courseTitle || activity.achievementTitle}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            +{activity.pointsEarned} points
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="text-center py-4">
-                    <Trophy className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500">
-                      Start learning to earn your first achievement!
+                    <Activity className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Start learning to see your activity
                     </p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Recommended Courses */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-pink-500" />
-                Recommended for You
+            {/* Learning Goals */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Target className="w-5 h-5 text-green-600" />
+                Learning Goals
               </h3>
 
-              <div className="space-y-3">
-                {recommendedCourses.length > 0 ? (
-                  recommendedCourses.slice(0, 2).map((course) => (
-                    <div
-                      key={course.id}
-                      className="p-3 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl border border-pink-200"
-                    >
-                      <h4 className="font-bold text-gray-800 text-sm mb-1">
-                        {course.title}
-                      </h4>
-                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                        {course.description}
-                      </p>
+              <div className="space-y-4">
+                {upcomingGoals?.length > 0 ? (
+                  upcomingGoals.slice(0, 3).map((goal) => (
+                    <div key={goal.id} className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-xs bg-pink-200 text-pink-800 px-2 py-1 rounded-lg">
-                          {course.ageGroup}
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                          {goal.title}
+                        </h4>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {goal.currentValue}/{goal.targetValue}
                         </span>
-                        <button
-                          onClick={() =>
-                            router.push(`/child/courses/${course.id}`)
-                          }
-                          className="text-xs bg-pink-500 text-white px-3 py-1 rounded-lg hover:bg-pink-600 transition-colors"
-                        >
-                          Explore
-                        </button>
                       </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-green-600 h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(
+                              (goal.currentValue / goal.targetValue) * 100,
+                              100
+                            )}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {goal.description}
+                      </p>
                     </div>
                   ))
                 ) : (
                   <div className="text-center py-4">
-                    <Heart className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500">
-                      We'll recommend courses based on your interests!
+                    <Target className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Goals will appear as you progress
                     </p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Fun Stats */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Brain className="w-5 h-5 text-indigo-500" />
-                Learning Stats
+            {/* Quick Stats */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <PieChart className="w-5 h-5 text-purple-600" />
+                Quick Stats
               </h3>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Learning Level</span>
-                  <span className="font-bold text-indigo-600">
-                    Level {stats.level}
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Completion Rate
+                  </span>
+                  <span className="font-semibold text-purple-600">
+                    {stats.totalCourses > 0
+                      ? Math.round(
+                          (stats.completedCourses / stats.totalCourses) * 100
+                        )
+                      : 0}
+                    %
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Daily Streak</span>
-                  <span className="font-bold text-orange-600">
-                    {stats.currentStreak} days
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Badges Earned
+                  </span>
+                  <span className="font-semibold text-yellow-600">
+                    {stats.badges}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Total Points</span>
-                  <span className="font-bold text-green-600">
-                    {stats.totalPoints}
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Active Courses
+                  </span>
+                  <span className="font-semibold text-blue-600">
+                    {stats.inProgressCourses}
                   </span>
                 </div>
-                <div className="mt-4 p-3 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-200">
-                  <p className="text-xs text-indigo-800 text-center">
-                    🎯 {stats.nextLevelPoints} more points to reach Level{" "}
-                    {stats.level + 1}!
-                  </p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Avg. Session
+                  </span>
+                  <span className="font-semibold text-green-600">
+                    {stats.completedLessons > 0
+                      ? Math.round(
+                          stats.timeSpentMinutes / stats.completedLessons
+                        )
+                      : 0}
+                    m
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* Achievement Highlights */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Award className="w-5 h-5 text-yellow-600" />
+            Achievement Highlights
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <Trophy className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Course Master
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Complete {stats.completedCourses} courses
+              </p>
+            </div>
+
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <Star className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Point Collector
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Earn {stats.totalPoints} total points
+              </p>
+            </div>
+
+            <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <Flame className="w-8 h-8 text-orange-600 mx-auto mb-2" />
+              <h4 className="font-semibold text-gray-900 dark:text-white">
+                Streak Champion
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {stats.currentStreak} day learning streak
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };

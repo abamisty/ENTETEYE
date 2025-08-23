@@ -4,23 +4,10 @@ import { ResponseInterface } from "@/types/interfaces";
 import toast from "react-hot-toast";
 import { successStyles } from "@/lib/constants";
 
-interface LessonProgressData {
+interface SegmentProgressData {
   isCompleted?: boolean;
-  quizResults?: {
-    score: number;
-    totalQuestions: number;
-    answers: {
-      questionId: string;
-      selectedAnswer: string;
-      isCorrect: boolean;
-    }[];
-  };
-  activityResults?: {
-    activityType: any;
-    data: any;
-    pointsEarned: number;
-  };
-  timeSpentMinutes?: number;
+  interactionData?: any;
+  pointsEarned?: number;
 }
 
 export const childCourseApi = {
@@ -102,32 +89,22 @@ export const childCourseApi = {
     }
   },
 
-  async updateLessonProgress(
+  async updateSegmentProgress(
     courseId: string,
-    lessonId: string,
-    data: LessonProgressData
+    segmentId: string,
+    data: SegmentProgressData
   ) {
     try {
       const response: ResponseInterface = await api.patch(
-        `/child/courses/${courseId}/lessons/${lessonId}/progress`,
+        `/child/courses/${courseId}/segments/${segmentId}/progress`,
         data
       );
       if (data.isCompleted) {
-        toast.success("Lesson completed!", successStyles);
+        toast.success("Segment completed!", successStyles);
       }
       return response;
     } catch (error) {
-      handleApiError(error, "Failed to update lesson progress");
-      throw error;
-    }
-  },
-
-  async getChildProfile() {
-    try {
-      const response: ResponseInterface = await api.get("/child/profile");
-      return response;
-    } catch (error) {
-      handleApiError(error, "Failed to fetch child profile");
+      handleApiError(error, "Failed to update segment progress");
       throw error;
     }
   },
@@ -141,6 +118,14 @@ export const childCourseApi = {
     } catch (error) {
       handleApiError(error, "Failed to fetch child progress");
       throw error;
+    }
+  },
+  async getDashboardData() {
+    try {
+      const response: ResponseInterface = await api.get("/child/dashboard");
+      return response;
+    } catch (error) {
+      handleApiError(error, "Failed to fetch child progress");
     }
   },
 };

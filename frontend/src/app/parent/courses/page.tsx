@@ -20,12 +20,11 @@ interface Course {
   description: string;
   ageGroup: string;
   thumbnailUrl?: string;
-  totalModules?: number;
-  totalLessons?: number;
-  totalDuration?: number;
+  totalLessons: number;
+  totalDuration: number;
   isApproved: boolean;
   tags?: string[];
-  modules: any;
+  lessons: any[];
 }
 
 interface Stat {
@@ -80,7 +79,6 @@ const ParentCoursesDashboard = () => {
         total: response.data.total,
       }));
     } catch (error) {
-      toast.error("Failed to fetch courses");
       console.error("Error fetching courses:", error);
     } finally {
       setLoading(false);
@@ -96,27 +94,8 @@ const ParentCoursesDashboard = () => {
         setSelectedChildId(response.data[0].id);
       }
     } catch (error) {
-      toast.error("Failed to fetch children");
       console.error("Error fetching children:", error);
     }
-  };
-
-  const calculateCourseTotals = (course: Course) => {
-    let totalLessons = 0;
-    let totalDuration = 0;
-
-    if (course.modules) {
-      course.modules.forEach((module: any) => {
-        if (module.lessons) {
-          totalLessons += module.lessons.length;
-          totalDuration += module.lessons.reduce((sum: any, lesson: any) => {
-            return sum + (lesson.durationMinutes || 0);
-          }, 0);
-        }
-      });
-    }
-
-    return { totalLessons, totalDuration };
   };
 
   // Open enrollment modal
@@ -126,6 +105,15 @@ const ParentCoursesDashboard = () => {
     setShowEnrollmentModal(true);
   };
 
+  const calculateCourseTotals = (course: Course) => {
+    const totalLessons = course.lessons?.length || 0;
+    const totalDuration = course.lessons?.reduce(
+      (sum, lesson) => sum + (lesson.durationMinutes || 0),
+      0
+    );
+
+    return { totalLessons, totalDuration };
+  };
   // Handle enrollment submission
   const handleEnrollment = async () => {
     if (!selectedCourse || !selectedChildId) return;
@@ -240,18 +228,10 @@ const ParentCoursesDashboard = () => {
                       ))}
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 text-center text-sm mb-4">
+                    <div className="grid grid-cols-2 gap-2 text-center text-sm mb-4">
                       <div>
                         <p className="font-medium">
-                          {course.modules.length || 0}
-                        </p>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Modules
-                        </p>
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {calculateCourseTotals(course).totalLessons || 0}
+                          {course?.lessons?.length || 0}
                         </p>
                         <p className="text-gray-500 dark:text-gray-400">
                           Lessons

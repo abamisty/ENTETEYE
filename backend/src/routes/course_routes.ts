@@ -1,49 +1,49 @@
-// routes/courseRoutes.ts
 import express from "express";
 import { protect, requireAdmin } from "../middlewares/authorized";
 import {
   createCourse,
   updateCourse,
   deleteCourse,
-  getCourse,
-  listCourses,
+  getCourseWithContent,
+  getAllCourses,
   approveCourse,
-  createModule,
-  updateModuleOrder,
-  createLesson,
-  uploadLessonVideo,
+  createLearningPath,
+  createLearningSegment,
+  updateLearningPathOrder,
+  updateLearningSegmentOrder,
 } from "../controllers/course_controller";
-import multer from "multer";
 import { uploadSingleFile } from "../config/multer";
 
 const router: any = express.Router();
 
-// Admin-protected routes
 router.post("/", protect, requireAdmin, uploadSingleFile, createCourse);
 router.put("/:id", protect, requireAdmin, uploadSingleFile, updateCourse);
 router.delete("/:id", protect, requireAdmin, deleteCourse);
 router.patch("/:id/approve", protect, requireAdmin, approveCourse);
 
-// Module routes (admin only)
-router.post("/:courseId/modules", protect, requireAdmin, createModule);
+router.post("/:courseId/paths", protect, requireAdmin, createLearningPath);
 router.patch(
-  "/:courseId/modules/order",
+  "/:courseId/paths/order",
   protect,
   requireAdmin,
-  updateModuleOrder
+  updateLearningPathOrder
 );
 
-// Lesson routes (admin only)
-router.post("/modules/:moduleId/lessons", protect, requireAdmin, createLesson);
 router.post(
-  "/lessons/:lessonId/video",
+  "/paths/:pathId/segments",
   protect,
   requireAdmin,
-  uploadLessonVideo
+  createLearningSegment
+);
+router.patch(
+  "/paths/:pathId/segments/order",
+  protect,
+  requireAdmin,
+  updateLearningSegmentOrder
 );
 
-// Public routes
-router.get("/", listCourses);
-router.get("/:id", getCourse);
+// Public Access Routes
+router.get("/", getAllCourses);
+router.get("/:id", getCourseWithContent);
 
 export default router;

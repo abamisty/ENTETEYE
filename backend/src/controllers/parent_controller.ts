@@ -490,11 +490,6 @@ export const enrollChildInCourse = async (
       course,
       progressPercentage: 0,
       isCompleted: false,
-      coursePreferences: {
-        difficulty: "medium",
-        notificationEnabled: true,
-        dailyGoalMinutes: 30,
-      },
     });
 
     await enrollmentRepository.save(enrollment);
@@ -633,14 +628,14 @@ export const updateCoursePreferences = async (
     }
 
     // Update preferences
-    enrollment.coursePreferences = {
-      difficulty: difficulty || enrollment.coursePreferences?.difficulty,
+    enrollment.preferences = {
+      difficulty: difficulty || enrollment.preferences?.difficulty,
       notificationEnabled:
         notificationEnabled !== undefined
           ? notificationEnabled
-          : enrollment.coursePreferences?.notificationEnabled,
+          : enrollment.preferences?.notificationEnabled,
       dailyGoalMinutes:
-        dailyGoalMinutes || enrollment.coursePreferences?.dailyGoalMinutes,
+        dailyGoalMinutes || enrollment.preferences?.dailyGoalMinutes,
     };
 
     await enrollmentRepository.save(enrollment);
@@ -652,7 +647,7 @@ export const updateCoursePreferences = async (
         enrollment: {
           id: enrollment.id,
           courseId: enrollment.course.id,
-          preferences: enrollment.coursePreferences,
+          preferences: enrollment.preferences,
         },
       },
     });
@@ -699,7 +694,7 @@ export const getChildCourseProgress = async (
     // Get the enrollment with progress details
     const enrollment = await enrollmentRepository.findOne({
       where: { child: { id: childId }, course: { id: courseId } },
-      relations: ["course", "progress", "progress.lesson"],
+      relations: ["course", "progress", "progress.lesson", "course.lessons"],
     });
 
     if (!enrollment) {
@@ -710,14 +705,9 @@ export const getChildCourseProgress = async (
     }
 
     // Calculate overall progress
-    const totalLessons =
-      enrollment.course.modules?.reduce(
-        (total, module) => total + module.lessons.length,
-        0
-      ) || 0;
-
+    const totalLessons = enrollment.course.learningPaths?.length || 0;
     const completedLessons =
-      enrollment.progress?.filter((p) => p.isCompleted).length || 0;
+      enrollment.pathProgress?.filter((p) => p.isCompleted).length || 0;
 
     const progressPercentage =
       totalLessons > 0
@@ -735,17 +725,7 @@ export const getChildCourseProgress = async (
           childName: child.displayName,
           progressPercentage,
           isCompleted: enrollment.isCompleted,
-          preferences: enrollment.coursePreferences,
-          lessons: enrollment.course.modules?.flatMap((module) =>
-            module.lessons.map((lesson) => ({
-              lessonId: lesson.id,
-              title: lesson.title,
-              type: lesson.type,
-              isCompleted: enrollment.progress?.some(
-                (p) => p.lesson.id === lesson.id && p.isCompleted
-              ),
-            }))
-          ),
+          preferences: enrollment.preferences,
         },
       },
     });
@@ -802,7 +782,6 @@ export const deleteChild = async (
     next(error);
   }
 };
-
 export const createMockSubscription = async (
   req: Request,
   res: Response,

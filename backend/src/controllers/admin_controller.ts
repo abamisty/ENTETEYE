@@ -400,6 +400,7 @@ export const getAllCourseEnrollments = async (
         "child",
         "child.family",
         "course",
+        "course.lessons", // Changed from modules to direct lessons
         "progress",
         "progress.lesson",
       ],
@@ -407,14 +408,10 @@ export const getAllCourseEnrollments = async (
     });
 
     const formattedEnrollments = enrollments.map((enrollment) => {
-      const totalLessons =
-        enrollment.course.modules?.reduce(
-          (total, module) => total + module.lessons.length,
-          0
-        ) || 0;
-
+      // Calculate total lessons directly from course.lessons
+      const totalLessons = enrollment.course.learningPaths?.length || 0;
       const completedLessons =
-        enrollment.progress?.filter((p) => p.isCompleted).length || 0;
+        enrollment.pathProgress?.filter((p) => p.isCompleted).length || 0;
 
       return {
         id: enrollment.id,
@@ -436,7 +433,7 @@ export const getAllCourseEnrollments = async (
           totalLessons,
           isCompleted: enrollment.isCompleted,
         },
-        preferences: enrollment.coursePreferences,
+        preferences: enrollment.preferences,
         createdAt: enrollment.createdAt,
         updatedAt: enrollment.updatedAt,
       };
@@ -451,7 +448,6 @@ export const getAllCourseEnrollments = async (
     next(error);
   }
 };
-
 // GET ENROLLMENT ANALYTICS (ADMIN ONLY)
 export const getEnrollmentAnalytics = async (
   req: Request,

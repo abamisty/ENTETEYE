@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   Check,
   Star,
@@ -13,9 +13,29 @@ import {
 import { parentApi } from "@/api/parent";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { BASE_URL } from "@/lib/constants";
+import { PaystackButton } from "react-paystack";
 
 const SubscriptionPlansPage = () => {
   const router = useRouter();
+  const amount = 1000000;
+  const [email, setEmail] = useState("ikram.codes@gmail.com");
+  const [name, setName] = useState("IKRAM KHAN");
+  const [phone, setPhone] = useState("02434343");
+  const publicKey = "pk_test_c433649b4344daaec516925783beae6b0b3219d3";
+  const componentProps = {
+    email,
+    amount,
+    metadata: {
+      name: "IKRAM",
+      phone: "0243242",
+    },
+    publicKey,
+    text: "Pay Now",
+    onSuccess: () =>
+      alert("Thanks for doing business with us! Come back soon!!"),
+    onClose: () => alert("Wait! Don't leave :("),
+  };
 
   const handleSelectPlan = async (product: "basic" | "professional") => {
     try {
@@ -24,22 +44,6 @@ const SubscriptionPlansPage = () => {
         product,
       });
 
-      toast.success(
-        `${
-          product === "basic" ? "Basic" : "Professional"
-        } subscription created with free trial!`,
-        {
-          duration: 4000,
-          icon: "🎉",
-          style: {
-            borderRadius: "10px",
-            background: "#333",
-            color: "#fff",
-          },
-        }
-      );
-
-      // Redirect to dashboard after successful subscription
       router.push("/dashboard");
     } catch (error) {
       toast.error("Failed to create subscription. Please try again.", {
@@ -186,7 +190,18 @@ const SubscriptionPlansPage = () => {
                     </span>
                   </div>
                 </div>
-
+                <PaystackButton
+                  currency="USD"
+                  email={componentProps.email}
+                  publicKey={publicKey}
+                  amount={componentProps.amount}
+                  text="Pay Now"
+                  onSuccess={() =>
+                    alert("Thanks for doing business with us! Come back soon!!")
+                  }
+                  className=""
+                  onClose={() => alert("Wait! Don't leave :(")}
+                />
                 <button
                   onClick={() => handleSelectPlan(plan.product)}
                   className={`w-full py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
@@ -264,7 +279,7 @@ const SubscriptionPlansPage = () => {
                   Safe & Secure
                 </h4>
                 <p className="text-slate-600 text-sm">
-                  COPPA compliant platform with advanced parental controls
+                  All payments are securely processed by Paystack
                 </p>
               </div>
 

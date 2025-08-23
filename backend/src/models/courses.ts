@@ -6,9 +6,12 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
 } from "typeorm";
 import { User } from "./user";
-import { ChildProgress, Enrollment } from "./enrollment";
+import { Character } from "./character";
+import { Enrollment, PathProgress, SegmentProgress } from "./enrollment";
 
 @Entity("courses")
 export class Course {
@@ -45,11 +48,15 @@ export class Course {
   @Column({ default: false })
   isApproved!: boolean;
 
-  @OneToMany(() => Module, (module) => module.course)
-  modules!: Module[];
+  @OneToMany(() => LearningPath, (path) => path.course)
+  learningPaths!: LearningPath[];
 
   @OneToMany(() => Enrollment, (enrollment) => enrollment.course)
   enrollments!: Enrollment[];
+
+  @ManyToMany(() => Character, (character) => character.availableInCourses)
+  @JoinTable()
+  featuredCharacters!: Character[];
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -58,8 +65,8 @@ export class Course {
   updatedAt!: Date;
 }
 
-@Entity("modules")
-export class Module {
+@Entity("learning_paths")
+export class LearningPath {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
@@ -72,11 +79,14 @@ export class Module {
   @Column()
   order!: number;
 
-  @ManyToOne(() => Course, (course) => course.modules)
+  @OneToMany(() => PathProgress, (progress) => progress.learningPath)
+  pathProgressRecords!: PathProgress[];
+
+  @ManyToOne(() => Course, (course) => course.learningPaths)
   course!: Course;
 
-  @OneToMany(() => Lesson, (lesson) => lesson.module)
-  lessons!: Lesson[];
+  @OneToMany(() => LearningSegment, (segment) => segment.learningPath)
+  segments!: LearningSegment[];
 
   @CreateDateColumn()
   createdAt!: Date;
@@ -85,116 +95,71 @@ export class Module {
   updatedAt!: Date;
 }
 
-@Entity("lessons")
-export class Lesson {
+@Entity("learning_segments")
+export class LearningSegment {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
-
-  @Column()
-  title!: string;
-
-  @Column("text", { nullable: true })
-  description!: string;
 
   @Column()
   order!: number;
 
   @Column({
     type: "enum",
-    enum: [
-      "video",
-      "interactive",
-      "quiz",
-      "reading",
-      "activity",
-      "reflection",
-      "simulation",
-    ],
+    enum: ["dialogue", "instruction", "question", "practice", "review"],
+    default: "instruction",
   })
   type!: string;
 
-  @Column({ nullable: true })
-  durationMinutes!: number;
+  @Column("int", { default: 0 })
+  basePoints!: number;
 
-  @Column({ nullable: true })
-  thumbnailUrl?: string;
-
-  @Column({ type: "simple-array", nullable: true })
-  learningObjectives?: string[];
-
-  @Column({ type: "int", default: 0 })
-  pointsReward!: number;
-
-  @Column({ nullable: true })
-  videoUrl?: string;
-
-  @Column({ nullable: true })
-  videoTranscript?: string;
-
-  @Column({ type: "boolean", default: false })
-  hasCaptions!: boolean;
+  @Column("int", { nullable: true })
+  bonusPoints?: number;
 
   @Column("jsonb", { nullable: true })
-  quiz?: {
-    questions: Array<{
-      id: string;
-      questionText: string;
-      questionType:
-        | "multiple-choice"
-        | "true-false"
-        | "matching"
-        | "short-answer";
+  content?: {
+    dialogue?: {
+      characters: Array<{
+        characterId: string;
+        lines: string[];
+        position: "left" | "right" | "center";
+      }>;
+      backgroundScene?: string;
+      audioUrl?: string;
+    };
+
+    instruction?: {
+      text: string;
+      mediaUrl?: string;
+      mediaType?: "image" | "video" | "audio";
+    };
+    question?: {
+      text: string;
+      type: "multiple-choice" | "true-false" | "fill-blank" | "matching";
       options?: Array<{
         id: string;
         text: string;
         isCorrect: boolean;
       }>;
       correctAnswer?: string;
-      points: number;
       explanation?: string;
-    }>;
-    passingScore?: number;
-    maxAttempts?: number;
-    timeLimitMinutes?: number;
+    };
+    practice?: {
+      type: "drag-drop" | "role-play" | "simulation";
+      instructions: string;
+      components: any;
+    };
   };
 
-  @Column("text", { nullable: true })
-  readingContent?: string;
+  @ManyToOne(() => LearningPath, (path) => path.segments)
+  learningPath!: LearningPath;
 
-  @Column("simple-array", { nullable: true })
-  relatedResources?: string[];
-
-  @Column("jsonb", { nullable: true })
-  activity?: {
-    type: "drag-drop" | "role-play" | "simulation" | "creative";
-    instructions: string;
-    components: any;
-    scoringRubric?: any;
-  };
-
-  @Column("jsonb", { nullable: true })
-  reflectionPrompts?: Array<{
-    prompt: string;
-    type: "text" | "audio" | "drawing";
-    minLength?: number;
-    maxLength?: number;
-  }>;
-
-  @Column("jsonb", { nullable: true })
-  content!: any;
-
-  @ManyToOne(() => Module, (module) => module.lessons)
-  module!: Module;
-
-  @OneToMany(() => ChildProgress, (progress) => progress.lesson)
-  progressRecords!: ChildProgress[];
+  @OneToMany(() => SegmentProgress, (progress) => progress.segment)
+  progressRecords!: SegmentProgress[];
 
   @CreateDateColumn()
   createdAt!: Date;
 
   @UpdateDateColumn()
   updatedAt!: Date;
-
-  @Column({ nullable: true })
-  lastUpdatedBy?: string;
 }

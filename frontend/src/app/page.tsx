@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import Navbar from "@/components/General/Navbar";
 
 const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,6 +25,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
+      <Navbar />
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-green-50 via-white to-emerald-50 py-20">

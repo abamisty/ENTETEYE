@@ -33,6 +33,7 @@ const protectedRoutes: any = {
   [UserRole.ADMIN]: [
     "/admin/dashboard",
     "/admin/courses",
+    "/admin/characters",
     "/admin/users",
     "/analytics",
     "/settings",
@@ -148,7 +149,6 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
         </AuthRoute>
       ) : (
         <>
-          <Navbar />
           <main className="w-full bg-[#eff6f2]">{children}</main>
         </>
       )}

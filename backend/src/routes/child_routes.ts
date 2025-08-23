@@ -5,9 +5,10 @@ import {
   getCourseDetails,
   getAvailableCourses,
   enrollInCourse,
-  updateLessonProgress,
   getRecommendedCourses,
   getChildProgress,
+  updateSegmentProgress,
+  getDashboardData, // Make sure this is imported
 } from "../controllers/child_controller";
 import { authenticateChild } from "../middlewares/authorized";
 
@@ -15,13 +16,14 @@ const router: any = express.Router();
 
 router.post("/login", childLogin);
 
-router.use(authenticateChild); // All routes below this will require child authentication
+router.use(authenticateChild);
 
-// Enrolled courses
+router.get("/dashboard", getDashboardData);
 router.get("/courses/enrolled", getEnrolledCourses);
 router.get("/courses/:courseId", getCourseDetails);
 
 // Available courses
+
 router.get("/courses/available", getAvailableCourses);
 router.get("/courses/all/recommended", getRecommendedCourses);
 
@@ -29,11 +31,10 @@ router.get("/courses/all/recommended", getRecommendedCourses);
 router.post("/courses/:courseId/enroll", enrollInCourse);
 
 // Progress tracking
+router.get("/courses/:courseId/progress", getChildProgress);
 router.patch(
-  "/courses/:courseId/lessons/:lessonId/progress",
-  updateLessonProgress
+  "/courses/:courseId/segments/:segmentId/progress",
+  updateSegmentProgress
 );
-
-router.get("/courses/:courseId/progress", authenticateChild, getChildProgress);
 
 export default router;

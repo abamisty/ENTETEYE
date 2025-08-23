@@ -13,7 +13,7 @@ import {
 import { Family } from "./family";
 import { User } from "./user";
 import { ParentProfile } from "./parent";
-import { ChildProgress, Enrollment } from "./enrollment";
+import { Enrollment, PathProgress } from "./enrollment";
 import bcrypt from "bcryptjs";
 
 @Entity("children")
@@ -72,8 +72,8 @@ export class Child {
   @OneToMany(() => Enrollment, (enrollment) => enrollment.child)
   enrollments!: Enrollment[];
 
-  @OneToMany(() => ChildProgress, (progress) => progress.child)
-  progressRecords!: ChildProgress[];
+  // @OneToMany()
+  // progressRecords!: PathProgress[];
 
   @CreateDateColumn()
   createdAt!: Date;

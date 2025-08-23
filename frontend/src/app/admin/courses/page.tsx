@@ -11,12 +11,14 @@ interface Course {
   description: string;
   ageGroup: string;
   thumbnailUrl?: string;
-  totalModules?: number;
-  totalLessons?: number;
-  totalDuration?: number;
   isApproved: boolean;
   tags?: string[];
-  modules: any;
+  lessons: any[];
+  learningObjectives?: string[];
+  isCustom?: boolean;
+  customRequestId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 interface Stat {
@@ -76,43 +78,34 @@ const AdminCoursesDashboard = () => {
       }));
 
       setStats([
-        { name: "Total Courses", value: response.data.legth, icon: Book },
+        { name: "Total Courses", value: response.data.length, icon: Book },
         { name: "Active Students", value: 156, icon: Users },
         { name: "Total Hours", value: 86, icon: Clock },
         { name: "Completion Rate", value: "78%", icon: BarChart },
       ]);
     } catch (error) {
-      toast.error("Failed to fetch courses");
       console.error("Error fetching courses:", error);
     } finally {
       setLoading(false);
     }
   };
-  const calculateCourseTotals = (course: Course) => {
-    let totalLessons = 0;
-    let totalDuration = 0;
 
-    if (course.modules) {
-      course.modules.forEach((module: any) => {
-        if (module.lessons) {
-          totalLessons += module.lessons.length;
-          totalDuration += module.lessons.reduce((sum: any, lesson: any) => {
-            return sum + (lesson.durationMinutes || 0);
-          }, 0);
-        }
-      });
-    }
+  const calculateCourseTotals = (course: Course) => {
+    const totalLessons = course.lessons?.length || 0;
+    const totalDuration = course.lessons?.reduce(
+      (sum, lesson) => sum + (lesson.durationMinutes || 0),
+      0
+    );
 
     return { totalLessons, totalDuration };
   };
+
   // Handle course approval
   const handleApproveCourse = async (courseId: string) => {
     try {
       await courseApi.approveCourse(courseId);
-      toast.success("Course approved successfully");
-      fetchCourses(); // Refresh the list
+      fetchCourses();
     } catch (error) {
-      toast.error("Failed to approve course");
       console.error("Error approving course:", error);
     }
   };
@@ -121,6 +114,7 @@ const AdminCoursesDashboard = () => {
   useEffect(() => {
     fetchCourses();
   }, [pagination.page, searchTerm, ageGroupFilter, statusFilter]);
+
   return (
     <div className="min-h-screen bg-gray-50 text-text2 dark:bg-gray-900 dark:text-text1">
       {/* Header */}
@@ -259,18 +253,18 @@ const AdminCoursesDashboard = () => {
                     <div className="grid grid-cols-3 gap-2 text-center text-sm mb-4">
                       <div>
                         <p className="font-medium">
-                          {course.modules.length || 0}
+                          {course.lessons?.length || 0}
                         </p>
                         <p className="text-gray-500 dark:text-gray-400">
-                          Modules
+                          Lessons
                         </p>
                       </div>
                       <div>
                         <p className="font-medium">
-                          {calculateCourseTotals(course).totalLessons || 0}
+                          {course.learningObjectives?.length || 0}
                         </p>
                         <p className="text-gray-500 dark:text-gray-400">
-                          Lessons
+                          Objectives
                         </p>
                       </div>
                       <div>

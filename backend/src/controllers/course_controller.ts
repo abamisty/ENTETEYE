@@ -1,12 +1,77 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { AppDataSource } from "../config/database";
-import { Course, Lesson } from "../models/courses";
-import { Module } from "../models/courses";
-import validator from "validator";
+import { Course, LearningPath, LearningSegment } from "../models/courses";
+import { User, UserRole } from "../models/user";
 import { uploadToCloudinary } from "../utils/uploadToCloudinary";
+import { Character } from "../models/character";
+import { PathProgress, SegmentProgress } from "../models/enrollment";
 
 const courseRepository = AppDataSource.getRepository(Course);
-const moduleRepository = AppDataSource.getRepository(Module);
+const learningPathRepository = AppDataSource.getRepository(LearningPath);
+const learningSegmentRepository = AppDataSource.getRepository(LearningSegment);
+const characterRepository = AppDataSource.getRepository(Character);
+const userRepository = AppDataSource.getRepository(User);
+const segmentProgressRepository = AppDataSource.getRepository(SegmentProgress);
+const pathProgressRepository = AppDataSource.getRepository(PathProgress);
+
+const safeJsonParse = (jsonString: string | any, fallback: any = null) => {
+  if (typeof jsonString === "object") {
+    return jsonString;
+  }
+  try {
+    return JSON.parse(jsonString);
+  } catch (error) {
+    console.warn("JSON parse error:", error);
+    return fallback;
+  }
+};
+
+// Helper function to validate segment content
+const validateSegmentContent = (type: string, content: any): boolean => {
+  if (!content) return false;
+
+  switch (type) {
+    case "instruction":
+    case "review":
+      return content.instruction && content.instruction.text;
+
+    case "question":
+      if (!content.question || !content.question.text) return false;
+
+      const questionType = content.question.type;
+      if (questionType === "multiple-choice") {
+        return (
+          content.question.options &&
+          Array.isArray(content.question.options) &&
+          content.question.options.length >= 2 &&
+          content.question.options.some((opt: any) => opt.isCorrect)
+        );
+      } else if (
+        questionType === "true-false" ||
+        questionType === "fill-blank"
+      ) {
+        return content.question.correctAnswer !== undefined;
+      }
+      return true;
+
+    case "dialogue":
+      return (
+        content.dialogue &&
+        content.dialogue.characters &&
+        Array.isArray(content.dialogue.characters) &&
+        content.dialogue.characters.length > 0 &&
+        content.dialogue.characters.every(
+          (char: any) => char.characterId && char.lines && char.lines.length > 0
+        )
+      );
+
+    case "practice":
+      return content.practice && content.practice.instructions;
+
+    default:
+      return true;
+  }
+};
 
 export const createCourse = async (
   req: Request,
@@ -14,14 +79,34 @@ export const createCourse = async (
   next: NextFunction
 ) => {
   try {
-    const { title, description, ageGroup, tags, learningObjectives, modules } =
-      JSON.parse(req.body.data);
+    const {
+      title,
+      description,
+      tags,
+      ageGroup,
+      learningObjectives,
+      isCustom = false,
+      customRequestId,
+      featuredCharacterIds = [],
+      learningPaths = [],
+    } = req.body;
 
-    // Validation
-    if (!title || !description || !ageGroup) {
+    // Verify requesting user is admin
+    const userId = (req as any).user.id;
+    const user = await userRepository.findOneBy({ id: userId });
+    if (user?.role !== UserRole.ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: "Only admin users can create courses",
+      });
+    }
+
+    // Validate required fields
+    if (!title || !description || !ageGroup || !learningObjectives?.length) {
       return res.status(400).json({
         success: false,
-        message: "Title, description and age group are required",
+        message:
+          "Title, description, ageGroup and learningObjectives are required",
       });
     }
 
@@ -32,90 +117,173 @@ export const createCourse = async (
       });
     }
 
-    let thumbnailUrl = "";
-
-    if (req.file) {
-      thumbnailUrl = await uploadToCloudinary(req.file);
-    } else {
+    // Handle thumbnail upload
+    if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: "Thumbnail is required",
+        message: "Course thumbnail is required",
       });
     }
 
-    // Start transaction for course, modules, and lessons
-    const result = await AppDataSource.transaction(
-      async (transactionalEntityManager) => {
-        // Create course
-        const course = new Course();
-        course.title = title;
-        course.description = description;
-        course.ageGroup = ageGroup;
-        course.tags = tags || [];
-        course.learningObjectives = learningObjectives || [];
-        course.thumbnailUrl = thumbnailUrl;
-        course.isApproved = true;
+    const thumbnailUrl = await uploadToCloudinary(req.file);
 
-        const savedCourse = await transactionalEntityManager.save(course);
+    // Create course
+    const course = new Course();
+    course.title = title;
+    course.description = description;
+    course.tags = safeJsonParse(tags, []);
+    course.ageGroup = ageGroup;
+    course.learningObjectives = safeJsonParse(learningObjectives, []);
+    course.isCustom = isCustom;
+    course.customRequestId = customRequestId;
+    course.thumbnailUrl = thumbnailUrl;
 
-        // Create modules and lessons if provided
-        if (modules && Array.isArray(modules)) {
-          for (const moduleData of modules) {
-            const module = new Module();
-            module.title = moduleData.title;
-            module.description = moduleData.description || "";
-            module.order = moduleData.order || 0;
-            module.course = savedCourse;
+    // Save course first
+    const savedCourse = await courseRepository.save(course);
 
-            const savedModule = await transactionalEntityManager.save(module);
+    // Associate featured characters if provided
+    if (featuredCharacterIds && featuredCharacterIds.length > 0) {
+      const parsedCharacterIds = safeJsonParse(featuredCharacterIds, []);
+      if (parsedCharacterIds.length > 0) {
+        const characters = await characterRepository.findByIds(
+          parsedCharacterIds
+        );
+        if (characters.length > 0) {
+          savedCourse.featuredCharacters = characters;
+          await courseRepository.save(savedCourse);
+        }
+      }
+    }
 
-            if (moduleData.lessons && Array.isArray(moduleData.lessons)) {
-              for (const lessonData of moduleData.lessons) {
-                const lesson = new Lesson();
-                lesson.title = lessonData.title;
-                lesson.description = lessonData.description || "";
-                lesson.type = lessonData.type || "reading";
-                lesson.order = lessonData.order || 0;
-                lesson.durationMinutes = lessonData.durationMinutes || 0;
-                lesson.module = savedModule;
+    // Create learning paths and segments if provided
+    if (learningPaths && learningPaths.length > 0) {
+      const parsedLearningPaths = safeJsonParse(learningPaths, []);
 
-                // Set type-specific fields
-                switch (lesson.type) {
-                  case "video":
-                    lesson.videoUrl = lessonData.videoUrl || "";
-                    break;
-                  case "quiz":
-                    lesson.quiz = lessonData.quiz || { questions: [] };
-                    break;
-                  case "activity":
-                    lesson.activity = lessonData.activity || {
-                      instructions: "",
-                    };
-                    break;
-                  case "reading":
-                    lesson.readingContent = lessonData.content || "";
-                    break;
+      for (const pathData of parsedLearningPaths) {
+        if (!pathData.title) continue;
+
+        const learningPath = new LearningPath();
+        learningPath.title = pathData.title;
+        learningPath.description = pathData.description || null;
+        learningPath.order = parseInt(pathData.order) || 1;
+        learningPath.course = savedCourse;
+
+        const savedPath = await learningPathRepository.save(learningPath);
+
+        // Create segments for this path
+        if (pathData.segments && pathData.segments.length > 0) {
+          for (const segmentData of pathData.segments) {
+            try {
+              const segment = new LearningSegment();
+              segment.type = segmentData.type || "instruction";
+              segment.order = parseInt(segmentData.order) || 1;
+              segment.basePoints = parseInt(segmentData.basePoints) || 0;
+              segment.bonusPoints = segmentData.bonusPoints
+                ? parseInt(segmentData.bonusPoints)
+                : undefined;
+              segment.learningPath = savedPath;
+
+              // Handle content based on segment type
+              let segmentContent = null;
+              if (segmentData.content) {
+                // Parse content if it's a string
+                const parsedContent = safeJsonParse(
+                  segmentData.content,
+                  segmentData.content
+                );
+
+                // Validate and structure content based on segment type
+                if (validateSegmentContent(segment.type, parsedContent)) {
+                  segmentContent = parsedContent;
+                } else {
+                  console.warn(
+                    `Invalid content for segment type ${segment.type}:`,
+                    parsedContent
+                  );
+                  // Provide default content structure
+                  switch (segment.type) {
+                    case "instruction":
+                    case "review":
+                      segmentContent = {
+                        instruction: {
+                          text: parsedContent?.instruction?.text || "",
+                          mediaUrl:
+                            parsedContent?.instruction?.mediaUrl || null,
+                          mediaType:
+                            parsedContent?.instruction?.mediaType || "image",
+                        },
+                      };
+                      break;
+                    case "question":
+                      segmentContent = {
+                        question: {
+                          text: parsedContent?.question?.text || "",
+                          type:
+                            parsedContent?.question?.type || "multiple-choice",
+                          options: parsedContent?.question?.options || [],
+                          correctAnswer:
+                            parsedContent?.question?.correctAnswer || null,
+                          explanation:
+                            parsedContent?.question?.explanation || null,
+                        },
+                      };
+                      break;
+                    case "dialogue":
+                      segmentContent = {
+                        dialogue: {
+                          characters: parsedContent?.dialogue?.characters || [],
+                          backgroundScene:
+                            parsedContent?.dialogue?.backgroundScene || null,
+                          audioUrl: parsedContent?.dialogue?.audioUrl || null,
+                        },
+                      };
+                      break;
+                    case "practice":
+                      segmentContent = {
+                        practice: {
+                          type: parsedContent?.practice?.type || "drag-drop",
+                          instructions:
+                            parsedContent?.practice?.instructions || "",
+                          components: parsedContent?.practice?.components || {},
+                        },
+                      };
+                      break;
+                    default:
+                      segmentContent = parsedContent;
+                  }
                 }
-
-                await transactionalEntityManager.save(lesson);
               }
+
+              segment.content = segmentContent;
+              await learningSegmentRepository.save(segment);
+            } catch (segmentError) {
+              console.error(`Error creating segment:`, segmentError);
+              // Continue with other segments instead of failing the entire course creation
             }
           }
         }
-
-        // Return the complete course with relations
-        return await transactionalEntityManager.findOne(Course, {
-          where: { id: savedCourse.id },
-          relations: ["modules", "modules.lessons"],
-        });
       }
-    );
+    }
+
+    // Fetch the complete course with all relations
+    const completeCourse = await courseRepository.findOne({
+      where: { id: savedCourse.id },
+      relations: [
+        "learningPaths",
+        "learningPaths.segments",
+        "featuredCharacters",
+      ],
+      order: {
+        learningPaths: { order: "ASC" },
+      },
+    });
 
     res.status(201).json({
       success: true,
-      data: result,
+      data: completeCourse,
     });
   } catch (error) {
+    console.error("Error creating course:", error);
     next(error);
   }
 };
@@ -127,180 +295,25 @@ export const updateCourse = async (
 ) => {
   try {
     const { id } = req.params;
-    const { title, description, ageGroup, tags, learningObjectives, modules } =
-      JSON.parse(req.body.data);
-    if (!id) {
-      return res.status(400).json({
+    const updates = req.body;
+
+    // Verify requesting user is admin
+    const userId = (req as any).user.id;
+    const user = await userRepository.findOneBy({ id: userId });
+    if (user?.role !== UserRole.ADMIN) {
+      return res.status(403).json({
         success: false,
-        message: "Course ID is required",
-      });
-    }
-    console.log(modules[0].lessons[0]);
-    // Start transaction for course, modules, and lessons
-    const result = await AppDataSource.transaction(
-      async (transactionalEntityManager) => {
-        // Find existing course
-        const course = await transactionalEntityManager.findOne(Course, {
-          where: { id },
-          relations: ["modules", "modules.lessons"],
-        });
-
-        if (!course) {
-          throw new Error("Course not found");
-        }
-
-        // Handle thumbnail update if new file provided
-        if (req.file) {
-          course.thumbnailUrl = await uploadToCloudinary(req.file);
-        }
-
-        // Update course fields
-        course.title = title || course.title;
-        course.description = description || course.description;
-        course.ageGroup = ageGroup || course.ageGroup;
-        course.tags = tags || course.tags;
-        course.learningObjectives =
-          learningObjectives || course.learningObjectives;
-
-        const updatedCourse = await transactionalEntityManager.save(course);
-        // Handle modules and lessons updates
-        if (modules && Array.isArray(modules)) {
-          // First collect all existing module and lesson IDs for cleanup
-          const existingModuleIds = course.modules.map((m) => m.id);
-          const existingLessonIds = course.modules.flatMap((m) =>
-            m.lessons ? m.lessons.map((l) => l.id) : []
-          );
-
-          // Process each module from request
-          for (const moduleData of modules) {
-            let module: any;
-            if (moduleData.id) {
-              // Update existing module
-              module = await transactionalEntityManager.findOne(Module, {
-                where: { id: moduleData.id },
-              });
-              if (!module) {
-                continue; // Skip if module not found
-              }
-
-              // Remove from existing IDs array
-              const index = existingModuleIds.indexOf(moduleData.id);
-              if (index > -1) {
-                existingModuleIds.splice(index, 1);
-              }
-            } else {
-              // Create new module
-              module = new Module();
-              module.course = updatedCourse;
-            }
-
-            module.title = moduleData.title || module.title;
-            module.description = moduleData.description || module.description;
-            module.order = moduleData.order || module.order || 0;
-
-            const savedModule = await transactionalEntityManager.save(module);
-
-            // Process lessons for this module
-            if (moduleData.lessons && Array.isArray(moduleData.lessons)) {
-              for (const lessonData of moduleData.lessons) {
-                let lesson: any;
-                if (lessonData.id) {
-                  // Update existing lesson
-                  lesson = await transactionalEntityManager.findOne(Lesson, {
-                    where: { id: lessonData.id },
-                  });
-                  if (!lesson) {
-                    continue;
-                  }
-
-                  // Remove from existing IDs array
-                  const index = existingLessonIds.indexOf(lessonData.id);
-                  if (index > -1) {
-                    existingLessonIds.splice(index, 1);
-                  }
-                } else {
-                  // Create new lesson
-                  lesson = new Lesson();
-                  lesson.module = savedModule;
-                }
-                console.log(lessonData);
-                lesson.title = lessonData.title || lesson.title;
-                lesson.description =
-                  lessonData.description || lesson.description;
-                lesson.type = lessonData.type || lesson.type || "reading";
-                lesson.order = lessonData.order || lesson.order || 0;
-                lesson.durationMinutes =
-                  lessonData.durationMinutes || lesson.durationMinutes || 0;
-
-                // Update type-specific fields
-                switch (lesson.type) {
-                  case "video":
-                    lesson.videoUrl =
-                      lessonData.videoUrl || lesson.videoUrl || "";
-                    break;
-                  case "quiz":
-                    lesson.quiz = lessonData.quiz ||
-                      lesson.quiz || { questions: [] };
-                    break;
-                  case "activity":
-                    lesson.activity = lessonData.activity ||
-                      lesson.activity || { instructions: "" };
-                    break;
-                  case "reading":
-                    lesson.content =
-                      lessonData.readingContent || lesson.readingContent;
-                    break;
-                }
-
-                await transactionalEntityManager.save(lesson);
-              }
-            }
-          }
-
-          // Delete any remaining modules and lessons that weren't in the request
-          if (existingLessonIds.length > 0) {
-            await transactionalEntityManager.delete(Lesson, existingLessonIds);
-          }
-          if (existingModuleIds.length > 0) {
-            await transactionalEntityManager.delete(Module, existingModuleIds);
-          }
-        }
-
-        // Return the complete updated course
-        return await transactionalEntityManager.findOne(Course, {
-          where: { id: updatedCourse.id },
-          relations: ["modules", "modules.lessons"],
-        });
-      }
-    );
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const deleteCourse = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { id } = req.params;
-
-    if (!id) {
-      return res.status(400).json({
-        success: false,
-        message: "Course ID is required",
+        message: "Only admin users can update courses",
       });
     }
 
     const course = await courseRepository.findOne({
       where: { id },
-      relations: ["modules"],
+      relations: [
+        "learningPaths",
+        "learningPaths.segments",
+        "featuredCharacters",
+      ],
     });
 
     if (!course) {
@@ -310,19 +323,361 @@ export const deleteCourse = async (
       });
     }
 
-    // Soft delete (if your entity supports it)
-    await courseRepository.softRemove(course);
+    if (req.file) {
+      course.thumbnailUrl = await uploadToCloudinary(req.file);
+    }
+
+    // Update basic course fields
+    if (updates.title !== undefined) course.title = updates.title;
+    if (updates.description !== undefined)
+      course.description = updates.description;
+    if (updates.tags !== undefined) {
+      course.tags = safeJsonParse(updates.tags, []);
+    }
+    if (updates.ageGroup !== undefined) course.ageGroup = updates.ageGroup;
+    if (updates.learningObjectives !== undefined) {
+      course.learningObjectives = safeJsonParse(updates.learningObjectives, []);
+    }
+    if (updates.isCustom !== undefined) course.isCustom = updates.isCustom;
+    if (updates.customRequestId !== undefined)
+      course.customRequestId = updates.customRequestId;
+
+    // Update featured characters if provided
+    if (updates.featuredCharacterIds !== undefined) {
+      const parsedCharacterIds = safeJsonParse(
+        updates.featuredCharacterIds,
+        []
+      );
+      if (parsedCharacterIds.length > 0) {
+        const characters = await characterRepository.findByIds(
+          parsedCharacterIds
+        );
+        course.featuredCharacters = characters;
+      } else {
+        course.featuredCharacters = [];
+      }
+    }
+
+    // Save course updates first
+    await courseRepository.save(course);
+
+    // Handle learning paths updates if provided
+    if (updates.learningPaths !== undefined) {
+      const parsedLearningPaths = safeJsonParse(updates.learningPaths, []);
+
+      // Remove existing paths and segments with proper cleanup
+      for (const existingPath of course.learningPaths) {
+        // First delete all segment progress records for segments in this path
+        const segments = await learningSegmentRepository.find({
+          where: { learningPath: { id: existingPath.id } },
+          relations: ["progressRecords"],
+        });
+
+        for (const segment of segments) {
+          // Delete all progress records for this segment
+          await segmentProgressRepository.delete({
+            segment: { id: segment.id },
+          });
+        }
+
+        // Then delete all path progress records for this path
+        await pathProgressRepository.delete({
+          learningPath: { id: existingPath.id },
+        });
+
+        // Then remove all segments in this path
+        await learningSegmentRepository.delete({
+          learningPath: { id: existingPath.id },
+        });
+
+        // Finally remove the path
+        await learningPathRepository.delete(existingPath.id);
+      }
+
+      // Create new paths and segments
+      for (const pathData of parsedLearningPaths) {
+        if (!pathData.title) continue;
+
+        const learningPath = new LearningPath();
+        learningPath.title = pathData.title;
+        learningPath.description = pathData.description || null;
+        learningPath.order = parseInt(pathData.order) || 1;
+        learningPath.course = course;
+
+        const savedPath = await learningPathRepository.save(learningPath);
+
+        if (pathData.segments && pathData.segments.length > 0) {
+          for (const segmentData of pathData.segments) {
+            try {
+              const segment = new LearningSegment();
+              segment.type = segmentData.type || "instruction";
+              segment.order = parseInt(segmentData.order) || 1;
+              segment.basePoints = parseInt(segmentData.basePoints) || 0;
+              segment.bonusPoints = segmentData.bonusPoints
+                ? parseInt(segmentData.bonusPoints)
+                : undefined;
+              segment.learningPath = savedPath;
+
+              let segmentContent = null;
+              if (segmentData.content) {
+                const parsedContent = safeJsonParse(
+                  segmentData.content,
+                  segmentData.content
+                );
+
+                if (validateSegmentContent(segment.type, parsedContent)) {
+                  segmentContent = parsedContent;
+                } else {
+                  console.warn(
+                    `Invalid content for segment type ${segment.type}:`,
+                    parsedContent
+                  );
+                  // Provide default content structure
+                  switch (segment.type) {
+                    case "instruction":
+                    case "review":
+                      segmentContent = {
+                        instruction: {
+                          text: parsedContent?.instruction?.text || "",
+                          mediaUrl:
+                            parsedContent?.instruction?.mediaUrl || null,
+                          mediaType:
+                            parsedContent?.instruction?.mediaType || "image",
+                        },
+                      };
+                      break;
+                    case "question":
+                      segmentContent = {
+                        question: {
+                          text: parsedContent?.question?.text || "",
+                          type:
+                            parsedContent?.question?.type || "multiple-choice",
+                          options: parsedContent?.question?.options || [],
+                          correctAnswer:
+                            parsedContent?.question?.correctAnswer || null,
+                          explanation:
+                            parsedContent?.question?.explanation || null,
+                        },
+                      };
+                      break;
+                    case "dialogue":
+                      segmentContent = {
+                        dialogue: {
+                          characters: parsedContent?.dialogue?.characters || [],
+                          backgroundScene:
+                            parsedContent?.dialogue?.backgroundScene || null,
+                          audioUrl: parsedContent?.dialogue?.audioUrl || null,
+                        },
+                      };
+                      break;
+                    case "practice":
+                      segmentContent = {
+                        practice: {
+                          type: parsedContent?.practice?.type || "drag-drop",
+                          instructions:
+                            parsedContent?.practice?.instructions || "",
+                          components: parsedContent?.practice?.components || {},
+                        },
+                      };
+                      break;
+                    default:
+                      segmentContent = parsedContent;
+                  }
+                }
+              }
+
+              segment.content = segmentContent;
+              await learningSegmentRepository.save(segment);
+            } catch (segmentError) {
+              console.error(`Error updating segment:`, segmentError);
+            }
+          }
+        }
+      }
+    }
+
+    const updatedCourse = await courseRepository.findOne({
+      where: { id },
+      relations: [
+        "learningPaths",
+        "learningPaths.segments",
+        "featuredCharacters",
+      ],
+      order: {
+        learningPaths: { order: "ASC" },
+      },
+    });
 
     res.status(200).json({
       success: true,
-      message: "Course deleted successfully",
+      data: updatedCourse,
+    });
+  } catch (error) {
+    console.error("Error updating course:", error);
+    next(error);
+  }
+};
+
+export const debugSegmentContent = (segmentData: any) => {
+  console.log("=== SEGMENT DEBUG ===");
+  console.log("Type:", segmentData.type);
+  console.log("Raw content:", JSON.stringify(segmentData.content, null, 2));
+
+  if (segmentData.type === "question" && segmentData.content?.question) {
+    const question = segmentData.content.question;
+    console.log("Question text:", question.text);
+    console.log("Question type:", question.type);
+
+    if (question.type === "multiple-choice" && question.options) {
+      console.log("Options count:", question.options.length);
+      question.options.forEach((opt: any, idx: number) => {
+        console.log(
+          `Option ${idx + 1}:`,
+          opt.text,
+          "(Correct:",
+          opt.isCorrect,
+          ")"
+        );
+      });
+    } else if (question.correctAnswer !== undefined) {
+      console.log("Correct answer:", question.correctAnswer);
+    }
+
+    if (question.explanation) {
+      console.log("Explanation:", question.explanation);
+    }
+  }
+  console.log("==================");
+};
+
+export const createLearningPath = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { courseId } = req.params;
+    const { title, description, order, segments = [] } = req.body;
+
+    // Validate required fields
+    if (!title || order === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and order are required",
+      });
+    }
+
+    const course = await courseRepository.findOneBy({ id: courseId });
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    const learningPath = new LearningPath();
+    learningPath.title = title;
+    learningPath.description = description || null;
+    learningPath.order = parseInt(order);
+    learningPath.course = course;
+
+    const savedPath = await learningPathRepository.save(learningPath);
+
+    // Create segments if provided
+    if (segments.length > 0) {
+      const parsedSegments = Array.isArray(segments)
+        ? segments
+        : JSON.parse(segments);
+
+      for (const segmentData of parsedSegments) {
+        const segment = new LearningSegment();
+        segment.type = segmentData.type;
+        segment.order = parseInt(segmentData.order);
+        segment.basePoints = parseInt(segmentData.basePoints) || 0;
+        segment.bonusPoints = segmentData.bonusPoints
+          ? parseInt(segmentData.bonusPoints)
+          : 0;
+        segment.content = segmentData.content || null;
+        segment.learningPath = savedPath;
+
+        await learningSegmentRepository.save(segment);
+      }
+    }
+
+    // Fetch the complete learning path with segments
+    const completePath = await learningPathRepository.findOne({
+      where: { id: savedPath.id },
+      relations: ["segments"],
+      order: {
+        segments: { order: "ASC" },
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      data: completePath,
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getCourse = async (
+export const createLearningSegment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { pathId } = req.params;
+    const { type, order, basePoints = 0, bonusPoints, content } = req.body;
+
+    // Validate required fields
+    if (!type || order === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Type and order are required",
+      });
+    }
+
+    if (
+      !["dialogue", "instruction", "question", "practice", "review"].includes(
+        type
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid segment type",
+      });
+    }
+
+    const learningPath = await learningPathRepository.findOneBy({ id: pathId });
+    if (!learningPath) {
+      return res.status(404).json({
+        success: false,
+        message: "Learning path not found",
+      });
+    }
+
+    const segment = new LearningSegment();
+    segment.type = type;
+    segment.order = parseInt(order);
+    segment.basePoints = parseInt(basePoints) || 0;
+    segment.bonusPoints = bonusPoints ? parseInt(bonusPoints) : 0;
+    segment.content = content || null;
+    segment.learningPath = learningPath;
+
+    const savedSegment = await learningSegmentRepository.save(segment);
+
+    res.status(201).json({
+      success: true,
+      data: savedSegment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCourseWithContent = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -332,7 +687,14 @@ export const getCourse = async (
 
     const course = await courseRepository.findOne({
       where: { id },
-      relations: ["modules", "modules.lessons"],
+      relations: [
+        "learningPaths",
+        "learningPaths.segments",
+        "featuredCharacters",
+      ],
+      order: {
+        learningPaths: { order: "ASC" },
+      },
     });
 
     if (!course) {
@@ -351,65 +713,80 @@ export const getCourse = async (
   }
 };
 
-export const listCourses = async (
+export const deleteCourse = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { ageGroup, search, tags } = req.query;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const { id } = req.params;
 
-    const query = courseRepository
-      .createQueryBuilder("course")
-      .leftJoinAndSelect("course.modules", "module")
-      .leftJoinAndSelect("module.lessons", "lesson")
-      .where("course.isApproved = :isApproved", { isApproved: true });
-
-    if (ageGroup) {
-      query.andWhere("course.ageGroup = :ageGroup", { ageGroup });
+    // Verify requesting user is admin
+    const userId = (req as any).user.id;
+    const user = await AppDataSource.getRepository(User).findOneBy({
+      id: userId,
+    });
+    if (user?.role !== UserRole.ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: "Only admin users can delete courses",
+      });
     }
 
-    if (search) {
-      query.andWhere(
-        "(course.title LIKE :search OR course.description LIKE :search)",
-        {
-          search: `%${search}%`,
-        }
-      );
+    const course = await courseRepository.findOne({
+      where: { id },
+      relations: ["learningPaths", "enrollments"],
+    });
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
     }
 
-    if (tags) {
-      const tagArray = (tags as string).split(",");
-      query.andWhere("course.tags && :tags", { tags: tagArray });
+    // Check if course has enrollments
+    if (course.enrollments?.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete course with active enrollments",
+      });
     }
 
-    // Add ordering if needed (e.g., newest first)
-    query
-      .orderBy("course.createdAt", "DESC")
-      .addOrderBy("module.order", "ASC")
-      .addOrderBy("lesson.order", "ASC");
-
-    const [courses, total] = await query
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+    await courseRepository.remove(course);
 
     res.status(200).json({
       success: true,
-      data: courses,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
+      message: "Course deleted successfully",
     });
   } catch (error) {
     next(error);
   }
 };
+
+export const getAllCourses = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { ageGroup, search, isApproved } = req.query;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    const courses = await courseRepository.find({
+      relations: ["learningPaths", "learningPaths.segments"],
+    });
+
+    res.status(200).json({
+      success: true,
+      data: courses,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const approveCourse = async (
   req: Request,
   res: Response,
@@ -418,7 +795,19 @@ export const approveCourse = async (
   try {
     const { id } = req.params;
 
-    const course = await courseRepository.findOne({ where: { id } });
+    // Verify requesting user is admin
+    const userId = (req as any).user.id;
+    const user = await AppDataSource.getRepository(User).findOneBy({
+      id: userId,
+    });
+    if (user?.role !== UserRole.ADMIN) {
+      return res.status(403).json({
+        success: false,
+        message: "Only admin users can approve courses",
+      });
+    }
+
+    const course = await courseRepository.findOneBy({ id });
     if (!course) {
       return res.status(404).json({
         success: false,
@@ -433,7 +822,8 @@ export const approveCourse = async (
       });
     }
 
-    await courseRepository.update(id, { isApproved: true });
+    course.isApproved = true;
+    await courseRepository.save(course);
 
     res.status(200).json({
       success: true,
@@ -444,190 +834,66 @@ export const approveCourse = async (
   }
 };
 
-export const createModule = async (
+export const updateLearningPathOrder = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { courseId } = req.params;
-    const { title, description, order } = req.body;
+    const { paths } = req.body; // Array of { id, order }
 
-    if (!courseId) {
+    if (!Array.isArray(paths)) {
       return res.status(400).json({
         success: false,
-        message: "Course ID is required",
-      });
-    }
-
-    const course = await courseRepository.findOne({ where: { id: courseId } });
-    if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
-      });
-    }
-
-    const module = new Module();
-    module.title = title;
-    module.description = description;
-    module.order = order || 0;
-    module.course = course;
-
-    await moduleRepository.save(module);
-
-    res.status(201).json({
-      success: true,
-      data: module,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-export const updateModuleOrder = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { courseId } = req.params;
-    const { modules } = req.body; // Array of { id, order }
-
-    if (!Array.isArray(modules)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid module order data",
+        message: "Invalid path order data",
       });
     }
 
     await AppDataSource.transaction(async (transactionalEntityManager) => {
-      for (const mod of modules) {
-        await transactionalEntityManager.update(Module, mod.id, {
-          order: mod.order,
+      for (const path of paths) {
+        await transactionalEntityManager.update(LearningPath, path.id, {
+          order: path.order,
         });
       }
     });
 
     res.status(200).json({
       success: true,
-      message: "Module order updated successfully",
+      message: "Learning path order updated successfully",
     });
   } catch (error) {
     next(error);
   }
 };
-const lessonRepository = AppDataSource.getRepository(Lesson);
 
-export const createLesson = async (
+export const updateLearningSegmentOrder = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { moduleId } = req.params;
-    const {
-      title,
-      description,
-      type,
-      order,
-      videoUrl,
-      quiz,
-      activity,
-      readingContent,
-      durationMinutes = 0,
-    } = req.body;
-    if (
-      !["video", "interactive", "quiz", "reading", "activity"].includes(type)
-    ) {
+    const { pathId } = req.params;
+    const { segments } = req.body; // Array of { id, order }
+
+    if (!Array.isArray(segments)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid lesson type",
+        message: "Invalid segment order data",
       });
     }
 
-    if (type === "video" && (!videoUrl || !validator.isURL(videoUrl))) {
-      return res.status(400).json({
-        success: false,
-        message: "Valid video URL is required for video lessons",
-      });
-    }
-
-    if (type === "quiz" && (!quiz || !Array.isArray(quiz.questions))) {
-      return res.status(400).json({
-        success: false,
-        message: "Valid quiz structure is required for quiz lessons",
-      });
-    }
-
-    const module = await moduleRepository.findOne({
-      where: { id: moduleId },
-      relations: ["course"],
-    });
-    if (!module) {
-      return res.status(404).json({
-        success: false,
-        message: "Module not found",
-      });
-    }
-
-    const lesson = new Lesson();
-    lesson.title = title;
-    lesson.description = description;
-    lesson.type = type;
-    lesson.order = order || 0;
-    lesson.durationMinutes = durationMinutes;
-    lesson.module = module;
-
-    switch (type) {
-      case "video":
-        lesson.videoUrl = videoUrl;
-        break;
-      case "quiz":
-        lesson.quiz = quiz;
-        break;
-      case "activity":
-        lesson.activity = activity;
-        break;
-      case "reading":
-        lesson.readingContent = readingContent;
-        break;
-    }
-
-    res.status(201).json({
-      success: true,
-      data: lesson,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const uploadLessonVideo = async (
-  req: any,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { lessonId } = req.params;
-    const videoFile = req.file;
-
-    if (!videoFile) {
-      return res.status(400).json({
-        success: false,
-        message: "Video file is required",
-      });
-    }
-
-    const videoUrl = `/uploads/lessons/${lessonId}/${videoFile.filename}`;
-
-    await lessonRepository.update(lessonId, {
-      videoUrl,
-      type: "video",
+    await AppDataSource.transaction(async (transactionalEntityManager) => {
+      for (const segment of segments) {
+        await transactionalEntityManager.update(LearningSegment, segment.id, {
+          order: segment.order,
+        });
+      }
     });
 
     res.status(200).json({
       success: true,
-      data: { videoUrl },
+      message: "Learning segment order updated successfully",
     });
   } catch (error) {
     next(error);

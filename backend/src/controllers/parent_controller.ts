@@ -8,12 +8,14 @@ import { User } from "../models/user";
 import {
   BillingFrequency,
   FamilySubscription,
+  SubscriptionPayment,
   SubscriptionPlan,
   SubscriptionProduct,
   SubscriptionStatus,
 } from "../models/subscription";
 import { Enrollment } from "../models/enrollment";
 import { Course } from "../models/courses";
+import axios from "axios";
 
 const parentProfileRepository = AppDataSource.getRepository(ParentProfile);
 const childRepository = AppDataSource.getRepository(Child);
@@ -22,7 +24,8 @@ const userRepository = AppDataSource.getRepository(User);
 const subscriptionRepository = AppDataSource.getRepository(FamilySubscription);
 const enrollmentRepository = AppDataSource.getRepository(Enrollment);
 const courseRepository = AppDataSource.getRepository(Course);
-
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_API_URL = "https://api.paystack.co";
 // 1. UPDATE PARENT PROFILE
 export const updateParentProfile = async (
   req: Request,
@@ -306,60 +309,73 @@ export const activateFamilySubscription = async (
   res: Response,
   next: NextFunction
 ) => {
+  const { email, plan, product, amount, userId } = req.body;
+
   try {
-    const userId = (req as any).user.id;
-    const { paystackSubscriptionCode, plan } = req.body;
-
-    const parentProfile = await parentProfileRepository.findOne({
-      where: { user: { id: userId } },
-      relations: ["family"],
-    });
-
-    if (!parentProfile || !parentProfile.family) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Parent must belong to a family" });
+    // Validate input
+    if (!email || !plan || !product || !amount || !userId) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    if (!parentProfile.isFamilyOwner) {
-      return res.status(403).json({
-        success: false,
-        message: "Only family owner can activate subscription",
-      });
+    // Initialize Paystack transaction
+    const response = await axios.post(
+      `${PAYSTACK_API_URL}/transaction/initialize`,
+      {
+        email,
+        amount: amount * 100, // Convert to kobo (NGN) or appropriate subunit
+        callback_url: `http://localhost:3000/subscription`, // e.g., http://yourapp.com/subscription/callback
+        metadata: {
+          plan,
+          product,
+          userId,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const { access_code, authorization_url } = response.data.data;
+
+    // Create a FamilySubscription record (pending status)
+    const subscriptionRepository =
+      AppDataSource.getRepository(FamilySubscription);
+    const userRepository = AppDataSource.getRepository(User);
+    const familyRepository = AppDataSource.getRepository(Family);
+
+    const user = await userRepository.findOneBy({ id: userId });
+    const family = await familyRepository.findOneBy({
+      owner: { id: user?.id },
+    });
+
+    if (!user || !family) {
+      return res.status(404).json({ error: "User or Family not found" });
     }
 
-    const subscription = subscriptionRepository.create({
-      paystackSubscriptionCode,
-      plan,
-      status: SubscriptionStatus.ACTIVE,
-      startDate: new Date(),
-      nextPaymentDate:
-        plan === "monthly"
-          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-          : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-      amount: plan === "monthly" ? 500000 : 5000000,
-      currency: "NGN",
-      isAutoRenew: true,
-      family: parentProfile.family,
-      managedBy: parentProfile.user,
-    });
+    const subscription = new FamilySubscription();
+    subscription.plan = plan;
+    subscription.product = product;
+    subscription.status = SubscriptionStatus.PAUSED; // Set to pending until payment is verified
+    subscription.startDate = new Date();
+    subscription.amount = amount;
+    subscription.billingFrequency = plan; // Assuming plan matches billing frequency
+    subscription.currency = "NGN"; // Adjust based on your needs
+    subscription.isAutoRenew = true; // Set based on your logic
+    subscription.family = family;
+    subscription.managedBy = user;
 
     await subscriptionRepository.save(subscription);
 
-    res.status(201).json({
+    res.json({
       success: true,
-      message: "Subscription activated successfully",
-      data: {
-        subscription: {
-          id: subscription.id,
-          plan: subscription.plan,
-          status: subscription.status,
-          nextPaymentDate: subscription.nextPaymentDate,
-        },
-      },
+      data: { access_code, authorization_url, subscriptionId: subscription.id },
     });
   } catch (error) {
-    next(error);
+    console.error("Error initializing subscription:", error);
+    res.status(500).json({ error: "Failed to initialize subscription" });
   }
 };
 
@@ -782,213 +798,6 @@ export const deleteChild = async (
     next(error);
   }
 };
-export const createMockSubscription = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const userId = (req as any).user.id;
-    const { plan, product } = req.body;
-
-    // Validate input
-    if (!plan || !Object.values(BillingFrequency).includes(plan)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid plan. Must be one of: monthly, yearly, lifetime",
-      });
-    }
-
-    if (!product || !Object.values(SubscriptionProduct).includes(product)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid product. Must be one of: basic, professional",
-      });
-    }
-
-    // Get the user and check if they already have a family
-    const user = await userRepository.findOne({
-      where: { id: userId },
-      relations: ["parentProfile", "parentProfile.family"],
-    });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    let family = user.parentProfile?.family;
-
-    // If user doesn't have a family, create one
-    if (!family) {
-      family = familyRepository.create({
-        name: `${user.firstName}'s Family`,
-        owner: user,
-      });
-
-      await familyRepository.save(family);
-
-      // Update parent profile to be family owner
-      if (!user.parentProfile) {
-        const parentProfile = parentProfileRepository.create({
-          user,
-          isFamilyOwner: true,
-          family,
-        });
-        await parentProfileRepository.save(parentProfile);
-      } else {
-        user.parentProfile.isFamilyOwner = true;
-        user.parentProfile.family = family;
-        await parentProfileRepository.save(user.parentProfile);
-      }
-    }
-
-    // Check if family already has an active subscription
-    const existingSubscription = await subscriptionRepository.findOne({
-      where: {
-        family: { id: family.id },
-        status: SubscriptionStatus.ACTIVE,
-      },
-    });
-
-    if (existingSubscription) {
-      return res.status(400).json({
-        success: false,
-        message: "Family already has an active subscription",
-      });
-    }
-
-    // Calculate subscription details based on plan and product
-    let amount = 0;
-    let trialDays = 14;
-    let description = "";
-
-    if (product === SubscriptionProduct.BASIC) {
-      amount =
-        plan === BillingFrequency.MONTHLY
-          ? 999
-          : plan === BillingFrequency.YEARLY
-          ? 9999
-          : 29999;
-      description = "Basic Plan - Character Building Essentials";
-    } else {
-      amount =
-        plan === BillingFrequency.MONTHLY
-          ? 1999
-          : plan === BillingFrequency.YEARLY
-          ? 19999
-          : 49999;
-      description = "Professional Plan - Complete Family Values Education";
-      trialDays = 30;
-    }
-
-    // Create mock subscription
-    const subscription = subscriptionRepository.create({
-      plan: SubscriptionPlan.MONTHLY,
-      product: product as SubscriptionProduct,
-      status: SubscriptionStatus.TRIAL,
-      startDate: new Date(),
-      trialEndDate: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
-      nextPaymentDate:
-        plan === BillingFrequency.LIFETIME
-          ? undefined
-          : new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
-      amount,
-      currency: "USD",
-      isAutoRenew: plan !== BillingFrequency.LIFETIME,
-      family,
-      managedBy: user,
-    });
-
-    await subscriptionRepository.save(subscription);
-
-    res.status(201).json({
-      success: true,
-      message: `Mock ${product} subscription created successfully with ${trialDays}-day free trial`,
-      data: {
-        subscription: {
-          id: subscription.id,
-          plan: subscription.plan,
-          product: subscription.product,
-          status: subscription.status,
-          startDate: subscription.startDate,
-          trialEndDate: subscription.trialEndDate,
-          nextPaymentDate: subscription.nextPaymentDate,
-          amount: subscription.amount,
-          currency: subscription.currency,
-          description,
-        },
-        family: {
-          id: family.id,
-          name: family.name,
-          isNewFamily: !user.parentProfile?.family,
-        },
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const cancelMockSubscription = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const userId = (req as any).user.id;
-
-    // Get user's family
-    const user = await userRepository.findOne({
-      where: { id: userId },
-      relations: ["parentProfile", "parentProfile.family"],
-    });
-
-    if (!user?.parentProfile?.family) {
-      return res.status(400).json({
-        success: false,
-        message: "User does not belong to a family",
-      });
-    }
-
-    // Find active subscription
-    const subscription = await subscriptionRepository.findOne({
-      where: {
-        family: { id: user.parentProfile.family.id },
-        status: SubscriptionStatus.ACTIVE,
-      },
-    });
-
-    if (!subscription) {
-      return res.status(404).json({
-        success: false,
-        message: "No active subscription found",
-      });
-    }
-
-    // Cancel the subscription
-    subscription.status = SubscriptionStatus.CANCELLED;
-    subscription.endDate = new Date();
-    subscription.isAutoRenew = false;
-    await subscriptionRepository.save(subscription);
-
-    res.status(200).json({
-      success: true,
-      message: "Subscription cancelled successfully",
-      data: {
-        subscription: {
-          id: subscription.id,
-          status: subscription.status,
-          endDate: subscription.endDate,
-        },
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 export const getMockSubscriptionDetails = async (
   req: Request,
@@ -1165,5 +974,74 @@ export const updateChild = async (
     });
   } catch (error) {
     next(error);
+  }
+};
+
+// backend/src/controllers/subscriptionController.ts
+export const handleCallback = async (req: Request, res: Response) => {
+  const { reference } = req.query;
+
+  if (!reference) {
+    return res.status(400).json({ error: "No reference provided" });
+  }
+
+  try {
+    // Verify transaction with Paystack
+    const response = await axios.get(
+      `${PAYSTACK_API_URL}/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        },
+      }
+    );
+
+    const { status, amount, customer, metadata } = response.data.data;
+
+    if (status === "success") {
+      const subscriptionRepository =
+        AppDataSource.getRepository(FamilySubscription);
+      const paymentRepository =
+        AppDataSource.getRepository(SubscriptionPayment);
+
+      const subscription = await subscriptionRepository.findOne({
+        where: { id: metadata.subscriptionId },
+        relations: ["family", "managedBy"],
+      });
+
+      if (!subscription) {
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+
+      // Update subscription
+      subscription.status = SubscriptionStatus.ACTIVE;
+      subscription.paystackCustomerCode = customer.customer_code;
+      subscription.nextPaymentDate = new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000
+      ); // Example: 30 days from now
+      await subscriptionRepository.save(subscription);
+
+      // Create payment record
+      const payment = new SubscriptionPayment();
+      payment.paystackReference = reference as any;
+      payment.paystackAuthorizationCode =
+        response.data.data.authorization.authorization_code;
+      payment.amount = amount / 100;
+      payment.status = "success";
+      payment.paidAt = new Date();
+      payment.subscription = subscription;
+      payment.initiatedBy = subscription.managedBy;
+      payment.metadata = metadata;
+
+      await paymentRepository.save(payment);
+
+      // Redirect to success page
+      res.redirect("/dashboard?payment=success");
+    } else {
+      res.redirect("/dashboard?payment=failed");
+    }
+  } catch (error) {
+    console.error("Error verifying payment:", error);
+    res.redirect("/dashboard?payment=error");
   }
 };

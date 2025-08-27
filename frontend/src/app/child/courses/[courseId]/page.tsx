@@ -53,6 +53,7 @@ const GameCourseTrail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { courseId } = useParams();
+
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
@@ -105,10 +106,11 @@ const GameCourseTrail = () => {
       router.push(`/child/courses/${courseData?.id}/${path.id}`);
     }
   };
-  const isPathUnlocked = (path: LearningPath) => {
-    if (path.order === 1) return true; // First path is always unlocked
 
-    // Find the previous path
+  const isPathUnlocked = (path: LearningPath) => {
+    console.log(path);
+    if (path.order === 1) return true;
+
     const previousPath = courseData?.learningPaths.find(
       (p) => p.order === path.order - 1
     );
@@ -142,10 +144,10 @@ const GameCourseTrail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-400 border-solid mx-auto mb-4"></div>
-          <p className="text-white text-xl">Loading your adventure...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid mx-auto mb-4"></div>
+          <p className="text-slate-700 text-xl">Loading your adventure...</p>
         </div>
       </div>
     );
@@ -153,16 +155,16 @@ const GameCourseTrail = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center rounded-lg overflow-hidden justify-center">
-        <div className="text-center">
-          <div className="text-red-400 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-white mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
             Oops! Something went wrong
           </h2>
-          <p className="text-red-400 mb-4">{error}</p>
+          <p className="text-red-600 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:scale-105 transition-transform"
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:scale-105 transition-transform shadow-md"
           >
             Try Again
           </button>
@@ -177,50 +179,58 @@ const GameCourseTrail = () => {
   const overallProgress = calculateOverallProgress();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 rounded-lg text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br rounded-lg overflow-hidden from-blue-50 via-sky-50 to-indigo-50 text-slate-800">
       {/* Header */}
-      <div className="relative p-6 bg-gradient-to-r from-purple-800/50 to-blue-800/50 backdrop-blur-sm">
+      <div className="relative p-4 sm:p-6 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm shadow-sm">
         <div className="container mx-auto max-w-6xl">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-            <div className="mb-4 md:mb-0">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4 gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent leading-tight">
                 {courseData.title}
               </h1>
-              <p className="text-blue-200 mt-1">{courseData.description}</p>
-              <p className="text-sm text-blue-300 mt-1">
+              <p className="text-slate-600 mt-1 text-sm sm:text-base">
+                {courseData.description}
+              </p>
+              <p className="text-xs sm:text-sm text-blue-600 mt-1">
                 Age Group: {courseData.ageGroup}
               </p>
             </div>
-            <div className="text-right">
-              <div className="flex items-center gap-2 text-yellow-400 text-xl font-bold">
+            <div className="text-center lg:text-right bg-white/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-sm border border-blue-200">
+              <div className="flex items-center justify-center lg:justify-end gap-2 text-amber-600 text-lg sm:text-xl font-bold">
                 <span>⭐</span>
-                {earnedPoints} / {totalPoints}
+                <span className="text-sm sm:text-lg">
+                  {earnedPoints} / {totalPoints}
+                </span>
               </div>
-              <p className="text-sm text-blue-200">Experience Points</p>
+              <p className="text-xs sm:text-sm text-slate-600">
+                Experience Points
+              </p>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="bg-black/20 rounded-full h-4 overflow-hidden">
+          <div className="bg-white/50 rounded-full h-3 sm:h-4 overflow-hidden border border-blue-200 shadow-sm">
             <div
-              className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-1000"
+              className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 transition-all duration-1000 relative overflow-hidden"
               style={{ width: `${overallProgress}%` }}
-            ></div>
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+            </div>
           </div>
-          <p className="text-center text-sm text-blue-200 mt-2">
+          <p className="text-center text-xs sm:text-sm text-slate-600 mt-2">
             {overallProgress}% Complete - Keep going, champion!
           </p>
         </div>
       </div>
 
       {/* Trail Container */}
-      <div className="container mx-auto max-w-4xl p-6">
+      <div className="container mx-auto max-w-5xl p-4 sm:p-6">
         <div className="relative">
-          {/* Trail Path - Simple line version */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-400 to-orange-500 opacity-30"></div>
+          {/* Trail Path - Responsive line */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-0.5 sm:w-1 bg-gradient-to-b from-blue-300 to-indigo-400 opacity-40 hidden sm:block"></div>
 
           {/* Learning Path Nodes */}
-          <div className="relative z-10 space-y-24">
+          <div className="relative z-10 space-y-8 sm:space-y-16 lg:space-y-24">
             {courseData.learningPaths
               .sort((a, b) => a.order - b.order)
               .map((path, index) => {
@@ -240,124 +250,131 @@ const GameCourseTrail = () => {
                 return (
                   <div key={path.id} className="relative">
                     <div
-                      className={`flex items-center gap-8 ${
-                        index % 2 === 0 ? "flex-row" : "flex-row-reverse"
+                      className={`flex flex-col sm:flex-row items-center gap-4 sm:gap-6 lg:gap-8 ${
+                        index % 2 === 0 ? "sm:flex-row" : "sm:flex-row-reverse"
                       }`}
                     >
                       {/* Path Node */}
                       <div
                         onClick={() => handlePathClick(path)}
                         className={`
-                          relative w-24 h-24 md:w-32 md:h-32 rounded-full cursor-pointer transition-all duration-300 transform flex items-center justify-center
+                          relative w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 rounded-full cursor-pointer transition-all duration-300 transform flex items-center justify-center shadow-lg border-4 border-white
                           ${isUnlocked ? "hover:scale-110" : ""}
                           ${
                             isCompleted
-                              ? "bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-500/50"
+                              ? "bg-gradient-to-r from-green-400 to-emerald-500 shadow-green-200"
                               : isActive
-                              ? "bg-gradient-to-r from-purple-400 to-purple-600 shadow-lg shadow-purple-500/50 animate-pulse"
-                              : "bg-gradient-to-r from-gray-600 to-gray-700 shadow-lg shadow-gray-500/30"
+                              ? "bg-gradient-to-r from-blue-400 to-blue-600 shadow-blue-200 animate-pulse"
+                              : "bg-gradient-to-r from-slate-300 to-slate-400 shadow-slate-200"
                           }
                         `}
                       >
                         {/* Path Number */}
-                        <div className="absolute -top-2 -left-2 w-8 h-8 bg-yellow-400 text-black rounded-full flex items-center justify-center font-bold text-sm">
+                        <div className="absolute -top-2 -left-2 w-6 h-6 sm:w-8 sm:h-8 bg-amber-400 text-slate-800 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm shadow-md border-2 border-white">
                           {path.order}
                         </div>
 
                         {/* Main Icon */}
-                        <div className="text-2xl md:text-4xl">
+                        <div className="text-xl sm:text-2xl lg:text-4xl">
                           {isCompleted ? (
                             <span className="text-white">✅</span>
                           ) : isUnlocked ? (
                             <span>🎯</span>
                           ) : (
-                            <span className="text-gray-400">🔒</span>
+                            <span className="text-slate-500">🔒</span>
                           )}
                         </div>
 
                         {/* Points Badge */}
                         {isCompleted && (
-                          <div className="absolute -bottom-2 -right-2 bg-yellow-400 text-black rounded-full px-2 py-1 text-xs font-bold flex items-center gap-1">
+                          <div className="absolute -bottom-2 -right-2 bg-amber-400 text-slate-800 rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs font-bold flex items-center gap-1 shadow-md border-2 border-white">
                             <span>⭐</span>
-                            {earnedSegmentPoints}
+                            <span className="hidden xs:inline">
+                              {earnedSegmentPoints}
+                            </span>
                           </div>
                         )}
 
                         {/* Glow Effect for Active Paths */}
                         {isActive && (
-                          <div className="absolute inset-0 rounded-full bg-white/20 animate-ping"></div>
+                          <div className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping"></div>
                         )}
                       </div>
 
                       {/* Path Info Card */}
                       <div
                         className={`
-                        flex-1 max-w-md bg-black/80 backdrop-blur-sm rounded-lg p-4 border border-purple-500/30
-                        ${isUnlocked ? "opacity-100" : "opacity-60"}
-                        transition-all duration-300 hover:scale-105
+                        flex-1 w-full sm:max-w-sm lg:max-w-md bg-white/90 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-blue-200 shadow-lg
+                        ${isUnlocked ? "opacity-100" : "opacity-70"}
+                        transition-all duration-300 hover:scale-105 hover:shadow-xl
                       `}
                       >
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
                             <h3
-                              className={`font-bold text-lg ${
+                              className={`font-bold text-base sm:text-lg lg:text-xl leading-tight ${
                                 isCompleted
-                                  ? "text-green-400"
+                                  ? "text-green-600"
                                   : isActive
-                                  ? "text-white"
-                                  : "text-gray-400"
+                                  ? "text-slate-800"
+                                  : "text-slate-500"
                               }`}
                             >
                               {path.title}
                             </h3>
-                            <p className="text-sm text-gray-300">
+                            <p className="text-xs sm:text-sm text-slate-600 mt-1">
                               {path.segments.length} segments
                             </p>
                           </div>
                           {path.progressPercentage > 0 && (
-                            <div className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-sm font-bold">
+                            <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg text-xs sm:text-sm font-bold ml-2 shadow-sm">
                               {path.progressPercentage}%
                             </div>
                           )}
                         </div>
 
                         {path.description && (
-                          <p className="text-gray-300 text-sm mb-3">
+                          <p className="text-slate-600 text-xs sm:text-sm mb-3 leading-relaxed">
                             {path.description}
                           </p>
                         )}
 
                         {/* Segments Preview */}
-                        <div className="flex gap-1 mb-3">
+                        <div className="flex flex-wrap gap-1 mb-3">
                           {path.segments.slice(0, 5).map((segment) => (
                             <div
                               key={segment.id}
-                              className={`w-3 h-3 rounded-full ${
+                              className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
                                 segment.isCompleted
-                                  ? "bg-green-400"
-                                  : "bg-gray-600"
-                              }`}
+                                  ? "bg-green-500"
+                                  : "bg-slate-300"
+                              } shadow-sm`}
                               title={`Segment ${segment.order}: ${segment.type}`}
                             />
                           ))}
                           {path.segments.length > 5 && (
-                            <span className="text-xs text-gray-400 self-center">
-                              +{path.segments.length - 5} more
+                            <span className="text-xs text-slate-500 self-center ml-1">
+                              +{path.segments.length - 5}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+                        <div className="flex items-center justify-between text-xs text-slate-500 mb-3 bg-slate-50 rounded-lg p-2">
                           <div className="flex items-center gap-1">
                             <span>📊</span>
-                            {
-                              path.segments.filter((s) => s.isCompleted).length
-                            }{" "}
-                            / {path.segments.length} completed
+                            <span className="text-xs">
+                              {
+                                path.segments.filter((s) => s.isCompleted)
+                                  .length
+                              }{" "}
+                              / {path.segments.length}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <span>⭐</span>
-                            {totalSegmentPoints} XP
+                            <span className="text-xs">
+                              {totalSegmentPoints} XP
+                            </span>
                           </div>
                         </div>
 
@@ -366,11 +383,11 @@ const GameCourseTrail = () => {
                           <button
                             onClick={() => handlePathClick(path)}
                             className={`
-                              w-full py-2 px-4 rounded-lg font-medium transition-all duration-200
+                              w-full py-2.5 sm:py-3 px-4 rounded-lg font-medium transition-all duration-200 text-sm sm:text-base shadow-md hover:shadow-lg
                               ${
                                 isCompleted
-                                  ? "bg-green-600 hover:bg-green-700 text-white"
-                                  : "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                                  ? "bg-green-500 hover:bg-green-600 text-white"
+                                  : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
                               }
                             `}
                           >
@@ -379,15 +396,6 @@ const GameCourseTrail = () => {
                         )}
                       </div>
                     </div>
-
-                    {/* Achievement Badge */}
-                    {isCompleted && path.progressPercentage === 100 && (
-                      <div className="absolute top-0 right-0 z-20">
-                        <div className="bg-yellow-400 text-black rounded-full p-2 animate-bounce">
-                          <span className="text-lg">👑</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })}
@@ -396,15 +404,15 @@ const GameCourseTrail = () => {
 
         {/* Completion Celebration */}
         {overallProgress === 100 && (
-          <div className="text-center mt-16 p-8 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-xl border border-yellow-400/30">
-            <div className="text-6xl mb-4">🏆</div>
-            <h2 className="text-3xl font-bold text-yellow-400 mb-2">
+          <div className="text-center mt-12 sm:mt-16 p-6 sm:p-8 bg-gradient-to-r from-amber-100/80 to-orange-100/80 rounded-xl border-2 border-amber-200 shadow-xl backdrop-blur-sm">
+            <div className="text-4xl sm:text-6xl mb-4">🏆</div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-amber-600 mb-2">
               Congratulations, Champion!
             </h2>
-            <p className="text-white text-lg mb-4">
+            <p className="text-slate-700 text-base sm:text-lg mb-4 max-w-md mx-auto">
               You've completed the entire course adventure!
             </p>
-            <button className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-lg font-bold hover:scale-105 transition-transform">
+            <button className="bg-gradient-to-r from-amber-400 to-orange-500 text-slate-800 px-6 py-3 rounded-lg font-bold hover:scale-105 transition-transform shadow-md text-sm sm:text-base">
               View Certificate
             </button>
           </div>

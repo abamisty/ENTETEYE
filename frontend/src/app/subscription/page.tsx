@@ -14,44 +14,17 @@ import { parentApi } from "@/api/parent";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { BASE_URL } from "@/lib/constants";
-import { PaystackButton } from "react-paystack";
+import PaystackPop from "@paystack/inline-js";
+import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/api/api";
 
 const SubscriptionPlansPage = () => {
   const router = useRouter();
-  const amount = 1000000;
   const [email, setEmail] = useState("ikram.codes@gmail.com");
   const [name, setName] = useState("IKRAM KHAN");
   const [phone, setPhone] = useState("02434343");
-  const publicKey = "pk_test_c433649b4344daaec516925783beae6b0b3219d3";
-  const componentProps = {
-    email,
-    amount,
-    metadata: {
-      name: "IKRAM",
-      phone: "0243242",
-    },
-    publicKey,
-    text: "Pay Now",
-    onSuccess: () =>
-      alert("Thanks for doing business with us! Come back soon!!"),
-    onClose: () => alert("Wait! Don't leave :("),
-  };
-
-  const handleSelectPlan = async (product: "basic" | "professional") => {
-    try {
-      const response = await parentApi.createMockSubscription({
-        plan: "monthly", // Default to monthly, can be made configurable
-        product,
-      });
-
-      router.push("/dashboard");
-    } catch (error) {
-      toast.error("Failed to create subscription. Please try again.", {
-        duration: 4000,
-      });
-      console.error("Error creating subscription:", error);
-    }
-  };
+  const { user } = useAuth();
+  console.log(user);
 
   const plans = [
     {
@@ -60,6 +33,7 @@ const SubscriptionPlansPage = () => {
       description:
         "Perfect for families getting started with character building",
       price: "$9.99",
+      amount: 999, // Amount in USD cents (convert to NGN kobo if needed)
       period: "per month",
       originalPrice: "$19.99",
       isPopular: false,
@@ -81,6 +55,7 @@ const SubscriptionPlansPage = () => {
       product: "professional" as const,
       description: "Complete family values education with advanced features",
       price: "$19.99",
+      amount: 1999, // Amount in USD cents (convert to NGN kobo if needed)
       period: "per month",
       originalPrice: "$39.99",
       isPopular: true,
@@ -102,6 +77,41 @@ const SubscriptionPlansPage = () => {
       ],
     },
   ];
+
+  const handleSelectPlan = async (product: "basic" | "professional") => {
+    const plan = plans.find((p) => p.product === product);
+    if (!plan) return;
+
+    try {
+      // Call backend to initialize transaction
+      const response = await api.post(`/parent/subscription`, {
+        email,
+        plan: "monthly", // Adjust based on user selection
+        product,
+        amount: plan.amount * 100, // Convert to kobo if using NGN
+        userId: user.id, // Replace with actual user ID (from auth context)
+        familyId: user.familyId, // Replace with actual family ID
+      });
+
+      const { access_code, subscriptionId } = await response.data;
+
+      if (!access_code) {
+        throw new Error("Failed to get access code");
+      }
+
+      // Initialize Paystack Popup
+      const paystack = new PaystackPop();
+      paystack.resumeTransaction(access_code);
+
+      // Optionally, listen for payment events (requires custom handling)
+      // Paystack doesn't provide direct event listeners in Popup, so rely on callback_url or webhook
+    } catch (error) {
+      toast.error("Failed to initialize payment. Please try again.", {
+        duration: 4000,
+      });
+      console.error("Error initializing payment:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -190,18 +200,7 @@ const SubscriptionPlansPage = () => {
                     </span>
                   </div>
                 </div>
-                <PaystackButton
-                  currency="USD"
-                  email={componentProps.email}
-                  publicKey={publicKey}
-                  amount={componentProps.amount}
-                  text="Pay Now"
-                  onSuccess={() =>
-                    alert("Thanks for doing business with us! Come back soon!!")
-                  }
-                  className=""
-                  onClose={() => alert("Wait! Don't leave :(")}
-                />
+
                 <button
                   onClick={() => handleSelectPlan(plan.product)}
                   className={`w-full py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${

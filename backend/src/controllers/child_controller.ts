@@ -111,7 +111,6 @@ export const getEnrolledCourses = async (
     next(error);
   }
 };
-
 export const getCourseDetails = async (
   req: Request,
   res: Response,
@@ -121,12 +120,25 @@ export const getCourseDetails = async (
     const { courseId } = req.params;
     const childId = (req as any).user.id;
 
-    // Check if child is enrolled
+    // Get enrollment with all progress data in one query
     const enrollment = await enrollmentRepository.findOne({
       where: { child: { id: childId }, course: { id: courseId } },
-      relations: ["course"],
+      relations: [
+        "course",
+        "course.featuredCharacters",
+        "course.learningPaths",
+        "course.learningPaths.segments",
+        "pathProgress",
+        "pathProgress.learningPath",
+        "pathProgress.segmentProgress",
+        "pathProgress.segmentProgress.segment",
+      ],
+      order: {
+        course: {
+          learningPaths: { order: "ASC", segments: { order: "ASC" } },
+        },
+      },
     });
-
     if (!enrollment) {
       return res.status(403).json({
         success: false,
@@ -134,49 +146,23 @@ export const getCourseDetails = async (
       });
     }
 
-    // Get course with learning paths and segments
-    const course = await courseRepository.findOne({
-      where: { id: courseId },
-      relations: [
-        "learningPaths",
-        "learningPaths.segments",
-        "featuredCharacters",
-      ],
-      order: {
-        learningPaths: { order: "ASC" },
-      },
-    });
+    const { course, pathProgress } = enrollment;
 
-    if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
-      });
-    }
-
-    // Get child's progress for this course
-    const pathProgress = await pathProgressRepository.find({
-      where: {
-        enrollment: { id: enrollment.id },
-      },
-      relations: ["learningPath", "segmentProgress"],
-    });
-
-    // Structure response with progress information
-    const courseWithProgress = {
+    // Structure the response
+    const responseData = {
       ...course,
       learningPaths: course.learningPaths.map((path) => {
-        const pathProgressRecord = pathProgress.find(
-          (p) => p.learningPath.id === path.id
+        const progress = pathProgress.find(
+          (pp) => pp.learningPath.id === path.id
         );
 
         return {
           ...path,
-          isCompleted: pathProgressRecord?.isCompleted || false,
-          progressPercentage: pathProgressRecord?.progressPercentage || 0,
+          isCompleted: progress?.isCompleted || false,
+          progressPercentage: progress?.progressPercentage || 0,
           segments: path.segments.map((segment) => {
-            const segmentProgress = pathProgressRecord?.segmentProgress.find(
-              (sp) => sp.segment?.id === segment?.id
+            const segmentProgress = progress?.segmentProgress?.find(
+              (sp) => sp.segment?.id === segment.id
             );
             return {
               ...segment,
@@ -187,17 +173,23 @@ export const getCourseDetails = async (
           }),
         };
       }),
+      enrollment: {
+        id: enrollment.id,
+        isCompleted: enrollment.isCompleted,
+        progressPercentage: enrollment.progressPercentage,
+        totalPointsEarned: enrollment.totalPointsEarned,
+      },
     };
 
     return res.status(200).json({
       success: true,
-      data: { ...courseWithProgress, enrollment },
+      data: responseData,
     });
   } catch (error) {
+    console.error("Error in getCourseDetails:", error);
     next(error);
   }
 };
-
 export const getAvailableCourses = async (
   req: Request,
   res: Response,
@@ -303,300 +295,6 @@ export const enrollInCourse = async (
     next(error);
   }
 };
-
-export const updateSegmentProgress = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { courseId, segmentId } = req.params;
-    const childId = (req as any).user.id;
-    const { isCompleted, interactionData, pointsEarned } = req.body;
-
-    console.log(
-      `Updating segment progress: Child ${childId}, Course ${courseId}, Segment ${segmentId}`
-    );
-
-    // Verify enrollment
-    const enrollment = await enrollmentRepository.findOne({
-      where: { child: { id: childId }, course: { id: courseId } },
-      relations: ["pathProgress"],
-    });
-
-    if (!enrollment) {
-      return res.status(403).json({
-        success: false,
-        message: "You are not enrolled in this course",
-      });
-    }
-
-    // Verify segment exists in this course and get all segments in the path
-    const segment = await learningSegmentRepository.findOne({
-      where: { id: segmentId },
-      relations: [
-        "learningPath",
-        "learningPath.course",
-        "learningPath.segments",
-      ],
-    });
-
-    if (!segment || segment.learningPath.course.id !== courseId) {
-      return res.status(404).json({
-        success: false,
-        message: "Segment not found in this course",
-      });
-    }
-
-    // Find or create path progress
-    let pathProgress = await pathProgressRepository.findOne({
-      where: {
-        enrollment: { id: enrollment.id },
-        learningPath: { id: segment.learningPath.id },
-      },
-      relations: ["segmentProgress", "segmentProgress.segment"],
-    });
-
-    if (!pathProgress) {
-      console.log(
-        `Creating new path progress for path: ${segment.learningPath.id}`
-      );
-      // Create new path progress if it doesn't exist
-      pathProgress = pathProgressRepository.create({
-        enrollment: { id: enrollment.id },
-        learningPath: { id: segment.learningPath.id },
-        isCompleted: false,
-        progressPercentage: 0,
-        pointsEarned: 0,
-      });
-
-      await pathProgressRepository.save(pathProgress);
-
-      // Add the new path progress to the enrollment relation
-      if (!enrollment.pathProgress) {
-        enrollment.pathProgress = [];
-      }
-      enrollment.pathProgress.push(pathProgress);
-      await enrollmentRepository.save(enrollment);
-
-      // Reload the pathProgress with relations
-      pathProgress = await pathProgressRepository.findOne({
-        where: { id: pathProgress.id },
-        relations: ["segmentProgress", "segmentProgress.segment"],
-      });
-    }
-
-    // Find or create segment progress
-    let segmentProgress = await segmentProgressRepository.findOne({
-      where: {
-        pathProgress: { id: pathProgress!.id },
-        segment: { id: segmentId },
-      },
-    });
-
-    if (!segmentProgress) {
-      console.log(`Creating new segment progress for segment: ${segmentId}`);
-      segmentProgress = segmentProgressRepository.create({
-        pathProgress: pathProgress!,
-        segment: { id: segmentId },
-        isCompleted: false,
-        pointsEarned: 0,
-        timeSpentSeconds: 0,
-      });
-    }
-
-    // Update segment progress
-    let hasChanges = false;
-
-    if (
-      typeof isCompleted === "boolean" &&
-      segmentProgress.isCompleted !== isCompleted
-    ) {
-      segmentProgress.isCompleted = isCompleted;
-      hasChanges = true;
-      if (isCompleted) {
-        segmentProgress.completedAt = new Date();
-        console.log(`Segment ${segmentId} marked as completed`);
-      }
-    }
-
-    if (interactionData) {
-      segmentProgress.interactionData = interactionData;
-      hasChanges = true;
-    }
-
-    if (
-      typeof pointsEarned === "number" &&
-      segmentProgress.pointsEarned !== pointsEarned
-    ) {
-      segmentProgress.pointsEarned = pointsEarned;
-      hasChanges = true;
-    }
-
-    if (hasChanges) {
-      await segmentProgressRepository.save(segmentProgress);
-      console.log(`Segment progress saved for segment: ${segmentId}`);
-    }
-
-    // Update path progress calculations
-    if (pathProgress && segment.learningPath.segments) {
-      // Get all segment progress records for this path
-      const allSegmentProgress = await segmentProgressRepository.find({
-        where: { pathProgress: { id: pathProgress.id } },
-        relations: ["segment"],
-      });
-
-      // Get total segments in the learning path
-      const totalSegments = segment.learningPath.segments.length;
-
-      // Count completed segments
-      const completedSegments = allSegmentProgress.filter(
-        (sp) => sp.isCompleted
-      ).length;
-
-      // Calculate total points earned in this path
-      const totalPointsEarned = allSegmentProgress.reduce(
-        (sum, sp) => sum + (sp.pointsEarned || 0),
-        0
-      );
-
-      // Calculate progress percentage
-      const newProgressPercentage = Math.round(
-        (completedSegments / totalSegments) * 100
-      );
-
-      console.log(
-        `Path progress calculation: ${completedSegments}/${totalSegments} segments completed (${newProgressPercentage}%)`
-      );
-
-      // Update path progress if values have changed
-      if (
-        newProgressPercentage !== pathProgress.progressPercentage ||
-        totalPointsEarned !== pathProgress.pointsEarned ||
-        (newProgressPercentage === 100 && !pathProgress.isCompleted)
-      ) {
-        pathProgress.progressPercentage = newProgressPercentage;
-        pathProgress.pointsEarned = totalPointsEarned;
-        pathProgress.isCompleted = newProgressPercentage === 100;
-
-        if (pathProgress.isCompleted && !pathProgress.completedAt) {
-          pathProgress.completedAt = new Date();
-          console.log(
-            `Learning path ${segment.learningPath.id} marked as completed!`
-          );
-        }
-
-        await pathProgressRepository.save(pathProgress);
-      }
-    }
-
-    // Update course progress
-    await updateCourseProgress(enrollment.id);
-
-    // Return the updated segment progress with additional info
-    const responseData = {
-      ...segmentProgress,
-      pathProgress: {
-        id: pathProgress!.id,
-        progressPercentage: pathProgress!.progressPercentage,
-        isCompleted: pathProgress!.isCompleted,
-        pointsEarned: pathProgress!.pointsEarned,
-      },
-    };
-
-    return res.status(200).json({
-      success: true,
-      message: "Segment progress updated",
-      data: responseData,
-    });
-  } catch (error) {
-    console.error("Error updating segment progress:", error);
-    next(error);
-  }
-};
-
-// Updated course progress function to work with the fixed segment controller
-async function updateCourseProgress(enrollmentId: string) {
-  try {
-    const enrollment = await enrollmentRepository.findOne({
-      where: { id: enrollmentId },
-      relations: ["course", "course.learningPaths", "pathProgress"],
-    });
-
-    if (!enrollment || !enrollment.course) {
-      console.error(`Enrollment not found: ${enrollmentId}`);
-      return;
-    }
-
-    const totalPaths = enrollment.course.learningPaths?.length || 0;
-    if (totalPaths === 0) {
-      console.warn(
-        `No learning paths found for course: ${enrollment.course.id}`
-      );
-      return;
-    }
-
-    const completedPaths =
-      enrollment.pathProgress?.filter((pp) => pp.isCompleted).length || 0;
-    const newPercentage = Math.round((completedPaths / totalPaths) * 100);
-
-    // Calculate total points earned across all paths
-    const totalPointsEarned =
-      enrollment.pathProgress?.reduce(
-        (sum, pp) => sum + (pp.pointsEarned || 0),
-        0
-      ) || 0;
-
-    console.log(
-      `Updating course progress: ${completedPaths}/${totalPaths} paths completed (${newPercentage}%)`
-    );
-    if (
-      newPercentage !== enrollment.progressPercentage ||
-      totalPointsEarned !== enrollment.totalPointsEarned ||
-      (newPercentage === 100 && !enrollment.isCompleted)
-    ) {
-      enrollment.progressPercentage = newPercentage;
-      enrollment.totalPointsEarned = totalPointsEarned;
-      enrollment.isCompleted = newPercentage === 100;
-
-      if (enrollment.isCompleted && !enrollment.completedAt) {
-        enrollment.completedAt = new Date();
-        console.log(
-          `Course ${enrollment.course.id} marked as completed for child ${enrollment.child}!`
-        );
-      }
-
-      await enrollmentRepository.save(enrollment);
-      console.log(`Course progress updated successfully: ${enrollment.id}`);
-    }
-  } catch (error) {
-    console.error("Error updating course progress:", error);
-    throw error;
-  }
-}
-
-async function updatePathProgress(pathProgressId: string) {
-  const pathProgress = await pathProgressRepository.findOne({
-    where: { id: pathProgressId },
-    relations: ["learningPath", "segmentProgress"],
-  });
-
-  if (!pathProgress || !pathProgress.learningPath) return;
-
-  const totalSegments = pathProgress.learningPath.segments?.length || 0;
-  if (totalSegments === 0) return;
-
-  const completedSegments =
-    pathProgress.segmentProgress?.filter((sp) => sp.isCompleted).length || 0;
-
-  const newPercentage = Math.round((completedSegments / totalSegments) * 100);
-
-  if (newPercentage !== pathProgress.progressPercentage) {
-    pathProgress.progressPercentage = newPercentage;
-    pathProgress.isCompleted = newPercentage === 100;
-    await pathProgressRepository.save(pathProgress);
-  }
-}
 
 export const getChildProgress = async (
   req: Request,
@@ -942,3 +640,266 @@ export const getDashboardData = async (
     next(error);
   }
 };
+
+export const updateSegmentProgress = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { courseId, segmentId } = req.params;
+    const childId = (req as any).user.id;
+    const { isCompleted, interactionData, pointsEarned } = req.body;
+
+    console.log(`Updating segment ${segmentId} for child ${childId}`);
+
+    // 1. Get enrollment
+    const enrollment = await enrollmentRepository.findOne({
+      where: { child: { id: childId }, course: { id: courseId } },
+    });
+
+    if (!enrollment) {
+      return res.status(403).json({ success: false, message: "Not enrolled" });
+    }
+
+    // 2. Get segment with path
+    const segment = await learningSegmentRepository.findOne({
+      where: { id: segmentId },
+      relations: ["learningPath"],
+    });
+
+    if (!segment) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Segment not found" });
+    }
+
+    // 3. Find or create path progress
+    let pathProgress = await pathProgressRepository.findOne({
+      where: {
+        enrollment: { id: enrollment.id },
+        learningPath: { id: segment.learningPath.id },
+      },
+    });
+
+    if (!pathProgress) {
+      pathProgress = pathProgressRepository.create({
+        enrollment: { id: enrollment.id },
+        learningPath: { id: segment.learningPath.id },
+        isCompleted: false,
+        progressPercentage: 0,
+        pointsEarned: 0,
+      });
+      pathProgress = await pathProgressRepository.save(pathProgress);
+    }
+
+    // 4. Find or create segment progress
+    let segmentProgress = await segmentProgressRepository.findOne({
+      where: {
+        pathProgress: { id: pathProgress.id },
+        segment: { id: segmentId },
+      },
+    });
+
+    if (!segmentProgress) {
+      segmentProgress = segmentProgressRepository.create({
+        pathProgress: { id: pathProgress.id },
+        segment: { id: segmentId },
+        isCompleted: false,
+        pointsEarned: 0,
+        timeSpentSeconds: 0,
+      });
+    }
+
+    // Store previous state to check if we need to update path progress
+    const wasCompleted = segmentProgress.isCompleted;
+
+    // 5. Update values
+    if (typeof isCompleted === "boolean") {
+      segmentProgress.isCompleted = isCompleted;
+      if (isCompleted && !segmentProgress.completedAt) {
+        segmentProgress.completedAt = new Date();
+      }
+    }
+
+    if (interactionData) segmentProgress.interactionData = interactionData;
+    if (typeof pointsEarned === "number") {
+      segmentProgress.pointsEarned = pointsEarned;
+    }
+
+    // 6. Save segment progress
+    segmentProgress = await segmentProgressRepository.save(segmentProgress);
+    console.log(
+      `Segment progress saved: completed=${segmentProgress.isCompleted}`
+    );
+
+    // 7. UPDATE PATH PROGRESS - THIS WAS MISSING!
+    // Only update path progress if the completion status changed
+    // if (segmentProgress.isCompleted !== wasCompleted) {
+    console.log(
+      "Segment completion changed, updating path progress...",
+      pathProgress
+    );
+    await updatePathProgress(pathProgress.id);
+    // }
+
+    // 8. Get updated path progress for response
+    const updatedPathProgress = await pathProgressRepository.findOne({
+      where: { id: pathProgress.id },
+    });
+
+    // 9. Return response with both segment and path progress
+    return res.status(200).json({
+      success: true,
+      message: "Progress updated",
+      data: {
+        segmentProgress,
+        pathProgress: updatedPathProgress
+          ? {
+              id: updatedPathProgress.id,
+              isCompleted: updatedPathProgress.isCompleted,
+              progressPercentage: updatedPathProgress.progressPercentage,
+              pointsEarned: updatedPathProgress.pointsEarned,
+            }
+          : null,
+      },
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    next(error);
+  }
+};
+
+async function updatePathProgress(pathProgressId: string) {
+  try {
+    console.log(`Updating path progress for: ${pathProgressId}`);
+
+    const pathProgress = await pathProgressRepository.findOne({
+      where: { id: pathProgressId },
+      relations: ["learningPath", "learningPath.segments", "segmentProgress"],
+    });
+
+    if (!pathProgress || !pathProgress.learningPath) {
+      console.log("Path progress or learning path not found");
+      return;
+    }
+
+    // Get total segments in this learning path
+    const totalSegments = pathProgress.learningPath.segments?.length || 0;
+    console.log(`Total segments in path: ${totalSegments}`);
+
+    if (totalSegments === 0) {
+      console.log("No segments found in learning path");
+      return;
+    }
+
+    // Count completed segments
+    const completedSegments =
+      pathProgress.segmentProgress?.filter((sp) => sp.isCompleted).length || 0;
+    console.log(`Completed segments: ${completedSegments}`);
+
+    // Calculate new progress percentage
+    const newPercentage = Math.round((completedSegments / totalSegments) * 100);
+    console.log(`New progress percentage: ${newPercentage}%`);
+
+    // Check if path should be marked as completed
+    const shouldBeCompleted = completedSegments === totalSegments;
+    console.log(`Should path be completed? ${shouldBeCompleted}`);
+
+    // Update only if something changed
+    if (
+      newPercentage !== pathProgress.progressPercentage ||
+      shouldBeCompleted !== pathProgress.isCompleted
+    ) {
+      pathProgress.progressPercentage = newPercentage;
+      pathProgress.isCompleted = shouldBeCompleted;
+
+      // Set completedAt timestamp if path is newly completed
+      if (shouldBeCompleted && !pathProgress.completedAt) {
+        pathProgress.completedAt = new Date();
+        console.log("🎉 Path marked as completed!");
+      }
+
+      // Recalculate total points
+      const totalPoints =
+        pathProgress.segmentProgress?.reduce(
+          (sum, sp) => sum + (sp.pointsEarned || 0),
+          0
+        ) || 0;
+      pathProgress.pointsEarned = totalPoints;
+
+      await pathProgressRepository.save(pathProgress);
+      console.log("Path progress updated successfully");
+
+      // If path is completed, update course progress too
+      if (shouldBeCompleted) {
+        await updateCourseProgress(pathProgress.enrollment.id);
+      }
+    } else {
+      console.log("No changes to path progress");
+    }
+  } catch (error) {
+    console.error("Error in updatePathProgress:", error);
+    throw error;
+  }
+}
+
+async function updateCourseProgress(enrollmentId: string) {
+  try {
+    console.log(`Updating course progress for enrollment: ${enrollmentId}`);
+
+    const enrollment = await enrollmentRepository.findOne({
+      where: { id: enrollmentId },
+      relations: ["course", "course.learningPaths", "pathProgress"],
+    });
+
+    if (!enrollment || !enrollment.course) {
+      console.error("Enrollment or course not found");
+      return;
+    }
+
+    const totalPaths = enrollment.course.learningPaths?.length || 0;
+    if (totalPaths === 0) {
+      console.log("No learning paths found in course");
+      return;
+    }
+
+    const completedPaths =
+      enrollment.pathProgress?.filter((pp) => pp.isCompleted).length || 0;
+    const newPercentage = Math.round((completedPaths / totalPaths) * 100);
+
+    // Calculate total points earned across all paths
+    const totalPointsEarned =
+      enrollment.pathProgress?.reduce(
+        (sum, pp) => sum + (pp.pointsEarned || 0),
+        0
+      ) || 0;
+
+    console.log(
+      `Course progress: ${completedPaths}/${totalPaths} paths completed (${newPercentage}%)`
+    );
+
+    // Update if values changed
+    if (
+      newPercentage !== enrollment.progressPercentage ||
+      totalPointsEarned !== enrollment.totalPointsEarned
+    ) {
+      enrollment.progressPercentage = newPercentage;
+      enrollment.totalPointsEarned = totalPointsEarned;
+      enrollment.isCompleted = newPercentage === 100;
+
+      if (enrollment.isCompleted && !enrollment.completedAt) {
+        enrollment.completedAt = new Date();
+        console.log("🎉 Course marked as completed!");
+      }
+
+      await enrollmentRepository.save(enrollment);
+      console.log("Course progress updated successfully");
+    } else {
+      console.log("No changes to course progress");
+    }
+  } catch (error) {
+    console.error("Error in updateCourseProgress:", error);
+    throw error;
+  }
+}

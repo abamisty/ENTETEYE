@@ -14,9 +14,8 @@ import {
   updateCoursePreferences,
   getChildCourseProgress,
   deleteChild,
-  createMockSubscription,
-  cancelMockSubscription,
   getMockSubscriptionDetails,
+  handleCallback,
 } from "../controllers/parent_controller";
 import { protect } from "../middlewares/authorized";
 
@@ -33,11 +32,9 @@ router.post("/family/parents", protect, addParentToFamily);
 router.get("/family", protect, getFamilyDetails);
 
 router.post("/subscription", protect, activateFamilySubscription);
+router.get("/subscriptions/callback", handleCallback);
 router.get("/subscription", protect, getFamilySubscription);
 
-// New subscription routes
-router.post("/subscription/mock", protect, createMockSubscription);
-router.delete("/subscription/mock", protect, cancelMockSubscription);
 router.get("/subscription/mock", protect, getMockSubscriptionDetails);
 
 router.post("/enrollments", protect, enrollChildInCourse);

@@ -95,7 +95,7 @@ export const childCourseApi = {
     data: SegmentProgressData
   ) {
     try {
-      const response: ResponseInterface = await api.patch(
+      const response: ResponseInterface = await api.put(
         `/child/courses/${courseId}/segments/${segmentId}/progress`,
         data
       );

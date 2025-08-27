@@ -22,6 +22,11 @@ router.get("/dashboard", getDashboardData);
 router.get("/courses/enrolled", getEnrolledCourses);
 router.get("/courses/:courseId", getCourseDetails);
 
+router.put(
+  "/courses/:courseId/segments/:segmentId/progress",
+  updateSegmentProgress
+);
+
 // Available courses
 
 router.get("/courses/available", getAvailableCourses);
@@ -32,9 +37,5 @@ router.post("/courses/:courseId/enroll", enrollInCourse);
 
 // Progress tracking
 router.get("/courses/:courseId/progress", getChildProgress);
-router.patch(
-  "/courses/:courseId/segments/:segmentId/progress",
-  updateSegmentProgress
-);
 
 export default router;

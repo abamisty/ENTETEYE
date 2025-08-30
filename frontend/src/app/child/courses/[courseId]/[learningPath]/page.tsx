@@ -17,6 +17,14 @@ import {
   Clock,
   Award,
   TrendingUp,
+  Shuffle,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  Gamepad2,
+  Users,
+  Puzzle,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { childCourseApi } from "@/api/child";
@@ -37,7 +45,7 @@ const CelebrationPopup = ({
 }) => {
   useEffect(() => {
     if (show) {
-      const timer = setTimeout(onClose, 3000);
+      const timer = setTimeout(onClose, 1000);
       return () => clearTimeout(timer);
     }
   }, [show, onClose]);
@@ -45,7 +53,7 @@ const CelebrationPopup = ({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0  bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000000] p-4">
       <div className="bg-white rounded-3xl p-6 sm:p-8 text-center animate-bounce shadow-2xl border-4 border-amber-400 max-w-sm w-full">
         <div className="text-4xl sm:text-6xl mb-4 animate-pulse">
           {type === "correct" && "🎉"}
@@ -93,19 +101,16 @@ const TypewriterText = ({
   const [hasTyped, setHasTyped] = useState(false);
 
   useEffect(() => {
-    // If message has been active before and is no longer active, show full text
     if (hasBeenActive && !isActive && !hasTyped) {
       setDisplayedText(text);
       return;
     }
 
-    // If message has already been typed, don't type again
     if (hasTyped) {
       setDisplayedText(text);
       return;
     }
 
-    // Only start typing if currently active and hasn't been typed yet
     if (!isActive || hasTyped) {
       return;
     }
@@ -132,7 +137,6 @@ const TypewriterText = ({
     };
   }, [text, isActive, hasBeenActive, hasTyped, speed, onComplete]);
 
-  // Reset typing state when text changes (new message)
   useEffect(() => {
     setHasTyped(false);
     setDisplayedText("");
@@ -249,7 +253,6 @@ const DialogueMessage = ({
           speed={30}
         />
 
-        {/* Enhanced Speech bubble arrow */}
         {!isCenter && (
           <div
             className={`absolute top-4 w-0 h-0 ${
@@ -260,7 +263,6 @@ const DialogueMessage = ({
           />
         )}
 
-        {/* Message number badge */}
         <div
           className={`absolute -top-2 ${
             isLeft ? "-right-2" : "-left-2"
@@ -345,6 +347,14 @@ const LearningSegmentPage = ({
   const [sessionStartTime] = useState(Date.now());
   const [currentTime, setCurrentTime] = useState(Date.now());
 
+  const shuffleArray = (array: any) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
   // Celebration states
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationType, setCelebrationType] = useState<
@@ -362,9 +372,9 @@ const LearningSegmentPage = ({
   const [allDialogueMessages, setAllDialogueMessages] = useState<any[]>([]);
   const [visibleMessageCount, setVisibleMessageCount] = useState(0);
   const dialogueContainerRef = useRef<HTMLDivElement>(null);
-
+  const [openEndedAnswer, setOpenEndedAnswer] = useState("");
   // Question states
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<any>(null);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [attempts, setAttempts] = useState(0);
@@ -383,6 +393,35 @@ const LearningSegmentPage = ({
 
   // Instruction states
   const [instructionRead, setInstructionRead] = useState(false);
+
+  // New activity states
+  const [currentFlashcardIndex, setCurrentFlashcardIndex] = useState(0);
+  const [showFlashcardBack, setShowFlashcardBack] = useState(false);
+  const [flashcardsCompleted, setFlashcardsCompleted] = useState(false);
+  const [matchingPairs, setMatchingPairs] = useState<{ [key: string]: string }>(
+    {}
+  );
+  const [matchingCompleted, setMatchingCompleted] = useState(false);
+  const [currentStoryChapter, setCurrentStoryChapter] = useState("");
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [storyCompleted, setStoryCompleted] = useState(false);
+  const [dragDropItems, setDragDropItems] = useState<{
+    [key: string]: { x: number; y: number; placed: boolean };
+  }>({});
+  const [dragWordsAnswers, setDragWordsAnswers] = useState<{
+    [key: string]: string;
+  }>({});
+  const [fillBlanksAnswers, setFillBlanksAnswers] = useState<{
+    [key: string]: string;
+  }>({});
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [questionSetAnswers, setQuestionSetAnswers] = useState<{
+    [key: number]: any;
+  }>({});
+  const [scenarioAnswers, setScenarioAnswers] = useState<{
+    [key: number]: string;
+  }>({});
 
   const currentSegment = currentPath?.segments?.[currentSegmentIndex];
 
@@ -429,7 +468,6 @@ const LearningSegmentPage = ({
     const messages: any[] = [];
     const dialogue = currentSegment.content.dialogue;
 
-    // Create a flat array of all messages with character info
     dialogue.characters.forEach((characterData: any) => {
       const character = courseData?.featuredCharacters?.find(
         (char: any) => char.id === characterData.characterId
@@ -473,17 +511,13 @@ const LearningSegmentPage = ({
     setVisibleMessageCount(0);
 
     for (let i = 0; i < allDialogueMessages.length; i++) {
-      // Make current message visible
       setVisibleMessageCount(i + 1);
       setCurrentDialogueIndex(i);
 
-      // Small delay to show the message appearing
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      // Speak the text
       await speakText(allDialogueMessages[i].text);
 
-      // Pause between messages
       await new Promise((resolve) => setTimeout(resolve, 800));
     }
 
@@ -592,12 +626,12 @@ const LearningSegmentPage = ({
 
         setTimeout(() => {
           completeSegment();
-        }, 3000);
+        }, 1500);
       } else {
         setTimeout(() => {
           setShowResult(false);
           setBlanksCompleted(false);
-        }, 2000);
+        }, 1500);
       }
     }, 1500);
   };
@@ -688,12 +722,66 @@ const LearningSegmentPage = ({
             timeSpent: Date.now(),
           },
         };
-      case "practice":
+
         return {
           practice: {
             completed: practiceCompleted,
             interactions: Object.keys(draggedItems).length,
             details: draggedItems,
+          },
+        };
+      case "flashcards":
+        return {
+          flashcards: {
+            completed: flashcardsCompleted,
+            cardsViewed: currentFlashcardIndex + 1,
+          },
+        };
+      case "matching":
+        return {
+          matching: {
+            completed: matchingCompleted,
+            pairs: matchingPairs,
+          },
+        };
+      case "storytelling":
+        return {
+          storytelling: {
+            completed: storyCompleted,
+            chaptersRead: [currentStoryChapter],
+          },
+        };
+      case "dragdrop":
+        return {
+          dragdrop: {
+            completed: practiceCompleted,
+            itemsPaced: Object.keys(dragDropItems).length,
+          },
+        };
+      case "dragwords":
+      case "fillblanks":
+        return {
+          [currentSegment.type]: {
+            completed: practiceCompleted,
+            answers:
+              currentSegment.type === "dragwords"
+                ? dragWordsAnswers
+                : fillBlanksAnswers,
+          },
+        };
+      case "questionset":
+        return {
+          questionset: {
+            completed: practiceCompleted,
+            answers: questionSetAnswers,
+            currentQuestion: currentQuestionIndex,
+          },
+        };
+      case "scenario":
+        return {
+          scenario: {
+            completed: practiceCompleted,
+            answers: scenarioAnswers,
           },
         };
       default:
@@ -716,6 +804,21 @@ const LearningSegmentPage = ({
     setPracticeCompleted(false);
     setBlankAnswers({});
     setBlanksCompleted(false);
+
+    // Reset new activity states
+    setCurrentFlashcardIndex(0);
+    setShowFlashcardBack(false);
+    setFlashcardsCompleted(false);
+    setMatchingPairs({});
+    setMatchingCompleted(false);
+    setCurrentStoryChapter("");
+    setStoryCompleted(false);
+    setDragDropItems({});
+    setDragWordsAnswers({});
+    setFillBlanksAnswers({});
+    setCurrentQuestionIndex(0);
+    setQuestionSetAnswers({});
+    setScenarioAnswers({});
   };
 
   const handleDragDrop = (item: string, target: string) => {
@@ -743,7 +846,7 @@ const LearningSegmentPage = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 rounded-lg to-indigo-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-700 text-xl sm:text-2xl font-bold">
@@ -763,7 +866,7 @@ const LearningSegmentPage = ({
 
   if (!currentPath || !currentSegment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 rounded-lg flex items-center justify-center p-4">
         <div className="text-center max-w-md">
           <div className="text-4xl sm:text-6xl mb-4">😕</div>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4">
@@ -788,9 +891,9 @@ const LearningSegmentPage = ({
   const seconds = sessionTime % 60;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 text-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 text-slate-800 rounded-lg">
       {/* Enhanced Header with Gamification */}
-      <div className="bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm p-3 sm:p-4 border-b border-blue-200 shadow-sm">
+      <div className="bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm p-3 sticky top-0 z-[100000] sm:p-4 border-b rounded-tr-lg rounded-tl-lg border-blue-200 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <button
             onClick={() => router.push(`/child/courses/${courseId}`)}
@@ -992,6 +1095,1617 @@ const LearningSegmentPage = ({
               </div>
             </div>
           )}
+
+          {/* Enhanced Flashcards Segment */}
+          {currentSegment.type === "flashcards" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-purple-100/80 to-pink-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-purple-300 shadow-sm mb-4">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-purple-600">
+                    Flashcard Review
+                  </h3>
+                  <div className="bg-purple-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                    <span className="text-xs sm:text-sm font-semibold text-purple-700">
+                      {currentFlashcardIndex + 1}/
+                      {currentSegment.content.flashcards.cards.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {currentSegment.content.flashcards.cards.length > 0 && (
+                <div className="max-w-md mx-auto">
+                  <div
+                    className="relative w-full h-64 sm:h-80 cursor-pointer transform transition-transform duration-500 hover:scale-105"
+                    style={{ perspective: "1000px" }}
+                    onClick={() => setShowFlashcardBack(!showFlashcardBack)}
+                  >
+                    <div
+                      className={`absolute inset-0 w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
+                        showFlashcardBack ? "rotate-y-180" : ""
+                      }`}
+                    >
+                      {/* Front of card */}
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-2xl shadow-xl flex items-center justify-center p-6 backface-hidden">
+                        <div className="text-center">
+                          <div className="text-sm font-medium text-purple-100 mb-2">
+                            FRONT
+                          </div>
+                          <p className="text-lg sm:text-xl font-bold leading-relaxed">
+                            {
+                              currentSegment.content.flashcards.cards[
+                                currentFlashcardIndex
+                              ].front
+                            }
+                          </p>
+                          <div className="mt-4 text-purple-200 text-sm">
+                            Tap to reveal answer
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Back of card */}
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl shadow-xl flex items-center justify-center p-6 backface-hidden rotate-y-180">
+                        <div className="text-center">
+                          <div className="text-sm font-medium text-green-100 mb-2">
+                            BACK
+                          </div>
+                          <p className="text-lg sm:text-xl font-bold leading-relaxed">
+                            {
+                              currentSegment.content.flashcards.cards[
+                                currentFlashcardIndex
+                              ].back
+                            }
+                          </p>
+                          <div className="mt-4 text-green-200 text-sm">
+                            Tap to flip back
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Navigation Controls */}
+                  <div className="flex justify-between items-center mt-6 sm:mt-8">
+                    <button
+                      onClick={() => {
+                        if (currentFlashcardIndex > 0) {
+                          setCurrentFlashcardIndex(currentFlashcardIndex - 1);
+                          setShowFlashcardBack(false);
+                        }
+                      }}
+                      disabled={currentFlashcardIndex === 0}
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 disabled:bg-slate-100 disabled:text-slate-400 text-purple-700 rounded-full font-semibold transition-all"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </button>
+
+                    <div className="flex gap-1">
+                      {currentSegment.content.flashcards.cards.map(
+                        (_: any, index: any) => (
+                          <div
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all ${
+                              index === currentFlashcardIndex
+                                ? "bg-purple-500 scale-125"
+                                : index < currentFlashcardIndex
+                                ? "bg-green-500"
+                                : "bg-slate-300"
+                            }`}
+                          />
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (
+                          currentFlashcardIndex <
+                          currentSegment.content.flashcards.cards.length - 1
+                        ) {
+                          setCurrentFlashcardIndex(currentFlashcardIndex + 1);
+                          setShowFlashcardBack(false);
+                        } else {
+                          setFlashcardsCompleted(true);
+                          setCelebrationPoints(currentSegment.basePoints);
+                          setCelebrationType("complete");
+                          setShowCelebration(true);
+                          setXp(xp + currentSegment.basePoints);
+                          setTimeout(completeSegment, 3000);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-full font-semibold transition-all"
+                    >
+                      {currentFlashcardIndex ===
+                      currentSegment.content.flashcards.cards.length - 1
+                        ? "Complete"
+                        : "Next"}
+                      {currentFlashcardIndex ===
+                      currentSegment.content.flashcards.cards.length - 1 ? (
+                        <Trophy className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Enhanced Matching Activity */}
+          {currentSegment.type === "matching" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-teal-100/80 to-cyan-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-teal-300 shadow-sm mb-4">
+                  <Puzzle className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-teal-600">
+                    Match the Pairs
+                  </h3>
+                  <div className="bg-teal-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                    <span className="text-xs sm:text-sm font-semibold text-teal-700">
+                      {Object.keys(matchingPairs).length}/
+                      {currentSegment.content.matching.pairs.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-teal-50/80 to-cyan-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-center border border-teal-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+                <p className="text-lg sm:text-xl font-bold text-teal-800 relative z-10">
+                  {currentSegment.content.matching.instructions ||
+                    "Drag items from the left to match with items on the right!"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                {/* Left column - items to match */}
+                <div className="space-y-3">
+                  <h4 className="text-center font-bold text-teal-700 mb-4">
+                    Items to Match
+                  </h4>
+                  {currentSegment.content.matching.pairs.map(
+                    (pair: any, index: number) => (
+                      <div
+                        key={`left-${index}`}
+                        draggable
+                        onDragStart={(e) =>
+                          e.dataTransfer.setData(
+                            "text/plain",
+                            JSON.stringify({ item: pair.leftItem, index })
+                          )
+                        }
+                        className={`p-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl font-semibold cursor-grab active:cursor-grabbing hover:scale-105 transition-all shadow-lg ${
+                          Object.values(matchingPairs).includes(pair.leftItem)
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                      >
+                        {pair.leftItem}
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {/* Right column - targets */}
+                <div className="space-y-3">
+                  <h4 className="text-center font-bold text-teal-700 mb-4">
+                    Match With
+                  </h4>
+                  {shuffleArray(currentSegment.content.matching.pairs).map(
+                    (pair: any, index: number) => (
+                      <div
+                        key={`right-${index}`}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const dragData = JSON.parse(
+                            e.dataTransfer.getData("text/plain")
+                          );
+                          if (dragData.index === index) {
+                            setMatchingPairs((prev) => ({
+                              ...prev,
+                              [pair.rightItem]: dragData.item,
+                            }));
+
+                            // Check if all pairs are matched
+                            if (
+                              Object.keys(matchingPairs).length + 1 ===
+                              currentSegment.content.matching.pairs.length
+                            ) {
+                              setMatchingCompleted(true);
+                              setTimeout(() => {
+                                setCelebrationPoints(currentSegment.basePoints);
+                                setCelebrationType("complete");
+                                setShowCelebration(true);
+                                setXp(xp + currentSegment.basePoints);
+                                setTimeout(completeSegment, 3000);
+                              }, 1000);
+                            }
+                          }
+                        }}
+                        className={`p-4 border-3 border-dashed rounded-xl min-h-16 flex items-center justify-center text-center transition-all ${
+                          matchingPairs[pair.rightItem]
+                            ? "border-green-500 bg-green-100 text-green-700"
+                            : "border-teal-400 bg-teal-50 text-teal-600 hover:border-teal-500 hover:bg-teal-100"
+                        }`}
+                      >
+                        <div>
+                          <div className="font-semibold">{pair.rightItem}</div>
+                          {matchingPairs[pair.rightItem] && (
+                            <div className="mt-2 px-3 py-1 bg-green-500 text-white rounded-full text-sm font-bold">
+                              ✓ {matchingPairs[pair.rightItem]}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Scenario Segment */}
+          {currentSegment.type === "scenario" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-blue-300 shadow-sm mb-4">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-blue-600">
+                    Scenario Challenge
+                  </h3>
+                  <div className="bg-blue-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                    <span className="text-xs sm:text-sm font-semibold text-blue-700">
+                      {currentQuestionIndex + 1}/
+                      {currentSegment.content.scenario.questions.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-blue-200 backdrop-blur-sm shadow-inner">
+                <h4 className="text-lg sm:text-xl font-bold text-blue-800 mb-4">
+                  {currentSegment.content.scenario.title}
+                </h4>
+                <p className="text-sm sm:text-base text-blue-700 mb-4">
+                  {currentSegment.content.scenario.description}
+                </p>
+                <p className="text-base sm:text-lg text-blue-900 leading-relaxed">
+                  {currentSegment.content.scenario.situation}
+                </p>
+              </div>
+
+              {currentSegment.content.scenario.questions.length > 0 && (
+                <div className="max-w-2xl mx-auto">
+                  <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-blue-200">
+                    <h5 className="text-base sm:text-lg font-semibold text-blue-800 mb-3">
+                      Question {currentQuestionIndex + 1}:{" "}
+                      {
+                        currentSegment.content.scenario.questions[
+                          currentQuestionIndex
+                        ].text
+                      }
+                    </h5>
+                    {currentSegment.content.scenario.questions[
+                      currentQuestionIndex
+                    ].type === "multiple-choice" ? (
+                      <div className="space-y-3">
+                        {currentSegment.content.scenario.questions[
+                          currentQuestionIndex
+                        ].options.map((option: any, optionIndex: any) => (
+                          <button
+                            key={optionIndex}
+                            onClick={() => {
+                              const isCorrect = option.isCorrect;
+                              setSelectedAnswer(optionIndex);
+                              setShowFeedback(true);
+                              if (isCorrect) {
+                                setCorrectAnswers((prev) => prev + 1);
+                              }
+                            }}
+                            className={`w-full p-3 text-left rounded-lg border transition-all ${
+                              selectedAnswer === optionIndex && showFeedback
+                                ? option.isCorrect
+                                  ? "bg-green-100 border-green-500 text-green-800"
+                                  : "bg-red-100 border-red-500 text-red-800"
+                                : "bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100"
+                            }`}
+                            disabled={showFeedback}
+                          >
+                            {option.text}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <textarea
+                        value={openEndedAnswer}
+                        onChange={(e) => setOpenEndedAnswer(e.target.value)}
+                        rows={4}
+                        className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Type your answer here..."
+                        maxLength={500}
+                      />
+                    )}
+                    {showFeedback && (
+                      <div className="mt-4 p-3 rounded-lg bg-blue-50 text-blue-800">
+                        <p className="text-sm font-medium">
+                          {currentSegment.content.scenario.questions[
+                            currentQuestionIndex
+                          ].type === "multiple-choice"
+                            ? currentSegment.content.scenario.questions[
+                                currentQuestionIndex
+                              ].options[selectedAnswer].isCorrect
+                              ? "Correct! Well done."
+                              : "Incorrect. Try again or move to the next question."
+                            : "Your response has been recorded."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Navigation Controls */}
+                  <div className="flex justify-between items-center mt-6 sm:mt-8">
+                    <button
+                      onClick={() => {
+                        if (currentQuestionIndex > 0) {
+                          setCurrentQuestionIndex(currentQuestionIndex - 1);
+                          setSelectedAnswer(null);
+                          setShowFeedback(false);
+                          setOpenEndedAnswer("");
+                        }
+                      }}
+                      disabled={currentQuestionIndex === 0}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 disabled:bg-slate-100 disabled:text-slate-400 text-blue-700 rounded-full font-semibold transition-all"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </button>
+
+                    <div className="flex gap-1">
+                      {currentSegment.content.scenario.questions.map(
+                        (_: any, index: number) => (
+                          <div
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all ${
+                              index === currentQuestionIndex
+                                ? "bg-blue-500 scale-125"
+                                : index < currentQuestionIndex
+                                ? "bg-green-500"
+                                : "bg-slate-300"
+                            }`}
+                          />
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (
+                          currentQuestionIndex <
+                          currentSegment.content.scenario.questions.length - 1
+                        ) {
+                          setCurrentQuestionIndex(currentQuestionIndex + 1);
+                          setSelectedAnswer(null);
+                          setShowFeedback(false);
+                          setOpenEndedAnswer("");
+                        } else {
+                          setCelebrationPoints(currentSegment.basePoints);
+                          setCelebrationType("complete");
+                          setShowCelebration(true);
+                          setXp(xp + currentSegment.basePoints);
+                          setTimeout(completeSegment, 3000);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-semibold transition-all"
+                    >
+                      {currentQuestionIndex ===
+                      currentSegment.content.scenario.questions.length - 1
+                        ? "Complete"
+                        : "Next"}
+                      {currentQuestionIndex ===
+                      currentSegment.content.scenario.questions.length - 1 ? (
+                        <Trophy className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Enhanced Question Segment */}
+          {currentSegment.type === "question" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-indigo-300 shadow-sm mb-4">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-indigo-600">
+                    Question Challenge
+                  </h3>
+                </div>
+              </div>
+
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-indigo-200">
+                  <h5 className="text-base sm:text-lg font-semibold text-indigo-800 mb-3">
+                    {currentSegment.content.question.text}
+                  </h5>
+                  {currentSegment.content.question.type ===
+                  "multiple-choice" ? (
+                    <div className="space-y-3">
+                      {currentSegment.content.question.options.map(
+                        (option: any, optionIndex: any) => (
+                          <button
+                            key={optionIndex}
+                            onClick={() => {
+                              const isCorrect = option.isCorrect;
+                              setSelectedAnswer(optionIndex);
+                              setShowFeedback(true);
+                              if (isCorrect) {
+                                setCorrectAnswers((prev) => prev + 1);
+                              }
+                            }}
+                            className={`w-full p-3 text-left rounded-lg border transition-all ${
+                              selectedAnswer === optionIndex && showFeedback
+                                ? option.isCorrect
+                                  ? "bg-green-100 border-green-500 text-green-800"
+                                  : "bg-red-100 border-red-500 text-red-800"
+                                : "bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100"
+                            }`}
+                            disabled={showFeedback}
+                          >
+                            {option.text}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  ) : currentSegment.content.question.type === "true-false" ? (
+                    <div className="space-y-3">
+                      {["true", "false"].map((value, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            const isCorrect =
+                              value ===
+                              currentSegment.content.question.correctAnswer;
+                            setSelectedAnswer(value);
+                            setShowFeedback(true);
+                            if (isCorrect) {
+                              setCorrectAnswers((prev) => prev + 1);
+                            }
+                          }}
+                          className={`w-full p-3 text-left rounded-lg border transition-all ${
+                            selectedAnswer === value && showFeedback
+                              ? value ===
+                                currentSegment.content.question.correctAnswer
+                                ? "bg-green-100 border-green-500 text-green-800"
+                                : "bg-red-100 border-red-500 text-red-800"
+                              : "bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100"
+                          }`}
+                          disabled={showFeedback}
+                        >
+                          {value.charAt(0).toUpperCase() + value.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <textarea
+                      value={openEndedAnswer}
+                      onChange={(e) => setOpenEndedAnswer(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Type your answer here..."
+                      maxLength={500}
+                    />
+                  )}
+                  {showFeedback && (
+                    <div className="mt-4 p-3 rounded-lg bg-indigo-50 text-indigo-800">
+                      <p className="text-sm font-medium">
+                        {currentSegment.content.question.type ===
+                        "multiple-choice"
+                          ? currentSegment.content.question.options[
+                              selectedAnswer
+                            ].isCorrect
+                            ? "Correct! Well done."
+                            : "Incorrect. Try again or complete the segment."
+                          : currentSegment.content.question.type ===
+                            "true-false"
+                          ? selectedAnswer ===
+                            currentSegment.content.question.correctAnswer
+                            ? "Correct! Well done."
+                            : "Incorrect. Try again or complete the segment."
+                          : "Your response has been recorded."}
+                      </p>
+                      {currentSegment.content.question.explanation && (
+                        <p className="text-sm mt-2">
+                          {currentSegment.content.question.explanation}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation Controls */}
+                <div className="flex justify-end mt-6 sm:mt-8">
+                  <button
+                    onClick={() => {
+                      setCelebrationPoints(currentSegment.basePoints);
+                      setCelebrationType("complete");
+                      setShowCelebration(true);
+                      setXp(xp + currentSegment.basePoints);
+                      setTimeout(completeSegment, 3000);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-semibold transition-all"
+                  >
+                    Complete
+                    <Trophy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Scenario Segment */}
+          {currentSegment.type === "scenario" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-blue-300 shadow-sm mb-4">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-blue-600">
+                    Scenario Challenge
+                  </h3>
+                  <div className="bg-blue-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                    <span className="text-xs sm:text-sm font-semibold text-blue-700">
+                      {currentQuestionIndex + 1}/
+                      {currentSegment.content.scenario.questions.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-blue-200 backdrop-blur-sm shadow-inner">
+                <h4 className="text-lg sm:text-xl font-bold text-blue-800 mb-4">
+                  {currentSegment.content.scenario.title}
+                </h4>
+                <p className="text-sm sm:text-base text-blue-700 mb-4">
+                  {currentSegment.content.scenario.description}
+                </p>
+                <p className="text-base sm:text-lg text-blue-900 leading-relaxed">
+                  {currentSegment.content.scenario.situation}
+                </p>
+              </div>
+
+              {currentSegment.content.scenario.questions.length > 0 && (
+                <div className="max-w-2xl mx-auto">
+                  <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-blue-200">
+                    <h5 className="text-base sm:text-lg font-semibold text-blue-800 mb-3">
+                      Question {currentQuestionIndex + 1}:{" "}
+                      {
+                        currentSegment.content.scenario.questions[
+                          currentQuestionIndex
+                        ].text
+                      }
+                    </h5>
+                    {currentSegment.content.scenario.questions[
+                      currentQuestionIndex
+                    ].type === "multiple-choice" ? (
+                      <div className="space-y-3">
+                        {currentSegment.content.scenario.questions[
+                          currentQuestionIndex
+                        ].options.map((option: any, optionIndex: any) => (
+                          <button
+                            key={optionIndex}
+                            onClick={() => {
+                              const isCorrect = option.isCorrect;
+                              setSelectedAnswer(optionIndex);
+                              setShowFeedback(true);
+                              if (isCorrect) {
+                                setCorrectAnswers((prev: any) => prev + 1);
+                              }
+                            }}
+                            className={`w-full p-3 text-left rounded-lg border transition-all ${
+                              selectedAnswer === optionIndex && showFeedback
+                                ? option.isCorrect
+                                  ? "bg-green-100 border-green-500 text-green-800"
+                                  : "bg-red-100 border-red-500 text-red-800"
+                                : "bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100"
+                            }`}
+                            disabled={showFeedback}
+                          >
+                            {option.text}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <textarea
+                        value={openEndedAnswer}
+                        onChange={(e) => setOpenEndedAnswer(e.target.value)}
+                        rows={4}
+                        className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Type your answer here..."
+                        maxLength={500}
+                      />
+                    )}
+                    {showFeedback && (
+                      <div className="mt-4 p-3 rounded-lg bg-blue-50 text-blue-800">
+                        <p className="text-sm font-medium">
+                          {currentSegment.content.scenario.questions[
+                            currentQuestionIndex
+                          ].type === "multiple-choice"
+                            ? currentSegment.content.scenario.questions[
+                                currentQuestionIndex
+                              ].options[selectedAnswer].isCorrect
+                              ? "Correct! Well done."
+                              : "Incorrect. Try again or move to the next question."
+                            : "Your response has been recorded."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Navigation Controls */}
+                  <div className="flex justify-between items-center mt-6 sm:mt-8">
+                    <button
+                      onClick={() => {
+                        if (currentQuestionIndex > 0) {
+                          setCurrentQuestionIndex(currentQuestionIndex - 1);
+                          setSelectedAnswer(null);
+                          setShowFeedback(false);
+                          setOpenEndedAnswer("");
+                        }
+                      }}
+                      disabled={currentQuestionIndex === 0}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 disabled:bg-slate-100 disabled:text-slate-400 text-blue-700 rounded-full font-semibold transition-all"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Previous
+                    </button>
+
+                    <div className="flex gap-1">
+                      {currentSegment.content.scenario.questions.map(
+                        (_: any, index: number) => (
+                          <div
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all ${
+                              index === currentQuestionIndex
+                                ? "bg-blue-500 scale-125"
+                                : index < currentQuestionIndex
+                                ? "bg-green-500"
+                                : "bg-slate-300"
+                            }`}
+                          />
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        if (
+                          currentQuestionIndex <
+                          currentSegment.content.scenario.questions.length - 1
+                        ) {
+                          setCurrentQuestionIndex(currentQuestionIndex + 1);
+                          setSelectedAnswer(null);
+                          setShowFeedback(false);
+                          setOpenEndedAnswer("");
+                        } else {
+                          setCelebrationPoints(currentSegment.basePoints);
+                          setCelebrationType("complete");
+                          setShowCelebration(true);
+                          setXp(xp + currentSegment.basePoints);
+                          setTimeout(completeSegment, 3000);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-semibold transition-all"
+                    >
+                      {currentQuestionIndex ===
+                      currentSegment.content.scenario.questions.length - 1
+                        ? "Complete"
+                        : "Next"}
+                      {currentQuestionIndex ===
+                      currentSegment.content.scenario.questions.length - 1 ? (
+                        <Trophy className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Enhanced Question Segment */}
+          {currentSegment.type === "question" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-indigo-300 shadow-sm mb-4">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-indigo-600">
+                    Question Challenge
+                  </h3>
+                </div>
+              </div>
+
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-indigo-200">
+                  <h5 className="text-base sm:text-lg font-semibold text-indigo-800 mb-3">
+                    {currentSegment.content.question.text}
+                  </h5>
+                  {currentSegment.content.question.type ===
+                  "multiple-choice" ? (
+                    <div className="space-y-3">
+                      {currentSegment.content.question.options.map(
+                        (option: any, optionIndex: any) => (
+                          <button
+                            key={optionIndex}
+                            onClick={() => {
+                              const isCorrect = option.isCorrect;
+                              setSelectedAnswer(optionIndex);
+                              setShowFeedback(true);
+                              if (isCorrect) {
+                                setCorrectAnswers((prev) => prev + 1);
+                              }
+                            }}
+                            className={`w-full p-3 text-left rounded-lg border transition-all ${
+                              selectedAnswer === optionIndex && showFeedback
+                                ? option.isCorrect
+                                  ? "bg-green-100 border-green-500 text-green-800"
+                                  : "bg-red-100 border-red-500 text-red-800"
+                                : "bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100"
+                            }`}
+                            disabled={showFeedback}
+                          >
+                            {option.text}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  ) : currentSegment.content.question.type === "true-false" ? (
+                    <div className="space-y-3">
+                      {["true", "false"].map((value, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            const isCorrect =
+                              value ===
+                              currentSegment.content.question.correctAnswer;
+                            setSelectedAnswer(value);
+                            setShowFeedback(true);
+                            if (isCorrect) {
+                              setCorrectAnswers((prev) => prev + 1);
+                            }
+                          }}
+                          className={`w-full p-3 text-left rounded-lg border transition-all ${
+                            selectedAnswer === value && showFeedback
+                              ? value ===
+                                currentSegment.content.question.correctAnswer
+                                ? "bg-green-100 border-green-500 text-green-800"
+                                : "bg-red-100 border-red-500 text-red-800"
+                              : "bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100"
+                          }`}
+                          disabled={showFeedback}
+                        >
+                          {value.charAt(0).toUpperCase() + value.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <textarea
+                      value={openEndedAnswer}
+                      onChange={(e) => setOpenEndedAnswer(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Type your answer here..."
+                      maxLength={500}
+                    />
+                  )}
+                  {showFeedback && (
+                    <div className="mt-4 p-3 rounded-lg bg-indigo-50 text-indigo-800">
+                      <p className="text-sm font-medium">
+                        {currentSegment.content.question.type ===
+                        "multiple-choice"
+                          ? currentSegment.content.question.options[
+                              selectedAnswer
+                            ].isCorrect
+                            ? "Correct! Well done."
+                            : "Incorrect. Try again or complete the segment."
+                          : currentSegment.content.question.type ===
+                            "true-false"
+                          ? selectedAnswer ===
+                            currentSegment.content.question.correctAnswer
+                            ? "Correct! Well done."
+                            : "Incorrect. Try again or complete the segment."
+                          : "Your response has been recorded."}
+                      </p>
+                      {currentSegment.content.question.explanation && (
+                        <p className="text-sm mt-2">
+                          {currentSegment.content.question.explanation}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Navigation Controls */}
+                <div className="flex justify-end mt-6 sm:mt-8">
+                  <button
+                    onClick={() => {
+                      setCelebrationPoints(currentSegment.basePoints);
+                      setCelebrationType("complete");
+                      setShowCelebration(true);
+                      setXp(xp + currentSegment.basePoints);
+                      setTimeout(completeSegment, 3000);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-semibold transition-all"
+                  >
+                    Complete
+                    <Trophy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Scenario Activity */}
+          {currentSegment.type === "scenario" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-orange-100/80 to-red-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-orange-300 shadow-sm mb-4">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-orange-600">
+                    Interactive Scenario
+                  </h3>
+                </div>
+              </div>
+
+              {currentSegment.content.scenario.backgroundImage && (
+                <div className="text-center mb-6">
+                  <img
+                    src={currentSegment.content.scenario.backgroundImage}
+                    alt="Scenario Background"
+                    className="max-w-md mx-auto rounded-2xl shadow-lg border border-orange-200"
+                  />
+                </div>
+              )}
+
+              <div className="bg-gradient-to-br from-orange-50/80 to-red-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-orange-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+                <h4 className="text-xl sm:text-2xl font-bold text-orange-800 mb-4">
+                  {currentSegment.content.scenario.title}
+                </h4>
+                <p className="text-lg text-orange-700 leading-relaxed mb-4">
+                  {currentSegment.content.scenario.situation}
+                </p>
+                {currentSegment.content.scenario.description && (
+                  <p className="text-base text-orange-600">
+                    {currentSegment.content.scenario.description}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-4">
+                {currentSegment.content.scenario.questions.map(
+                  (question: any, index: number) => (
+                    <div
+                      key={index}
+                      className="bg-white/80 rounded-xl p-4 shadow-lg border border-orange-200"
+                    >
+                      <h5 className="font-bold text-orange-800 mb-3">
+                        Question {index + 1}: {question.text}
+                      </h5>
+
+                      {question.type === "multiple-choice" &&
+                        question.options && (
+                          <div className="space-y-2">
+                            {question.options.map(
+                              (option: any, optIndex: number) => (
+                                <button
+                                  key={optIndex}
+                                  onClick={() => {
+                                    setScenarioAnswers((prev) => ({
+                                      ...prev,
+                                      [index]: option.id,
+                                    }));
+
+                                    // Check if all questions are answered
+                                    if (
+                                      Object.keys(scenarioAnswers).length +
+                                        1 ===
+                                      currentSegment.content.scenario.questions
+                                        .length
+                                    ) {
+                                      setTimeout(() => {
+                                        setCelebrationPoints(
+                                          currentSegment.basePoints
+                                        );
+                                        setCelebrationType("complete");
+                                        setShowCelebration(true);
+                                        setXp(xp + currentSegment.basePoints);
+                                        setTimeout(completeSegment, 3000);
+                                      }, 1000);
+                                    }
+                                  }}
+                                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                                    scenarioAnswers[index] === option.id
+                                      ? "border-orange-500 bg-orange-100"
+                                      : "border-orange-200 hover:border-orange-400"
+                                  }`}
+                                >
+                                  {option.text}
+                                </button>
+                              )
+                            )}
+                          </div>
+                        )}
+
+                      {question.type === "short-answer" && (
+                        <textarea
+                          value={scenarioAnswers[index] || ""}
+                          onChange={(e) => {
+                            setScenarioAnswers((prev) => ({
+                              ...prev,
+                              [index]: e.target.value,
+                            }));
+                          }}
+                          className="w-full p-3 border-2 border-orange-200 rounded-lg resize-none focus:border-orange-500 focus:outline-none"
+                          rows={3}
+                          placeholder="Type your answer here..."
+                        />
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Storytelling Segment */}
+          {currentSegment.type === "storytelling" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-violet-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-violet-300 shadow-sm mb-4">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-violet-600">
+                    Interactive Story
+                  </h3>
+                </div>
+              </div>
+
+              {!currentStoryChapter && (
+                <div className="text-center">
+                  <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 mb-6 border border-violet-200 backdrop-blur-sm shadow-inner">
+                    <h4 className="text-2xl sm:text-3xl font-bold text-violet-800 mb-4">
+                      {currentSegment.content.storytelling.title}
+                    </h4>
+                    {currentSegment.content.storytelling.background && (
+                      <p className="text-lg text-violet-700 leading-relaxed mb-6">
+                        {currentSegment.content.storytelling.background}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() =>
+                      setCurrentStoryChapter(
+                        currentSegment.content.storytelling.startChapter
+                      )
+                    }
+                    className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-bold text-lg transform hover:scale-105 transition-all shadow-lg"
+                  >
+                    <Play className="w-5 h-5 inline mr-2" />
+                    Begin Story
+                  </button>
+                </div>
+              )}
+
+              {currentStoryChapter && (
+                <div className="space-y-6">
+                  {(() => {
+                    const chapter =
+                      currentSegment.content.storytelling.chapters.find(
+                        (ch: any) => ch.id === currentStoryChapter
+                      );
+
+                    if (!chapter) return null;
+
+                    return (
+                      <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 border border-violet-200 backdrop-blur-sm shadow-inner">
+                        <h4 className="text-xl sm:text-2xl font-bold text-violet-800 mb-4">
+                          {chapter.title}
+                        </h4>
+                        <div className="prose prose-lg text-violet-700 mb-6">
+                          <p>{chapter.content}</p>
+                        </div>
+
+                        {chapter.choices ? (
+                          <div className="space-y-3">
+                            <p className="font-semibold text-violet-800 mb-4">
+                              What do you choose?
+                            </p>
+                            {chapter.choices.map(
+                              (choice: any, index: number) => (
+                                <button
+                                  key={index}
+                                  onClick={() => {
+                                    if (choice.nextChapter) {
+                                      setCurrentStoryChapter(
+                                        choice.nextChapter
+                                      );
+                                    } else {
+                                      setStoryCompleted(true);
+                                      setCelebrationPoints(
+                                        currentSegment.basePoints
+                                      );
+                                      setCelebrationType("complete");
+                                      setShowCelebration(true);
+                                      setXp(xp + currentSegment.basePoints);
+                                      setTimeout(completeSegment, 3000);
+                                    }
+                                  }}
+                                  className="w-full text-left p-4 bg-white/80 hover:bg-violet-100 border-2 border-violet-200 hover:border-violet-400 rounded-xl transition-all transform hover:scale-[1.02]"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-violet-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                      {index + 1}
+                                    </div>
+                                    <span className="font-semibold text-violet-800">
+                                      {choice.text}
+                                    </span>
+                                  </div>
+                                </button>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <button
+                              onClick={() => {
+                                setStoryCompleted(true);
+                                setCelebrationPoints(currentSegment.basePoints);
+                                setCelebrationType("complete");
+                                setShowCelebration(true);
+                                setXp(xp + currentSegment.basePoints);
+                                setTimeout(completeSegment, 3000);
+                              }}
+                              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 rounded-full font-bold transform hover:scale-105 transition-all shadow-lg"
+                            >
+                              <Trophy className="w-5 h-5 inline mr-2" />
+                              Complete Story
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Enhanced Drag & Drop Activity */}
+          {currentSegment.type === "dragdrop" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-emerald-100/80 to-teal-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-emerald-300 shadow-sm mb-4">
+                  <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-emerald-600">
+                    Drag & Drop Challenge
+                  </h3>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-center border border-emerald-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+                <p className="text-lg sm:text-xl font-bold text-emerald-800 relative z-10">
+                  {currentSegment.content.dragdrop.instructions}
+                </p>
+              </div>
+
+              <div className="relative">
+                {currentSegment.content.dragdrop.backgroundImage && (
+                  <div className="w-full h-96 bg-cover bg-center rounded-2xl relative overflow-hidden border border-emerald-200">
+                    <img
+                      src={currentSegment.content.dragdrop.backgroundImage}
+                      alt="Drop Background"
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Drop zones overlay */}
+                    {currentSegment.content.dragdrop.dropZones.map(
+                      (zone: any, index: number) => (
+                        <div
+                          key={index}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const itemId = e.dataTransfer.getData("text/plain");
+                            const item =
+                              currentSegment.content.dragdrop.draggableItems.find(
+                                (item: any) => item.id === itemId
+                              );
+
+                            if (item && zone.correctItem === item.id) {
+                              setDragDropItems((prev) => ({
+                                ...prev,
+                                [itemId]: {
+                                  x: zone.x,
+                                  y: zone.y,
+                                  placed: true,
+                                },
+                              }));
+
+                              // Check completion
+                              const totalItems =
+                                currentSegment.content.dragdrop.draggableItems
+                                  .length;
+                              const placedItems =
+                                Object.values(dragDropItems).filter(
+                                  (item: any) => item.placed
+                                ).length + 1;
+
+                              if (placedItems === totalItems) {
+                                setPracticeCompleted(true);
+                                setTimeout(() => {
+                                  setCelebrationPoints(
+                                    currentSegment.basePoints
+                                  );
+                                  setCelebrationType("complete");
+                                  setShowCelebration(true);
+                                  setXp(xp + currentSegment.basePoints);
+                                  setTimeout(completeSegment, 3000);
+                                }, 1000);
+                              }
+                            }
+                          }}
+                          className="absolute border-2 border-dashed border-emerald-400 bg-emerald-100/50 rounded-lg flex items-center justify-center text-emerald-700 font-semibold"
+                          style={{
+                            left: `${zone.x}%`,
+                            top: `${zone.y}%`,
+                            width: "120px",
+                            height: "60px",
+                          }}
+                        >
+                          {dragDropItems[zone.correctItem]?.placed ? (
+                            <div className="bg-emerald-500 text-white px-3 py-1 rounded-full text-sm">
+                              ✓ Placed!
+                            </div>
+                          ) : (
+                            <div className="text-xs text-center">Drop Here</div>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+
+                {/* Draggable items */}
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  {currentSegment.content.dragdrop.draggableItems.map(
+                    (item: any, index: number) => (
+                      <div
+                        key={item.id}
+                        draggable={!dragDropItems[item.id]?.placed}
+                        onDragStart={(e) =>
+                          e.dataTransfer.setData("text/plain", item.id)
+                        }
+                        className={`px-4 py-2 rounded-xl font-semibold cursor-grab active:cursor-grabbing transition-all shadow-lg ${
+                          dragDropItems[item.id]?.placed
+                            ? "bg-green-500 text-white cursor-not-allowed opacity-50"
+                            : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:scale-105"
+                        }`}
+                      >
+                        {item.text}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Drag Words Activity */}
+          {currentSegment.type === "dragwords" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-blue-300 shadow-sm mb-4">
+                  <Puzzle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-blue-600">
+                    Fill the Gaps
+                  </h3>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-2xl p-6 sm:p-8 mb-6 border border-blue-200 backdrop-blur-sm shadow-inner">
+                <div className="text-lg sm:text-xl text-blue-800 leading-relaxed">
+                  {(() => {
+                    const content = currentSegment.content.dragwords;
+                    let textParts = content.text.split(/(\[GAP_\d+\])/);
+
+                    return textParts.map((part: string, index: number) => {
+                      const gapMatch = part.match(/\[GAP_(\d+)\]/);
+                      if (gapMatch) {
+                        const gapId = gapMatch[1];
+                        const gap = content.gaps.find(
+                          (g: any) => g.id === gapId
+                        );
+
+                        return (
+                          <span
+                            key={index}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              const wordId =
+                                e.dataTransfer.getData("text/plain");
+                              const word = content.wordBank.find(
+                                (w: any) => w.id === wordId
+                              );
+
+                              if (word) {
+                                setDragWordsAnswers((prev) => ({
+                                  ...prev,
+                                  [gapId]: word.word,
+                                }));
+
+                                // Check completion
+                                if (
+                                  Object.keys(dragWordsAnswers).length + 1 ===
+                                  content.gaps.length
+                                ) {
+                                  // Validate answers
+                                  let allCorrect = true;
+                                  content.gaps.forEach((gap: any) => {
+                                    const userAnswer =
+                                      gapId === gap.id
+                                        ? word.word
+                                        : dragWordsAnswers[gap.id];
+                                    const correctWord = content.wordBank.find(
+                                      (w: any) => w.id === gap.correctWordId
+                                    );
+                                    if (userAnswer !== correctWord?.word) {
+                                      allCorrect = false;
+                                    }
+                                  });
+
+                                  if (allCorrect) {
+                                    setPracticeCompleted(true);
+                                    setTimeout(() => {
+                                      setCelebrationPoints(
+                                        currentSegment.basePoints
+                                      );
+                                      setCelebrationType("complete");
+                                      setShowCelebration(true);
+                                      setXp(xp + currentSegment.basePoints);
+                                      setTimeout(completeSegment, 3000);
+                                    }, 1000);
+                                  }
+                                }
+                              }
+                            }}
+                            className="inline-block mx-2 px-3 py-1 border-2 border-dashed border-blue-400 bg-blue-100 rounded-lg min-w-20 text-center font-bold"
+                          >
+                            {dragWordsAnswers[gapId] || "____"}
+                          </span>
+                        );
+                      }
+                      return <span key={index}>{part}</span>;
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Word bank */}
+              <div className="text-center">
+                <h4 className="font-bold text-blue-700 mb-4">Word Bank</h4>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {currentSegment.content.dragwords.wordBank.map(
+                    (word: any) => (
+                      <div
+                        key={word.id}
+                        draggable={
+                          !Object.values(dragWordsAnswers).includes(word.word)
+                        }
+                        onDragStart={(e) =>
+                          e.dataTransfer.setData("text/plain", word.id)
+                        }
+                        className={`px-4 py-2 rounded-xl font-semibold transition-all shadow-lg ${
+                          Object.values(dragWordsAnswers).includes(word.word)
+                            ? "bg-green-500 text-white cursor-not-allowed opacity-50"
+                            : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white cursor-grab active:cursor-grabbing hover:scale-105"
+                        }`}
+                      >
+                        {word.word}
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Fill Blanks Activity */}
+          {currentSegment.type === "fillblanks" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-yellow-100/80 to-amber-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-yellow-300 shadow-sm mb-4">
+                  <Target className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-yellow-600">
+                    Complete the Text
+                  </h3>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-yellow-50/80 to-amber-50/80 rounded-2xl p-6 sm:p-8 mb-6 border border-yellow-200 backdrop-blur-sm shadow-inner">
+                <div className="text-lg sm:text-xl text-yellow-800 leading-relaxed">
+                  {(() => {
+                    const content = currentSegment.content.fillblanks;
+                    let textParts = content.text.split(/(\[BLANK_\d+\])/);
+
+                    return textParts.map((part: string, index: number) => {
+                      const blankMatch = part.match(/\[BLANK_(\d+)\]/);
+                      if (blankMatch) {
+                        const blankId = blankMatch[1];
+
+                        return (
+                          <input
+                            key={index}
+                            type="text"
+                            value={fillBlanksAnswers[blankId] || ""}
+                            onChange={(e) => {
+                              setFillBlanksAnswers((prev) => ({
+                                ...prev,
+                                [blankId]: e.target.value,
+                              }));
+
+                              // Check completion when all blanks are filled
+                              const updatedAnswers = {
+                                ...fillBlanksAnswers,
+                                [blankId]: e.target.value,
+                              };
+                              if (
+                                Object.keys(updatedAnswers).length ===
+                                  content.gaps.length &&
+                                Object.values(updatedAnswers).every(
+                                  (val) => val.trim() !== ""
+                                )
+                              ) {
+                                // Validate answers
+                                let allCorrect = true;
+                                content.gaps.forEach((gap: any) => {
+                                  const userAnswer = updatedAnswers[gap.id]
+                                    ?.toLowerCase()
+                                    .trim();
+                                  const correctAnswer = gap.correctAnswer
+                                    .toLowerCase()
+                                    .trim();
+                                  if (userAnswer !== correctAnswer) {
+                                    allCorrect = false;
+                                  }
+                                });
+
+                                if (allCorrect) {
+                                  setPracticeCompleted(true);
+                                  setTimeout(() => {
+                                    setCelebrationPoints(
+                                      currentSegment.basePoints
+                                    );
+                                    setCelebrationType("complete");
+                                    setShowCelebration(true);
+                                    setXp(xp + currentSegment.basePoints);
+                                    setTimeout(completeSegment, 3000);
+                                  }, 1000);
+                                }
+                              }
+                            }}
+                            className="inline-block mx-2 px-3 py-1 border-2 border-yellow-400 bg-yellow-100 rounded-lg min-w-24 text-center font-bold focus:border-yellow-500 focus:outline-none"
+                            placeholder="?"
+                          />
+                        );
+                      }
+                      return <span key={index}>{part}</span>;
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Question Set Activity */}
+          {currentSegment.type === "questionset" && (
+            <div className="space-y-4 sm:space-y-6 relative z-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-indigo-300 shadow-sm mb-4">
+                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 animate-pulse" />
+                  <h3 className="text-lg sm:text-2xl font-bold text-indigo-600">
+                    Question Challenge
+                  </h3>
+                  <div className="bg-indigo-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                    <span className="text-xs sm:text-sm font-semibold text-indigo-700">
+                      {currentQuestionIndex + 1}/
+                      {currentSegment.content.questionset.questions.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {currentSegment.content.questionset.questions.length > 0 && (
+                <div className="space-y-6">
+                  {(() => {
+                    const question =
+                      currentSegment.content.questionset.questions[
+                        currentQuestionIndex
+                      ];
+
+                    return (
+                      <div className="bg-gradient-to-br from-indigo-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 border border-indigo-200 backdrop-blur-sm shadow-inner">
+                        <h4 className="text-xl sm:text-2xl font-bold text-indigo-800 mb-6">
+                          {question.text}
+                        </h4>
+
+                        {question.type === "multiple-choice" &&
+                          question.options && (
+                            <div className="space-y-3">
+                              {question.options.map(
+                                (option: any, index: number) => (
+                                  <button
+                                    key={index}
+                                    onClick={() => {
+                                      setQuestionSetAnswers((prev) => ({
+                                        ...prev,
+                                        [currentQuestionIndex]: option.id,
+                                      }));
+                                    }}
+                                    className={`w-full text-left p-4 rounded-xl border-2 transition-all transform hover:scale-[1.02] ${
+                                      questionSetAnswers[
+                                        currentQuestionIndex
+                                      ] === option.id
+                                        ? "border-indigo-500 bg-indigo-100"
+                                        : "border-indigo-200 hover:border-indigo-400"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                        {String.fromCharCode(65 + index)}
+                                      </div>
+                                      <span className="font-semibold">
+                                        {option.text}
+                                      </span>
+                                    </div>
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          )}
+
+                        {question.type === "true-false" && (
+                          <div className="grid grid-cols-2 gap-4">
+                            {["true", "false"].map((answer) => (
+                              <button
+                                key={answer}
+                                onClick={() => {
+                                  setQuestionSetAnswers((prev) => ({
+                                    ...prev,
+                                    [currentQuestionIndex]: answer,
+                                  }));
+                                }}
+                                className={`p-6 rounded-xl border-2 font-bold text-lg transition-all transform hover:scale-105 ${
+                                  questionSetAnswers[currentQuestionIndex] ===
+                                  answer
+                                    ? "border-indigo-500 bg-indigo-100"
+                                    : "border-indigo-200 hover:border-indigo-400"
+                                }`}
+                              >
+                                <div className="text-4xl mb-2">
+                                  {answer === "true" ? "✅" : "❌"}
+                                </div>
+                                {answer.toUpperCase()}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {question.type === "short-answer" && (
+                          <textarea
+                            value={
+                              questionSetAnswers[currentQuestionIndex] || ""
+                            }
+                            onChange={(e) => {
+                              setQuestionSetAnswers((prev) => ({
+                                ...prev,
+                                [currentQuestionIndex]: e.target.value,
+                              }));
+                            }}
+                            className="w-full p-4 border-2 border-indigo-200 rounded-xl resize-none focus:border-indigo-500 focus:outline-none"
+                            rows={4}
+                            placeholder="Type your answer here..."
+                          />
+                        )}
+
+                        {/* Navigation */}
+                        <div className="flex justify-between items-center mt-8">
+                          <button
+                            onClick={() =>
+                              setCurrentQuestionIndex(
+                                Math.max(0, currentQuestionIndex - 1)
+                              )
+                            }
+                            disabled={currentQuestionIndex === 0}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-100 hover:bg-indigo-200 disabled:bg-slate-100 disabled:text-slate-400 text-indigo-700 rounded-full font-semibold transition-all"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                          </button>
+
+                          <div className="flex gap-2">
+                            {currentSegment.content.questionset.questions.map(
+                              (_: any, index: number) => (
+                                <div
+                                  key={index}
+                                  className={`w-3 h-3 rounded-full transition-all ${
+                                    index === currentQuestionIndex
+                                      ? "bg-indigo-500 scale-125"
+                                      : questionSetAnswers[index] !== undefined
+                                      ? "bg-green-500"
+                                      : "bg-slate-300"
+                                  }`}
+                                />
+                              )
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              if (
+                                currentQuestionIndex <
+                                currentSegment.content.questionset.questions
+                                  .length -
+                                  1
+                              ) {
+                                setCurrentQuestionIndex(
+                                  currentQuestionIndex + 1
+                                );
+                              } else {
+                                // Complete the question set
+                                setPracticeCompleted(true);
+                                setCelebrationPoints(currentSegment.basePoints);
+                                setCelebrationType("complete");
+                                setShowCelebration(true);
+                                setXp(xp + currentSegment.basePoints);
+                                setTimeout(completeSegment, 3000);
+                              }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-semibold transition-all"
+                          >
+                            {currentQuestionIndex ===
+                            currentSegment.content.questionset.questions
+                              .length -
+                              1
+                              ? "Complete"
+                              : "Next"}
+                            {currentQuestionIndex ===
+                            currentSegment.content.questionset.questions
+                              .length -
+                              1 ? (
+                              <Trophy className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* [EXISTING SEGMENTS - dialogue, question, fill-blank, true-false, multiple-choice, instruction, practice, review] */}
+          {/* ... keeping all the existing segment renderings unchanged ... */}
 
           {/* Enhanced Fill in the Blanks Question */}
           {currentSegment.type === "question" &&
@@ -1363,112 +3077,6 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Practice Segment - Drag and Drop */}
-          {currentSegment.type === "practice" &&
-            currentSegment.content.practice.type === "drag-drop" && (
-              <div className="space-y-4 sm:space-y-6 relative z-10">
-                <div className="text-center mb-6 sm:mb-8">
-                  <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-green-100/80 to-emerald-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-green-300 shadow-sm mb-4">
-                    <div className="text-2xl sm:text-4xl animate-bounce">
-                      🎮
-                    </div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-green-600">
-                      Practice Time!
-                    </h3>
-                    <div className="bg-green-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                      <Target className="w-3 h-3 sm:w-4 sm:h-4 text-green-700 inline" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-green-50/80 to-emerald-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-center border border-green-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-100/20 to-transparent animate-pulse"></div>
-                  <p className="text-lg sm:text-xl font-bold text-green-700 relative z-10">
-                    {currentSegment.content.practice.instructions}
-                  </p>
-                </div>
-
-                {/* Draggable Items */}
-                <div className="mb-6 sm:mb-8">
-                  <h4 className="text-base sm:text-lg font-bold text-indigo-600 mb-3 sm:mb-4 text-center">
-                    Available Items:
-                  </h4>
-                  <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                    {currentSegment.content.practice.components.items.map(
-                      (item: string, index: number) => (
-                        <div
-                          key={index}
-                          draggable
-                          onDragStart={(e) =>
-                            e.dataTransfer.setData("text/plain", item)
-                          }
-                          className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-xl font-mono font-bold cursor-grab active:cursor-grabbing hover:scale-105 transition-all shadow-lg border border-indigo-400/30 relative overflow-hidden group text-sm sm:text-base"
-                        >
-                          <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-700"></div>
-                          <span className="relative z-10">{item}</span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                {/* Drop Targets */}
-                <div className="grid gap-3 sm:gap-4">
-                  {currentSegment.content.practice.components.targets.map(
-                    (target: string, index: number) => (
-                      <div
-                        key={index}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const item = e.dataTransfer.getData("text/plain");
-                          handleDragDrop(item, target);
-                        }}
-                        className={`
-                          border-3 border-dashed p-4 sm:p-6 rounded-2xl text-center transition-all min-h-16 sm:min-h-20 flex items-center justify-center backdrop-blur-sm relative overflow-hidden
-                          ${
-                            draggedItems[target]
-                              ? "border-green-500 bg-gradient-to-br from-green-50/60 to-emerald-50/60 text-green-700 shadow-lg shadow-green-200/50"
-                              : "border-slate-400 bg-gradient-to-br from-slate-50/60 to-slate-100/60 text-slate-600 hover:border-indigo-400 hover:bg-gradient-to-br hover:from-indigo-50/40 hover:to-blue-50/40 hover:text-indigo-700"
-                          }
-                        `}
-                      >
-                        <div>
-                          <p className="font-bold text-sm sm:text-base lg:text-lg mb-2">
-                            {target}
-                          </p>
-                          {draggedItems[target] && (
-                            <div className="bg-indigo-500 text-white px-2 sm:px-3 py-1 rounded-lg font-mono font-bold animate-pulse text-sm">
-                              {draggedItems[target]}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-
-                {practiceCompleted && (
-                  <div className="text-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-green-50/80 to-emerald-50/80 rounded-2xl border-2 border-green-400 backdrop-blur-sm relative overflow-hidden shadow-lg">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-100/20 to-transparent animate-pulse"></div>
-                    <div className="text-4xl sm:text-6xl lg:text-8xl mb-4 animate-bounce">
-                      🏆
-                    </div>
-                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 mb-4">
-                      Perfect Match!
-                    </h3>
-                    <div className="flex items-center justify-center gap-2 relative z-10">
-                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 animate-pulse" />
-                      <p className="text-blue-600 text-lg sm:text-xl lg:text-2xl font-bold">
-                        +{currentSegment.basePoints} XP
-                      </p>
-                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 animate-pulse" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
           {/* Enhanced Review Segment */}
           {currentSegment.type === "review" && (
             <div className="space-y-4 sm:space-y-6 relative z-10">
@@ -1625,18 +3233,6 @@ const LearningSegmentPage = ({
                 Exit Lesson
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Achievement Streak Indicator */}
-      {streak > 10 && (
-        <div className="fixed top-16 sm:top-20 right-4 sm:right-6 bg-gradient-to-r from-orange-100/95 to-amber-100/95 backdrop-blur-sm text-orange-700 p-2 sm:p-3 rounded-2xl shadow-lg border border-orange-300 animate-pulse max-w-xs">
-          <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
-            <span className="font-bold text-xs sm:text-sm">
-              {streak} Day Streak! 🔥
-            </span>
           </div>
         </div>
       )}

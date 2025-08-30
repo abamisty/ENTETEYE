@@ -18,6 +18,12 @@ import {
   SegmentProgress,
 } from "../models/enrollment";
 import { Character } from "../models/character";
+import {
+  CourseRequest,
+  CourseRequestComment,
+  CourseRequestStatus,
+  CourseRequestVote,
+} from "../models/course_requests";
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -33,6 +39,9 @@ export const AppDataSource = new DataSource({
     User,
     ParentProfile,
     Family,
+    CourseRequest,
+    CourseRequestComment,
+    CourseRequestVote,
     Child,
     Character,
     FamilySubscription,

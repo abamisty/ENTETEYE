@@ -51,6 +51,12 @@ const validateSegmentContent = (type: string, content: any): boolean => {
         questionType === "fill-blank"
       ) {
         return content.question.correctAnswer !== undefined;
+      } else if (questionType === "matching") {
+        return (
+          content.question.options &&
+          Array.isArray(content.question.options) &&
+          content.question.options.length >= 2
+        );
       }
       return true;
 
@@ -66,7 +72,163 @@ const validateSegmentContent = (type: string, content: any): boolean => {
       );
 
     case "practice":
-      return content.practice && content.practice.instructions;
+      if (!content.practice || !content.practice.instructions) return false;
+
+      const practiceType = content.practice.type;
+      if (practiceType === "drag-drop") {
+        return (
+          content.practice.components &&
+          content.practice.components.draggables &&
+          Array.isArray(content.practice.components.draggables) &&
+          content.practice.components.draggables.length > 0 &&
+          content.practice.components.targets &&
+          Array.isArray(content.practice.components.targets) &&
+          content.practice.components.targets.length > 0
+        );
+      } else if (
+        practiceType === "role-play" ||
+        practiceType === "simulation"
+      ) {
+        return content.practice.scenario !== undefined;
+      }
+      return true;
+
+    // New activity type validations
+    case "scenario":
+      return (
+        content.scenario &&
+        content.scenario.title &&
+        content.scenario.situation &&
+        content.scenario.questions &&
+        Array.isArray(content.scenario.questions) &&
+        content.scenario.questions.length > 0 &&
+        content.scenario.questions.every((q: any) => q.text && q.type)
+      );
+
+    case "flashcards":
+      return (
+        content.flashcards &&
+        content.flashcards.cards &&
+        Array.isArray(content.flashcards.cards) &&
+        content.flashcards.cards.length > 0 &&
+        content.flashcards.cards.every((card: any) => card.front && card.back)
+      );
+
+    case "matching":
+      return (
+        content.matching &&
+        content.matching.pairs &&
+        Array.isArray(content.matching.pairs) &&
+        content.matching.pairs.length > 0 &&
+        content.matching.pairs.every(
+          (pair: any) => pair.leftItem && pair.rightItem
+        )
+      );
+
+    case "storytelling":
+      return (
+        content.storytelling &&
+        content.storytelling.title &&
+        content.storytelling.chapters &&
+        Array.isArray(content.storytelling.chapters) &&
+        content.storytelling.chapters.length > 0 &&
+        content.storytelling.startChapter &&
+        content.storytelling.chapters.every(
+          (chapter: any) => chapter.id && chapter.title && chapter.content
+        )
+      );
+
+    case "dragdrop":
+      return (
+        content.dragdrop &&
+        content.dragdrop.dropZones &&
+        Array.isArray(content.dragdrop.dropZones) &&
+        content.dragdrop.dropZones.length > 0 &&
+        content.dragdrop.draggableItems &&
+        Array.isArray(content.dragdrop.draggableItems) &&
+        content.dragdrop.draggableItems.length > 0 &&
+        content.dragdrop.dropZones.every(
+          (zone: any) =>
+            zone.id &&
+            zone.x !== undefined &&
+            zone.y !== undefined &&
+            zone.correctItem
+        ) &&
+        content.dragdrop.draggableItems.every(
+          (item: any) => item.id && item.text
+        )
+      );
+
+    case "dragwords":
+      // Validate that all gaps have corresponding words in the word bank
+      const validGaps = content.dragwords.gaps.every(
+        (gap: any) => gap.id && gap.correctWordId && gap.position !== undefined
+      );
+
+      const validWordBank = content.dragwords.wordBank.every(
+        (word: any) => word.id && word.word
+      );
+
+      return (
+        content.dragwords &&
+        content.dragwords.text &&
+        content.dragwords.wordBank &&
+        Array.isArray(content.dragwords.wordBank) &&
+        content.dragwords.wordBank.length > 0 &&
+        content.dragwords.gaps &&
+        Array.isArray(content.dragwords.gaps) &&
+        content.dragwords.gaps.length > 0 &&
+        validGaps &&
+        validWordBank
+      );
+
+    case "fillblanks":
+      // Validate that all gaps have correct answers
+      const validFillBlanks = content.fillblanks.gaps.every(
+        (gap: any) => gap.id && gap.correctAnswer && gap.position !== undefined
+      );
+
+      return (
+        content.fillblanks &&
+        content.fillblanks.text &&
+        content.fillblanks.gaps &&
+        Array.isArray(content.fillblanks.gaps) &&
+        content.fillblanks.gaps.length > 0 &&
+        validFillBlanks
+      );
+
+    case "questionset":
+      // Validate that all questions in the set are valid
+      const validQuestions = content.questionset.questions.every(
+        (question: any) => {
+          if (!question.text || !question.type) return false;
+
+          if (question.type === "multiple-choice") {
+            return (
+              question.options &&
+              Array.isArray(question.options) &&
+              question.options.length >= 2 &&
+              question.options.some((opt: any) => opt.isCorrect)
+            );
+          } else if (
+            question.type === "true-false" ||
+            question.type === "fill-blank"
+          ) {
+            return question.correctAnswer !== undefined;
+          } else if (question.type === "short-answer") {
+            return question.correctAnswer !== undefined;
+          }
+          return true;
+        }
+      );
+
+      return (
+        content.questionset &&
+        content.questionset.questions &&
+        Array.isArray(content.questionset.questions) &&
+        content.questionset.questions.length > 0 &&
+        validQuestions
+      );
 
     default:
       return true;
@@ -202,52 +364,121 @@ export const createCourse = async (
                   );
                   // Provide default content structure
                   switch (segment.type) {
-                    case "instruction":
-                    case "review":
+                    // Existing cases...
+
+                    case "scenario":
                       segmentContent = {
-                        instruction: {
-                          text: parsedContent?.instruction?.text || "",
-                          mediaUrl:
-                            parsedContent?.instruction?.mediaUrl || null,
-                          mediaType:
-                            parsedContent?.instruction?.mediaType || "image",
+                        scenario: {
+                          title: parsedContent?.scenario?.title || "",
+                          description:
+                            parsedContent?.scenario?.description || "",
+                          situation: parsedContent?.scenario?.situation || "",
+                          questions: parsedContent?.scenario?.questions || [],
+                          backgroundImage:
+                            parsedContent?.scenario?.backgroundImage || null,
+                          characterInvolved:
+                            parsedContent?.scenario?.characterInvolved || null,
                         },
                       };
                       break;
-                    case "question":
+
+                    case "flashcards":
                       segmentContent = {
-                        question: {
-                          text: parsedContent?.question?.text || "",
-                          type:
-                            parsedContent?.question?.type || "multiple-choice",
-                          options: parsedContent?.question?.options || [],
-                          correctAnswer:
-                            parsedContent?.question?.correctAnswer || null,
-                          explanation:
-                            parsedContent?.question?.explanation || null,
+                        flashcards: {
+                          cards: parsedContent?.flashcards?.cards || [],
+                          displayMode:
+                            parsedContent?.flashcards?.displayMode ||
+                            "sequential",
+                          showProgress:
+                            parsedContent?.flashcards?.showProgress !== false,
+                          allowMarking:
+                            parsedContent?.flashcards?.allowMarking || false,
                         },
                       };
                       break;
-                    case "dialogue":
+
+                    case "matching":
                       segmentContent = {
-                        dialogue: {
-                          characters: parsedContent?.dialogue?.characters || [],
-                          backgroundScene:
-                            parsedContent?.dialogue?.backgroundScene || null,
-                          audioUrl: parsedContent?.dialogue?.audioUrl || null,
-                        },
-                      };
-                      break;
-                    case "practice":
-                      segmentContent = {
-                        practice: {
-                          type: parsedContent?.practice?.type || "drag-drop",
+                        matching: {
+                          title: parsedContent?.matching?.title || "",
                           instructions:
-                            parsedContent?.practice?.instructions || "",
-                          components: parsedContent?.practice?.components || {},
+                            parsedContent?.matching?.instructions || "",
+                          pairs: parsedContent?.matching?.pairs || [],
+                          timeLimit: parsedContent?.matching?.timeLimit || null,
+                          shuffle: parsedContent?.matching?.shuffle !== false,
                         },
                       };
                       break;
+
+                    case "storytelling":
+                      segmentContent = {
+                        storytelling: {
+                          title: parsedContent?.storytelling?.title || "",
+                          background:
+                            parsedContent?.storytelling?.background || "",
+                          chapters: parsedContent?.storytelling?.chapters || [],
+                          startChapter:
+                            parsedContent?.storytelling?.startChapter || "",
+                        },
+                      };
+                      break;
+
+                    case "dragdrop":
+                      segmentContent = {
+                        dragdrop: {
+                          title: parsedContent?.dragdrop?.title || "",
+                          instructions:
+                            parsedContent?.dragdrop?.instructions || "",
+                          backgroundImage:
+                            parsedContent?.dragdrop?.backgroundImage || null,
+                          dropZones: parsedContent?.dragdrop?.dropZones || [],
+                          draggableItems:
+                            parsedContent?.dragdrop?.draggableItems || [],
+                        },
+                      };
+                      break;
+
+                    case "dragwords":
+                      segmentContent = {
+                        dragwords: {
+                          text: parsedContent?.dragwords?.text || "",
+                          instructions:
+                            parsedContent?.dragwords?.instructions || "",
+                          wordBank: parsedContent?.dragwords?.wordBank || [],
+                          gaps: parsedContent?.dragwords?.gaps || [],
+                        },
+                      };
+                      break;
+
+                    case "fillblanks":
+                      segmentContent = {
+                        fillblanks: {
+                          text: parsedContent?.fillblanks?.text || "",
+                          instructions:
+                            parsedContent?.fillblanks?.instructions || "",
+                          gaps: parsedContent?.fillblanks?.gaps || [],
+                        },
+                      };
+                      break;
+
+                    case "questionset":
+                      segmentContent = {
+                        questionset: {
+                          title: parsedContent?.questionset?.title || "",
+                          instructions:
+                            parsedContent?.questionset?.instructions || "",
+                          questions:
+                            parsedContent?.questionset?.questions || [],
+                          passingScore:
+                            parsedContent?.questionset?.passingScore || 70,
+                          showResults:
+                            parsedContent?.questionset?.showResults !== false,
+                          randomizeOrder:
+                            parsedContent?.questionset?.randomizeOrder || false,
+                        },
+                      };
+                      break;
+
                     default:
                       segmentContent = parsedContent;
                   }
@@ -434,52 +665,121 @@ export const updateCourse = async (
                   );
                   // Provide default content structure
                   switch (segment.type) {
-                    case "instruction":
-                    case "review":
+                    // Existing cases...
+
+                    case "scenario":
                       segmentContent = {
-                        instruction: {
-                          text: parsedContent?.instruction?.text || "",
-                          mediaUrl:
-                            parsedContent?.instruction?.mediaUrl || null,
-                          mediaType:
-                            parsedContent?.instruction?.mediaType || "image",
+                        scenario: {
+                          title: parsedContent?.scenario?.title || "",
+                          description:
+                            parsedContent?.scenario?.description || "",
+                          situation: parsedContent?.scenario?.situation || "",
+                          questions: parsedContent?.scenario?.questions || [],
+                          backgroundImage:
+                            parsedContent?.scenario?.backgroundImage || null,
+                          characterInvolved:
+                            parsedContent?.scenario?.characterInvolved || null,
                         },
                       };
                       break;
-                    case "question":
+
+                    case "flashcards":
                       segmentContent = {
-                        question: {
-                          text: parsedContent?.question?.text || "",
-                          type:
-                            parsedContent?.question?.type || "multiple-choice",
-                          options: parsedContent?.question?.options || [],
-                          correctAnswer:
-                            parsedContent?.question?.correctAnswer || null,
-                          explanation:
-                            parsedContent?.question?.explanation || null,
+                        flashcards: {
+                          cards: parsedContent?.flashcards?.cards || [],
+                          displayMode:
+                            parsedContent?.flashcards?.displayMode ||
+                            "sequential",
+                          showProgress:
+                            parsedContent?.flashcards?.showProgress !== false,
+                          allowMarking:
+                            parsedContent?.flashcards?.allowMarking || false,
                         },
                       };
                       break;
-                    case "dialogue":
+
+                    case "matching":
                       segmentContent = {
-                        dialogue: {
-                          characters: parsedContent?.dialogue?.characters || [],
-                          backgroundScene:
-                            parsedContent?.dialogue?.backgroundScene || null,
-                          audioUrl: parsedContent?.dialogue?.audioUrl || null,
-                        },
-                      };
-                      break;
-                    case "practice":
-                      segmentContent = {
-                        practice: {
-                          type: parsedContent?.practice?.type || "drag-drop",
+                        matching: {
+                          title: parsedContent?.matching?.title || "",
                           instructions:
-                            parsedContent?.practice?.instructions || "",
-                          components: parsedContent?.practice?.components || {},
+                            parsedContent?.matching?.instructions || "",
+                          pairs: parsedContent?.matching?.pairs || [],
+                          timeLimit: parsedContent?.matching?.timeLimit || null,
+                          shuffle: parsedContent?.matching?.shuffle !== false,
                         },
                       };
                       break;
+
+                    case "storytelling":
+                      segmentContent = {
+                        storytelling: {
+                          title: parsedContent?.storytelling?.title || "",
+                          background:
+                            parsedContent?.storytelling?.background || "",
+                          chapters: parsedContent?.storytelling?.chapters || [],
+                          startChapter:
+                            parsedContent?.storytelling?.startChapter || "",
+                        },
+                      };
+                      break;
+
+                    case "dragdrop":
+                      segmentContent = {
+                        dragdrop: {
+                          title: parsedContent?.dragdrop?.title || "",
+                          instructions:
+                            parsedContent?.dragdrop?.instructions || "",
+                          backgroundImage:
+                            parsedContent?.dragdrop?.backgroundImage || null,
+                          dropZones: parsedContent?.dragdrop?.dropZones || [],
+                          draggableItems:
+                            parsedContent?.dragdrop?.draggableItems || [],
+                        },
+                      };
+                      break;
+
+                    case "dragwords":
+                      segmentContent = {
+                        dragwords: {
+                          text: parsedContent?.dragwords?.text || "",
+                          instructions:
+                            parsedContent?.dragwords?.instructions || "",
+                          wordBank: parsedContent?.dragwords?.wordBank || [],
+                          gaps: parsedContent?.dragwords?.gaps || [],
+                        },
+                      };
+                      break;
+
+                    case "fillblanks":
+                      segmentContent = {
+                        fillblanks: {
+                          text: parsedContent?.fillblanks?.text || "",
+                          instructions:
+                            parsedContent?.fillblanks?.instructions || "",
+                          gaps: parsedContent?.fillblanks?.gaps || [],
+                        },
+                      };
+                      break;
+
+                    case "questionset":
+                      segmentContent = {
+                        questionset: {
+                          title: parsedContent?.questionset?.title || "",
+                          instructions:
+                            parsedContent?.questionset?.instructions || "",
+                          questions:
+                            parsedContent?.questionset?.questions || [],
+                          passingScore:
+                            parsedContent?.questionset?.passingScore || 70,
+                          showResults:
+                            parsedContent?.questionset?.showResults !== false,
+                          randomizeOrder:
+                            parsedContent?.questionset?.randomizeOrder || false,
+                        },
+                      };
+                      break;
+
                     default:
                       segmentContent = parsedContent;
                   }

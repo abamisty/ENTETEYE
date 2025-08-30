@@ -11,6 +11,8 @@ import courseRoutes from "./routes/course_routes";
 import childRoutes from "./routes/child_routes";
 import characterRoutes from "./routes/character_routes";
 import adminRoutes from "./routes/admin_routes";
+import courseReqRoutes from "./routes/course_requests_routes";
+
 dotenv.config();
 
 const app = express();
@@ -38,6 +40,7 @@ app.use(bodyParser.json());
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/parent", parentRoutes);
 app.use("/api/v1/characters", characterRoutes);
+app.use("/api/v1/course-requests", courseReqRoutes);
 app.use("/api/v1/courses", courseRoutes);
 app.use("/api/v1/child", childRoutes);
 app.use("/api/v1/admin", adminRoutes);

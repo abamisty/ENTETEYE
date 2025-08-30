@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Check,
   Star,
@@ -14,7 +14,6 @@ import { parentApi } from "@/api/parent";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { BASE_URL } from "@/lib/constants";
-import PaystackPop from "@paystack/inline-js";
 import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/api/api";
 
@@ -24,7 +23,11 @@ const SubscriptionPlansPage = () => {
   const [name, setName] = useState("IKRAM KHAN");
   const [phone, setPhone] = useState("02434343");
   const { user } = useAuth();
-  console.log(user);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const plans = [
     {
@@ -79,6 +82,9 @@ const SubscriptionPlansPage = () => {
   ];
 
   const handleSelectPlan = async (product: "basic" | "professional") => {
+    if (typeof window === "undefined") return;
+    if (!isClient) return;
+
     const plan = plans.find((p) => p.product === product);
     if (!plan) return;
 
@@ -100,6 +106,8 @@ const SubscriptionPlansPage = () => {
       }
 
       // Initialize Paystack Popup
+      const PaystackPop = (await import("@paystack/inline-js")).default;
+
       const paystack = new PaystackPop();
       paystack.resumeTransaction(access_code);
 

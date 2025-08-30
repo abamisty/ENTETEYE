@@ -105,7 +105,21 @@ export class LearningSegment {
 
   @Column({
     type: "enum",
-    enum: ["dialogue", "instruction", "question", "practice", "review"],
+    enum: [
+      "dialogue",
+      "instruction",
+      "question",
+      "practice",
+      "review",
+      "scenario",
+      "flashcards",
+      "matching",
+      "storytelling",
+      "dragdrop",
+      "dragwords",
+      "fillblanks",
+      "questionset",
+    ],
     default: "instruction",
   })
   type!: string;

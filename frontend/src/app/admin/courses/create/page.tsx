@@ -5,6 +5,8 @@ import { characterApi } from "@/api/characters";
 import toast from "react-hot-toast";
 import { errorStyles } from "@/lib/constants";
 import { useRouter, useSearchParams } from "next/navigation";
+import { LearningSegment, segmentTypes, steps } from "@/lib/utils";
+import { renderSegmentContent } from "./RenderContentSegment";
 
 // Types based on your schema
 interface Character {
@@ -12,46 +14,6 @@ interface Character {
   name: string;
   avatarUrl: string;
   type: string;
-}
-
-interface LearningSegment {
-  id?: string;
-  order: number;
-  type: "dialogue" | "instruction" | "question" | "practice" | "review";
-  basePoints: number;
-  bonusPoints?: number;
-  content?: {
-    dialogue?: {
-      characters: Array<{
-        characterId: string;
-        lines: string[];
-        position: "left" | "right" | "center";
-      }>;
-      backgroundScene?: string;
-      audioUrl?: string;
-    };
-    instruction?: {
-      text: string;
-      mediaUrl?: string;
-      mediaType?: "image" | "video" | "audio";
-    };
-    question?: {
-      text: string;
-      type: "multiple-choice" | "true-false" | "fill-blank" | "matching";
-      options?: Array<{
-        id: string;
-        text: string;
-        isCorrect: boolean;
-      }>;
-      correctAnswer?: string;
-      explanation?: string;
-    };
-    practice?: {
-      type: "drag-drop" | "role-play" | "simulation";
-      instructions: string;
-      components: any;
-    };
-  };
 }
 
 interface LearningPath {
@@ -134,47 +96,6 @@ const AdminCourseCreation = () => {
       },
     ],
   });
-
-  const steps = [
-    { title: "Course Basics", icon: "📚" },
-    { title: "Learning Paths", icon: "🛤️" },
-    { title: "Segments", icon: "🧩" },
-    { title: "Characters", icon: "👥" },
-    { title: "Review", icon: "👁️" },
-  ];
-
-  const segmentTypes = [
-    {
-      value: "dialogue",
-      label: "Dialogue",
-      icon: "💬",
-      description: "Character conversations",
-    },
-    {
-      value: "instruction",
-      label: "Instruction",
-      icon: "📝",
-      description: "Teaching content",
-    },
-    {
-      value: "question",
-      label: "Question",
-      icon: "❓",
-      description: "Interactive questions",
-    },
-    {
-      value: "practice",
-      label: "Practice",
-      icon: "🎯",
-      description: "Hands-on activities",
-    },
-    {
-      value: "review",
-      label: "Review",
-      icon: "📋",
-      description: "Summary and recap",
-    },
-  ];
 
   useEffect(() => {
     fetchCharacters();
@@ -284,12 +205,136 @@ const AdminCourseCreation = () => {
             backgroundScene: "",
           },
         };
-      case "practice":
+
+      case "scenario":
         return {
-          practice: {
-            type: "drag-drop",
+          scenario: {
+            title: "",
+            description: "",
+            situation: "",
+            questions: [
+              {
+                id: "1",
+                text: "",
+                type: "multiple-choice",
+                options: [
+                  { id: "1", text: "", isCorrect: false, feedback: "" },
+                  { id: "2", text: "", isCorrect: false, feedback: "" },
+                ],
+                explanation: "",
+              },
+            ],
+          },
+        };
+      case "flashcards":
+        return {
+          flashcards: {
+            cards: [
+              { id: "1", front: "", back: "" },
+              { id: "2", front: "", back: "" },
+            ],
+            displayMode: "sequential",
+            showProgress: true,
+            allowMarking: false,
+          },
+        };
+      case "matching":
+        return {
+          matching: {
+            title: "",
             instructions: "",
-            components: {},
+            pairs: [
+              { id: "1", leftItem: "", rightItem: "" },
+              { id: "2", leftItem: "", rightItem: "" },
+            ],
+            shuffle: true,
+          },
+        };
+      case "storytelling":
+        return {
+          storytelling: {
+            title: "",
+            background: "",
+            chapters: [
+              {
+                id: "1",
+                title: "Chapter 1",
+                content: "",
+                choices: [{ id: "1", text: "Continue", nextChapter: "2" }],
+              },
+            ],
+            startChapter: "1",
+          },
+        };
+      case "dragdrop":
+        return {
+          dragdrop: {
+            title: "",
+            instructions: "",
+            dropZones: [
+              {
+                id: "1",
+                x: 100,
+                y: 100,
+                width: 80,
+                height: 80,
+                correctItem: "1",
+              },
+            ],
+            draggableItems: [{ id: "1", text: "Item 1" }],
+          },
+        };
+      case "dragwords":
+        return {
+          dragwords: {
+            text: "This is a {{gap1}} with missing {{gap2}}.",
+            instructions: "Drag words from the bank to fill the gaps.",
+            wordBank: [
+              { id: "1", word: "text", distractor: false },
+              { id: "2", word: "words", distractor: false },
+              { id: "3", word: "distractor", distractor: true },
+            ],
+            gaps: [
+              { id: "gap1", correctWordId: "1", position: 10 },
+              { id: "gap2", correctWordId: "2", position: 30 },
+            ],
+          },
+        };
+      case "fillblanks":
+        return {
+          fillblanks: {
+            text: "The capital of France is {{gap1}}.",
+            instructions: "Fill in the blanks with the correct answers.",
+            gaps: [
+              {
+                id: "gap1",
+                correctAnswer: "Paris",
+                position: 20,
+                hints: ["Starts with P"],
+              },
+            ],
+          },
+        };
+      case "questionset":
+        return {
+          questionset: {
+            title: "",
+            instructions: "",
+            questions: [
+              {
+                id: "1",
+                text: "",
+                type: "multiple-choice",
+                options: [
+                  { id: "1", text: "", isCorrect: false },
+                  { id: "2", text: "", isCorrect: false },
+                ],
+                points: 10,
+              },
+            ],
+            passingScore: 70,
+            showResults: true,
+            randomizeOrder: false,
           },
         };
       default:
@@ -533,15 +578,99 @@ const AdminCourseCreation = () => {
             });
             break;
 
-          case "practice":
-            if (!segment.content?.practice?.instructions?.trim()) {
-              errors[`${segmentKey}_instructions`] = `Practice segment ${
+          case "scenario":
+            if (!segment.content?.scenario?.situation?.trim()) {
+              errors[`${segmentKey}_content`] = `Scenario segment ${
                 segmentIndex + 1
-              } must have instructions`;
-            } else if (segment.content.practice.instructions.length > 1000) {
-              errors[`${segmentKey}_instructions`] = `Practice segment ${
+              } must have a situation description`;
+            } else if (segment.content.scenario.situation.length > 1000) {
+              errors[`${segmentKey}_content`] = `Scenario segment ${
                 segmentIndex + 1
-              } instructions are too long (max 1000 characters)`;
+              } situation is too long (max 1000 characters)`;
+            }
+
+            if (!segment.content?.scenario?.questions?.length) {
+              errors[`${segmentKey}_questions`] = `Scenario segment ${
+                segmentIndex + 1
+              } must have at least one question`;
+            }
+            break;
+
+          case "flashcards":
+            if (!segment.content?.flashcards?.cards?.length) {
+              errors[`${segmentKey}_cards`] = `Flashcards segment ${
+                segmentIndex + 1
+              } must have at least one card`;
+            } else if (segment.content.flashcards.cards.length > 50) {
+              errors[`${segmentKey}_cards`] = `Flashcards segment ${
+                segmentIndex + 1
+              } cannot have more than 50 cards`;
+            }
+            break;
+
+          case "matching":
+            if (!segment.content?.matching?.pairs?.length) {
+              errors[`${segmentKey}_pairs`] = `Matching segment ${
+                segmentIndex + 1
+              } must have at least one pair`;
+            } else if (segment.content.matching.pairs.length > 10) {
+              errors[`${segmentKey}_pairs`] = `Matching segment ${
+                segmentIndex + 1
+              } cannot have more than 10 pairs`;
+            }
+            break;
+
+          case "storytelling":
+            if (!segment.content?.storytelling?.chapters?.length) {
+              errors[`${segmentKey}_chapters`] = `Storytelling segment ${
+                segmentIndex + 1
+              } must have at least one chapter`;
+            }
+            break;
+
+          case "dragdrop":
+            if (!segment.content?.dragdrop?.dropZones?.length) {
+              errors[`${segmentKey}_dropzones`] = `Drag & Drop segment ${
+                segmentIndex + 1
+              } must have at least one drop zone`;
+            }
+            if (!segment.content?.dragdrop?.draggableItems?.length) {
+              errors[`${segmentKey}_draggables`] = `Drag & Drop segment ${
+                segmentIndex + 1
+              } must have at least one draggable item`;
+            }
+            break;
+
+          case "dragwords":
+            if (!segment.content?.dragwords?.gaps?.length) {
+              errors[`${segmentKey}_gaps`] = `Drag Words segment ${
+                segmentIndex + 1
+              } must have at least one gap`;
+            }
+            if (!segment.content?.dragwords?.wordBank?.length) {
+              errors[`${segmentKey}_wordbank`] = `Drag Words segment ${
+                segmentIndex + 1
+              } must have at least one word in the bank`;
+            }
+            break;
+
+          case "fillblanks":
+            if (!segment.content?.fillblanks?.gaps?.length) {
+              errors[`${segmentKey}_gaps`] = `Fill Blanks segment ${
+                segmentIndex + 1
+              } must have at least one gap`;
+            }
+            break;
+
+          case "questionset":
+            if (!segment.content?.questionset?.questions?.length) {
+              errors[`${segmentKey}_questions`] = `Question Set segment ${
+                segmentIndex + 1
+              } must have at least one question`;
+            } else if (segment.content.questionset.questions.length > 20) {
+              errors[`${segmentKey}_questions`] = `Question Set segment ${
+                segmentIndex + 1
+              } cannot have more than 20 questions`;
             }
             break;
         }
@@ -862,826 +991,6 @@ const AdminCourseCreation = () => {
       );
     } finally {
       setLoading(false);
-    }
-  };
-
-  const renderSegmentContent = (
-    pathIndex: number,
-    segmentIndex: number,
-    segment: LearningSegment
-  ) => {
-    const updateSegmentContent = (content: any) => {
-      updateSegment(pathIndex, segmentIndex, { content });
-    };
-
-    const segmentKey = `path_${pathIndex}_segment_${segmentIndex}`;
-
-    switch (segment.type) {
-      case "instruction":
-      case "review":
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {segment.type === "instruction" ? "Instruction" : "Review"} Text
-                *
-              </label>
-              <textarea
-                value={segment.content?.instruction?.text || ""}
-                onChange={(e) =>
-                  updateSegmentContent({
-                    instruction: {
-                      ...segment.content?.instruction,
-                      text: e.target.value,
-                    },
-                  })
-                }
-                rows={4}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main ${
-                  validationErrors[`${segmentKey}_content`]
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-                placeholder={`Enter ${segment.type} content...`}
-                maxLength={2000}
-              />
-              {validationErrors[`${segmentKey}_content`] && (
-                <p className="text-red-500 text-sm mt-1">
-                  {validationErrors[`${segmentKey}_content`]}
-                </p>
-              )}
-              <p className="text-gray-500 text-xs mt-1">
-                {segment.content?.instruction?.text?.length || 0}/2000
-                characters
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Media URL (optional)
-              </label>
-              <input
-                type="url"
-                value={segment.content?.instruction?.mediaUrl || ""}
-                onChange={(e) =>
-                  updateSegmentContent({
-                    instruction: {
-                      ...segment.content?.instruction,
-                      mediaUrl: e.target.value,
-                    },
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-                placeholder="https://example.com/media.jpg"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Media Type
-              </label>
-              <select
-                value={segment.content?.instruction?.mediaType || "image"}
-                onChange={(e) =>
-                  updateSegmentContent({
-                    instruction: {
-                      ...segment.content?.instruction,
-                      mediaType: e.target.value,
-                    },
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-              >
-                <option value="image">Image</option>
-                <option value="video">Video</option>
-                <option value="audio">Audio</option>
-              </select>
-            </div>
-          </div>
-        );
-
-      case "question":
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Question Text *
-              </label>
-              <textarea
-                value={segment.content?.question?.text || ""}
-                onChange={(e) =>
-                  updateSegmentContent({
-                    question: {
-                      ...segment.content?.question,
-                      text: e.target.value,
-                    },
-                  })
-                }
-                rows={3}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main ${
-                  validationErrors[`${segmentKey}_content`]
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-                placeholder="Enter your question..."
-                maxLength={500}
-              />
-              {validationErrors[`${segmentKey}_content`] && (
-                <p className="text-red-500 text-sm mt-1">
-                  {validationErrors[`${segmentKey}_content`]}
-                </p>
-              )}
-              <p className="text-gray-500 text-xs mt-1">
-                {segment.content?.question?.text?.length || 0}/500 characters
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Question Type
-              </label>
-              <select
-                value={segment.content?.question?.type || "multiple-choice"}
-                onChange={(e) => {
-                  const newType = e.target.value;
-                  let newContent = {
-                    ...segment.content?.question,
-                    type: newType,
-                  };
-
-                  // Reset content based on type
-                  if (newType === "multiple-choice") {
-                    newContent.options = [
-                      { id: "1", text: "", isCorrect: false },
-                      { id: "2", text: "", isCorrect: false },
-                    ];
-                    delete newContent.correctAnswer;
-                  } else {
-                    delete newContent.options;
-                    newContent.correctAnswer = "";
-                  }
-
-                  updateSegmentContent({ question: newContent });
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-              >
-                <option value="multiple-choice">Multiple Choice</option>
-                <option value="true-false">True/False</option>
-                <option value="fill-blank">Fill in the Blank</option>
-                <option value="matching">Matching</option>
-              </select>
-            </div>
-
-            {/* Multiple Choice Options */}
-            {segment.content?.question?.type === "multiple-choice" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Answer Options (2-6 options) *
-                </label>
-                <div className="space-y-2">
-                  {(segment.content?.question?.options || []).map(
-                    (option, optionIndex) => (
-                      <div
-                        key={optionIndex}
-                        className="flex items-center gap-2"
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${pathIndex}-${segmentIndex}`}
-                          checked={option.isCorrect}
-                          onChange={() => {
-                            const updatedOptions =
-                              segment.content?.question?.options?.map(
-                                (opt, idx) => ({
-                                  ...opt,
-                                  isCorrect: idx === optionIndex,
-                                })
-                              ) || [];
-                            updateSegmentContent({
-                              question: {
-                                ...segment.content?.question,
-                                options: updatedOptions,
-                              },
-                            });
-                          }}
-                          className="text-primary-main"
-                        />
-                        <input
-                          type="text"
-                          value={option.text}
-                          onChange={(e) => {
-                            const updatedOptions =
-                              segment.content?.question?.options?.map(
-                                (opt, idx) =>
-                                  idx === optionIndex
-                                    ? { ...opt, text: e.target.value }
-                                    : opt
-                              ) || [];
-                            updateSegmentContent({
-                              question: {
-                                ...segment.content?.question,
-                                options: updatedOptions,
-                              },
-                            });
-                          }}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-                          placeholder={`Option ${optionIndex + 1}`}
-                          maxLength={100}
-                        />
-                        <button
-                          onClick={() => {
-                            const options =
-                              segment.content?.question?.options || [];
-                            if (options.length <= 2) {
-                              toast.error(
-                                "Must have at least 2 options",
-                                errorStyles
-                              );
-                              return;
-                            }
-                            const updatedOptions = options.filter(
-                              (_, idx) => idx !== optionIndex
-                            );
-                            updateSegmentContent({
-                              question: {
-                                ...segment.content?.question,
-                                options: updatedOptions,
-                              },
-                            });
-                          }}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded"
-                          disabled={
-                            (segment.content?.question?.options?.length || 0) <=
-                            2
-                          }
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    )
-                  )}
-                  <button
-                    onClick={() => {
-                      const options = segment.content?.question?.options || [];
-                      if (options.length >= 6) {
-                        toast.error("Maximum 6 options allowed", errorStyles);
-                        return;
-                      }
-                      const newOption = {
-                        id: (options.length + 1).toString(),
-                        text: "",
-                        isCorrect: false,
-                      };
-                      const updatedOptions = [...options, newOption];
-                      updateSegmentContent({
-                        question: {
-                          ...segment.content?.question,
-                          options: updatedOptions,
-                        },
-                      });
-                    }}
-                    className="w-full py-2 px-4 border border-dashed border-gray-300 rounded-md text-gray-500 hover:border-primary-main hover:text-primary-main"
-                    disabled={
-                      (segment.content?.question?.options?.length || 0) >= 6
-                    }
-                  >
-                    + Add Option
-                  </button>
-                </div>
-                {(validationErrors[`${segmentKey}_options`] ||
-                  validationErrors[`${segmentKey}_correct`] ||
-                  validationErrors[`${segmentKey}_empty_options`]) && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {validationErrors[`${segmentKey}_options`] ||
-                      validationErrors[`${segmentKey}_correct`] ||
-                      validationErrors[`${segmentKey}_empty_options`]}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* True/False Options */}
-            {segment.content?.question?.type === "true-false" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Correct Answer *
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name={`true-false-${pathIndex}-${segmentIndex}`}
-                      value="true"
-                      checked={
-                        segment.content?.question?.correctAnswer === "true"
-                      }
-                      onChange={(e) =>
-                        updateSegmentContent({
-                          question: {
-                            ...segment.content?.question,
-                            correctAnswer: e.target.value,
-                          },
-                        })
-                      }
-                      className="mr-2 text-primary-main"
-                    />
-                    True
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name={`true-false-${pathIndex}-${segmentIndex}`}
-                      value="false"
-                      checked={
-                        segment.content?.question?.correctAnswer === "false"
-                      }
-                      onChange={(e) =>
-                        updateSegmentContent({
-                          question: {
-                            ...segment.content?.question,
-                            correctAnswer: e.target.value,
-                          },
-                        })
-                      }
-                      className="mr-2 text-primary-main"
-                    />
-                    False
-                  </label>
-                </div>
-                {validationErrors[`${segmentKey}_correct_answer`] && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {validationErrors[`${segmentKey}_correct_answer`]}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Fill in the Blank */}
-            {segment.content?.question?.type === "fill-blank" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Correct Answer *
-                </label>
-                <input
-                  type="text"
-                  value={segment.content?.question?.correctAnswer || ""}
-                  onChange={(e) =>
-                    updateSegmentContent({
-                      question: {
-                        ...segment.content?.question,
-                        correctAnswer: e.target.value,
-                      },
-                    })
-                  }
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main ${
-                    validationErrors[`${segmentKey}_correct_answer`]
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  }`}
-                  placeholder="Enter the correct answer..."
-                  maxLength={100}
-                />
-                {validationErrors[`${segmentKey}_correct_answer`] && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {validationErrors[`${segmentKey}_correct_answer`]}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Matching - For now, just a text input for the answer */}
-            {segment.content?.question?.type === "matching" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Matching Pairs (JSON format)
-                </label>
-                <textarea
-                  value={segment.content?.question?.correctAnswer || ""}
-                  onChange={(e) =>
-                    updateSegmentContent({
-                      question: {
-                        ...segment.content?.question,
-                        correctAnswer: e.target.value,
-                      },
-                    })
-                  }
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-                  placeholder='{"item1": "match1", "item2": "match2"}'
-                />
-                <p className="text-gray-500 text-xs mt-1">
-                  Enter matching pairs in JSON format
-                </p>
-              </div>
-            )}
-
-            {/* Explanation for all question types */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Explanation (optional)
-              </label>
-              <textarea
-                value={segment.content?.question?.explanation || ""}
-                onChange={(e) =>
-                  updateSegmentContent({
-                    question: {
-                      ...segment.content?.question,
-                      explanation: e.target.value,
-                    },
-                  })
-                }
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-                placeholder="Explain why this is the correct answer..."
-                maxLength={300}
-              />
-              <p className="text-gray-500 text-xs mt-1">
-                {segment.content?.question?.explanation?.length || 0}/300
-                characters
-              </p>
-            </div>
-          </div>
-        );
-
-      case "dialogue":
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Background Scene
-              </label>
-              <input
-                type="text"
-                value={segment.content?.dialogue?.backgroundScene || ""}
-                onChange={(e) =>
-                  updateSegmentContent({
-                    dialogue: {
-                      ...segment.content?.dialogue,
-                      backgroundScene: e.target.value,
-                    },
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-                placeholder="Describe the scene setting..."
-                maxLength={200}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Character Dialogues (1-4 characters) *
-              </label>
-              <div className="space-y-3">
-                {(segment.content?.dialogue?.characters || []).map(
-                  (char, charIndex) => (
-                    <div key={charIndex} className="p-4 bg-gray-50 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                        <select
-                          value={char.characterId}
-                          onChange={(e) => {
-                            const updatedChars =
-                              segment.content?.dialogue?.characters?.map(
-                                (c, idx) =>
-                                  idx === charIndex
-                                    ? { ...c, characterId: e.target.value }
-                                    : c
-                              ) || [];
-                            updateSegmentContent({
-                              dialogue: {
-                                ...segment.content?.dialogue,
-                                characters: updatedChars,
-                              },
-                            });
-                          }}
-                          className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main ${
-                            validationErrors[
-                              `${segmentKey}_char_${charIndex}_id`
-                            ]
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          <option value="">Select Character</option>
-                          {availableCharacters.map((character) => (
-                            <option key={character.id} value={character.id}>
-                              {character.name}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={char.position}
-                          onChange={(e) => {
-                            const updatedChars =
-                              segment.content?.dialogue?.characters?.map(
-                                (c, idx) =>
-                                  idx === charIndex
-                                    ? {
-                                        ...c,
-                                        position: e.target.value as
-                                          | "left"
-                                          | "right"
-                                          | "center",
-                                      }
-                                    : c
-                              ) || [];
-                            updateSegmentContent({
-                              dialogue: {
-                                ...segment.content?.dialogue,
-                                characters: updatedChars,
-                              },
-                            });
-                          }}
-                          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-                        >
-                          <option value="left">Left</option>
-                          <option value="center">Center</option>
-                          <option value="right">Right</option>
-                        </select>
-                      </div>
-                      {validationErrors[
-                        `${segmentKey}_char_${charIndex}_id`
-                      ] && (
-                        <p className="text-red-500 text-sm mb-2">
-                          {
-                            validationErrors[
-                              `${segmentKey}_char_${charIndex}_id`
-                            ]
-                          }
-                        </p>
-                      )}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Lines *
-                        </label>
-                        {char.lines.map((line, lineIndex) => (
-                          <div key={lineIndex} className="flex gap-2 mb-2">
-                            <input
-                              type="text"
-                              value={line}
-                              onChange={(e) => {
-                                const updatedChars =
-                                  segment.content?.dialogue?.characters?.map(
-                                    (c, idx) => {
-                                      if (idx === charIndex) {
-                                        const updatedLines = c.lines.map(
-                                          (l, lIdx) =>
-                                            lIdx === lineIndex
-                                              ? e.target.value
-                                              : l
-                                        );
-                                        return { ...c, lines: updatedLines };
-                                      }
-                                      return c;
-                                    }
-                                  ) || [];
-                                updateSegmentContent({
-                                  dialogue: {
-                                    ...segment.content?.dialogue,
-                                    characters: updatedChars,
-                                  },
-                                });
-                              }}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-                              placeholder="Enter dialogue line..."
-                              maxLength={300}
-                            />
-                            <button
-                              onClick={() => {
-                                const updatedChars =
-                                  segment.content?.dialogue?.characters?.map(
-                                    (c, idx) => {
-                                      if (idx === charIndex) {
-                                        if (c.lines.length <= 1) {
-                                          toast.error(
-                                            "Character must have at least one line",
-                                            errorStyles
-                                          );
-                                          return c;
-                                        }
-                                        return {
-                                          ...c,
-                                          lines: c.lines.filter(
-                                            (_, lIdx) => lIdx !== lineIndex
-                                          ),
-                                        };
-                                      }
-                                      return c;
-                                    }
-                                  ) || [];
-                                updateSegmentContent({
-                                  dialogue: {
-                                    ...segment.content?.dialogue,
-                                    characters: updatedChars,
-                                  },
-                                });
-                              }}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded"
-                              disabled={char.lines.length <= 1}
-                            >
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                        {validationErrors[
-                          `${segmentKey}_char_${charIndex}_lines`
-                        ] && (
-                          <p className="text-red-500 text-sm mb-2">
-                            {
-                              validationErrors[
-                                `${segmentKey}_char_${charIndex}_lines`
-                              ]
-                            }
-                          </p>
-                        )}
-                        <button
-                          onClick={() => {
-                            const updatedChars =
-                              segment.content?.dialogue?.characters?.map(
-                                (c, idx) => {
-                                  if (idx === charIndex) {
-                                    if (c.lines.length >= 10) {
-                                      toast.error(
-                                        "Maximum 10 lines per character",
-                                        errorStyles
-                                      );
-                                      return c;
-                                    }
-                                    return { ...c, lines: [...c.lines, ""] };
-                                  }
-                                  return c;
-                                }
-                              ) || [];
-                            updateSegmentContent({
-                              dialogue: {
-                                ...segment.content?.dialogue,
-                                characters: updatedChars,
-                              },
-                            });
-                          }}
-                          className="text-sm text-primary-main hover:text-primary-secondary"
-                          disabled={char.lines.length >= 10}
-                        >
-                          + Add Line
-                        </button>
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <button
-                          onClick={() => {
-                            const characters =
-                              segment.content?.dialogue?.characters || [];
-                            if (characters.length <= 1) {
-                              toast.error(
-                                "Dialogue must have at least one character",
-                                errorStyles
-                              );
-                              return;
-                            }
-                            const updatedChars = characters.filter(
-                              (_, idx) => idx !== charIndex
-                            );
-                            updateSegmentContent({
-                              dialogue: {
-                                ...segment.content?.dialogue,
-                                characters: updatedChars,
-                              },
-                            });
-                          }}
-                          className="text-red-600 hover:text-red-800 text-sm"
-                          disabled={
-                            (segment.content?.dialogue?.characters?.length ||
-                              0) <= 1
-                          }
-                        >
-                          Remove Character
-                        </button>
-                      </div>
-                    </div>
-                  )
-                )}
-                <button
-                  onClick={() => {
-                    const characters =
-                      segment.content?.dialogue?.characters || [];
-                    if (characters.length >= 4) {
-                      toast.error(
-                        "Maximum 4 characters per dialogue",
-                        errorStyles
-                      );
-                      return;
-                    }
-                    const newChar = {
-                      characterId: "",
-                      lines: [""],
-                      position: "left" as const,
-                    };
-                    const updatedChars = [...characters, newChar];
-                    updateSegmentContent({
-                      dialogue: {
-                        ...segment.content?.dialogue,
-                        characters: updatedChars,
-                      },
-                    });
-                  }}
-                  className="w-full py-2 px-4 border border-dashed border-gray-300 rounded-md text-gray-500 hover:border-primary-main hover:text-primary-main"
-                  disabled={
-                    (segment.content?.dialogue?.characters?.length || 0) >= 4
-                  }
-                >
-                  + Add Character
-                </button>
-              </div>
-              {validationErrors[`${segmentKey}_characters`] && (
-                <p className="text-red-500 text-sm mt-1">
-                  {validationErrors[`${segmentKey}_characters`]}
-                </p>
-              )}
-            </div>
-          </div>
-        );
-
-      case "practice":
-        return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Practice Type
-              </label>
-              <select
-                value={segment.content?.practice?.type || "drag-drop"}
-                onChange={(e) =>
-                  updateSegmentContent({
-                    practice: {
-                      ...segment.content?.practice,
-                      type: e.target.value,
-                    },
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main"
-              >
-                <option value="drag-drop">Drag & Drop</option>
-                <option value="role-play">Role Play</option>
-                <option value="simulation">Simulation</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Instructions *
-              </label>
-              <textarea
-                value={segment.content?.practice?.instructions || ""}
-                onChange={(e) =>
-                  updateSegmentContent({
-                    practice: {
-                      ...segment.content?.practice,
-                      instructions: e.target.value,
-                    },
-                  })
-                }
-                rows={4}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-main ${
-                  validationErrors[`${segmentKey}_instructions`]
-                    ? "border-red-500"
-                    : "border-gray-300"
-                }`}
-                placeholder="Describe what the student should do..."
-                maxLength={1000}
-              />
-              {validationErrors[`${segmentKey}_instructions`] && (
-                <p className="text-red-500 text-sm mt-1">
-                  {validationErrors[`${segmentKey}_instructions`]}
-                </p>
-              )}
-              <p className="text-gray-500 text-xs mt-1">
-                {segment.content?.practice?.instructions?.length || 0}/1000
-                characters
-              </p>
-            </div>
-          </div>
-        );
-
-      default:
-        return <div>Select a segment type to configure content</div>;
     }
   };
 
@@ -2413,7 +1722,14 @@ const AdminCourseCreation = () => {
                         <h4 className="text-sm font-medium text-gray-700 mb-3">
                           Content Configuration
                         </h4>
-                        {renderSegmentContent(pathIndex, segmentIndex, segment)}
+                        {renderSegmentContent(
+                          pathIndex,
+                          segmentIndex,
+                          segment,
+                          updateSegment,
+                          validationErrors,
+                          availableCharacters
+                        )}
                       </div>
                     </div>
                   ))}

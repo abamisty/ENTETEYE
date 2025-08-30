@@ -14,6 +14,11 @@ import {
 import { Family } from "./family";
 import { ParentProfile } from "./parent";
 import { AdminProfile } from "./admin";
+import {
+  CourseRequest,
+  CourseRequestComment,
+  CourseRequestVote,
+} from "./course_requests";
 
 export enum UserRole {
   PARENT = "parent",
@@ -80,6 +85,14 @@ export class User {
 
   @Column({ type: "timestamp", nullable: true })
   resetPasswordExp?: Date;
+  @OneToMany(() => CourseRequest, (request) => request.requestedBy)
+  courseRequests!: CourseRequest[];
+
+  @OneToMany(() => CourseRequestVote, (vote) => vote.user)
+  courseRequestVotes!: CourseRequestVote[];
+
+  @OneToMany(() => CourseRequestComment, (comment) => comment.author)
+  courseRequestComments!: CourseRequestComment[];
 
   @Column({
     type: "enum",

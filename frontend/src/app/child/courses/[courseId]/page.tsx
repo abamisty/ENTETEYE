@@ -269,12 +269,6 @@ const GameCourseTrail = () => {
                           }
                         `}
                       >
-                        {/* Path Number */}
-                        <div className="absolute -top-2 -left-2 w-6 h-6 sm:w-8 sm:h-8 bg-amber-400 text-slate-800 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm shadow-md border-2 border-white">
-                          {path.order}
-                        </div>
-
-                        {/* Main Icon */}
                         <div className="text-xl sm:text-2xl lg:text-4xl">
                           {isCompleted ? (
                             <span className="text-white">✅</span>
@@ -284,17 +278,7 @@ const GameCourseTrail = () => {
                             <span className="text-slate-500">🔒</span>
                           )}
                         </div>
-
                         {/* Points Badge */}
-                        {isCompleted && (
-                          <div className="absolute -bottom-2 -right-2 bg-amber-400 text-slate-800 rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 text-xs font-bold flex items-center gap-1 shadow-md border-2 border-white">
-                            <span>⭐</span>
-                            <span className="hidden xs:inline">
-                              {earnedSegmentPoints}
-                            </span>
-                          </div>
-                        )}
-
                         {/* Glow Effect for Active Paths */}
                         {isActive && (
                           <div className="absolute inset-0 rounded-full bg-blue-400/30 animate-ping"></div>

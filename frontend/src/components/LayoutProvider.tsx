@@ -140,9 +140,11 @@ const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
           <div className="h-screen overflow-hidden  flex flex-col">
             <Header />
             <div className="flex flex-1 overflow-hidden">
-              <SideBar userRole={user?.role || UserRole.PARENT} />
+              <div className="w-11 sm:w-max h-max relative z-[100000000]">
+                <SideBar userRole={user?.role || UserRole.PARENT} />
+              </div>
               <main className="flex-1  pb-[5rem] min-h-screen overflow-auto bg-[#eff6f2] min-w-0">
-                <div className="h-max p-6">{children}</div>
+                <div className="h-max p-2 py-4 sm:p-6">{children}</div>
               </main>
             </div>
           </div>

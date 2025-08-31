@@ -16,6 +16,8 @@ import {
   Settings2Icon,
   BookAIcon,
   PersonStanding,
+  HelpingHand,
+  HelpingHandIcon,
 } from "lucide-react";
 import { UserRole } from "@/types/auth";
 import { useRouter } from "next/navigation";
@@ -34,25 +36,29 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeItem, setActiveItem] = useState("dashboard");
 
-  const commonItems: NavigationItem[] = [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      icon: Home,
-      href: "/",
-      roles: [UserRole.ADMIN, UserRole.PARENT, UserRole.CHILD],
-    },
-  ];
+  const commonItems: NavigationItem[] = [];
 
   // Role-specific navigation items
   const roleSpecificItems: Record<UserRole, NavigationItem[]> = {
     [UserRole.ADMIN]: [
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: Home,
+        href: `/admin/dashboard`,
+      },
       { id: "users", label: "Users", icon: Users, href: "/admin/users" },
       {
         id: "courses",
         label: "Courses",
         icon: BookOpen,
         href: "/admin/courses",
+      },
+      {
+        id: "requests",
+        label: "Parent Requests",
+        icon: HelpingHandIcon,
+        href: "/admin/courses/requests",
       },
       {
         id: "characters",
@@ -68,12 +74,24 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
       },
     ],
     [UserRole.PARENT]: [
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: Home,
+        href: `/admin/parent`,
+      },
       // { id: "family", label: "Family", icon: Users, href: "/family" },
       {
         id: "children",
         label: "Children",
         icon: Users,
         href: "/parent/children",
+      },
+      {
+        id: "requst",
+        label: "Requests",
+        icon: HelpingHand,
+        href: "/parent/courses/request",
       },
       {
         id: "courses",
@@ -89,6 +107,12 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
       },
     ],
     [UserRole.CHILD]: [
+      {
+        id: "dashboard",
+        label: "Dashboard",
+        icon: Home,
+        href: `/admin/child`,
+      },
       {
         id: "courses",
         label: "Courses",
@@ -144,12 +168,14 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
 
   return (
     <div
-      className={`bg-white shadow-lg transition-all duration-300 ease-in-out ${
-        isOpen ? "w-64" : "w-16"
-      } flex flex-col relative z-20`}
+      className={`bg-white  z-[100000] h-[90vh] shadow-lg transition-all duration-300 ease-in-out ${
+        isOpen ? "w-64" : "w-11"
+      } flex flex-col  z-20`}
     >
       {/* Sidebar Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div
+        className={`${isOpen ? "p-4" : "p-2"} px-0 border-b border-gray-200`}
+      >
         <div className="flex items-center justify-between">
           <button
             onClick={toggleSidebar}
@@ -165,7 +191,11 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav
+        className={`flex-1 ${
+          isOpen ? "p-4" : "p-2"
+        }  px-1 space-y-2 overflow-y-auto`}
+      >
         {navigationItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -181,7 +211,7 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
               title={!isOpen ? item.label : undefined}
             >
               <Icon
-                className={`w-5 h-5 ${isOpen ? "" : "mx-auto"} flex-shrink-0`}
+                className={`w-4 h-4 ${isOpen ? "" : "mx-auto"} flex-shrink-0`}
               />
               {isOpen && (
                 <>
@@ -207,7 +237,11 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
       </nav>
 
       {/* Bottom Section */}
-      <div className="p-4 border-t border-gray-200 space-y-2">
+      <div
+        className={`${
+          isOpen ? "w-64" : "w-11"
+        }  border-t border-gray-200 space-y-2`}
+      >
         {getFilteredItems(bottomItems).map((item) => {
           const Icon = item.icon;
           return (
@@ -235,7 +269,9 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
 
       {/* User Profile Section (when collapsed) */}
       {!isOpen && (
-        <div className="p-4 border-t border-gray-200">
+        <div
+          className={`${isOpen ? "w-64" : "w-11"}  border-t border-gray-200`}
+        >
           <div className="w-8 h-8 bg-gradient-to-r from-[#043873] to-[#4f9cf9] rounded-full flex items-center justify-center mx-auto">
             <span className="text-white text-sm font-medium">
               {userRole.charAt(0)}

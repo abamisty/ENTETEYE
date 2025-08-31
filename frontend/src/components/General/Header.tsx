@@ -87,19 +87,13 @@ const Header: React.FC = () => {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-6 relative z-30">
       {/* Mobile menu button */}
-      <button
-        className="sm:hidden p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100"
-        onClick={() => setShowMobileMenu(!showMobileMenu)}
-      >
-        <Menu className="w-5 h-5" />
-      </button>
 
       {/* Logo and search */}
       <div className="flex items-center space-x-4 flex-1">
         <Link href={home}>
           <div className="flex items-center h-full space-x-3 mr-[3rem]">
             <div className="w-max h-max rounded-lg flex items-center justify-center">
-              <Image src={"/logo.jpg"} alt="Enteteye" width={60} height={60} />
+              <Image src={"/logo.jpg"} alt="Enteteye" width={50} height={50} />
             </div>
             <div className="hidden justify-center items-center h-full sm:flex">
               <h1 className="text-lg h-full font-bold relative top-[6px] text-primary-main">
@@ -314,33 +308,6 @@ const Header: React.FC = () => {
             setShowMusicControls(false);
           }}
         />
-      )}
-
-      {/* Mobile Menu */}
-      {showMobileMenu && (
-        <div className="fixed top-16 left-0 right-0 bg-white shadow-md z-30 p-4 border-t border-gray-200 sm:hidden">
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4f9cf9]"
-            />
-          </div>
-          <div className="space-y-2">
-            <button className="w-full px-4 py-2 text-left hover:bg-gray-50 rounded-lg">
-              Dashboard
-            </button>
-            <button className="w-full px-4 py-2 text-left hover:bg-gray-50 rounded-lg">
-              Courses
-            </button>
-            <button className="w-full px-4 py-2 text-left hover:bg-gray-50 rounded-lg">
-              Challenges
-            </button>
-            <button className="w-full px-4 py-2 text-left hover:bg-gray-50 rounded-lg">
-              Family
-            </button>
-          </div>
-        </div>
       )}
     </header>
   );

@@ -45,7 +45,7 @@ const CelebrationPopup = ({
 }) => {
   useEffect(() => {
     if (show) {
-      const timer = setTimeout(onClose, 1000);
+      const timer = setTimeout(onClose, 800);
       return () => clearTimeout(timer);
     }
   }, [show, onClose]);
@@ -53,26 +53,26 @@ const CelebrationPopup = ({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0  bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000000] p-4">
-      <div className="bg-white rounded-3xl p-6 sm:p-8 text-center animate-bounce shadow-2xl border-4 border-amber-400 max-w-sm w-full">
-        <div className="text-4xl sm:text-6xl mb-4 animate-pulse">
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[1000000] p-2 xs:p-4">
+      <div className="bg-white rounded-2xl xs:rounded-3xl p-4 xs:p-6 sm:p-8 text-center animate-bounce shadow-2xl border-4 border-amber-400 max-w-[16rem] xs:max-w-[18rem] w-full">
+        <div className="text-3xl xs:text-4xl sm:text-6xl mb-3 xs:mb-4 animate-pulse">
           {type === "correct" && "🎉"}
           {type === "bonus" && "⭐"}
           {type === "complete" && "🏆"}
         </div>
-        <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-2 bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+        <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-slate-800 mb-2 bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
           {type === "correct" && "Awesome Achievement!"}
           {type === "bonus" && "Bonus Points Unlocked!"}
           {type === "complete" && "Level Complete!"}
         </h3>
-        <p className="text-green-600 text-lg sm:text-xl font-bold animate-pulse">
+        <p className="text-green-600 text-base xs:text-lg sm:text-xl font-bold animate-pulse">
           +{points} XP {bonus && `(+${bonus} bonus!)`}
         </p>
         <div className="flex justify-center gap-1 mt-2">
           {[1, 2, 3, 4, 5].map((i) => (
             <Star
               key={i}
-              className="w-3 h-3 sm:w-4 sm:h-4 text-amber-500 fill-current animate-bounce"
+              className="w-3 h-3 xs:w-4 xs:h-4 text-amber-500 fill-current animate-bounce"
               style={{ animationDelay: `${i * 0.1}s` }}
             />
           ))}
@@ -186,7 +186,7 @@ const DialogueMessage = ({
   return (
     <div
       ref={messageRef}
-      className={`flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6 transition-all duration-500 transform ${
+      className={`flex items-start gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 sm:mb-6 transition-all duration-500 transform ${
         isLeft ? "flex-row" : isCenter ? "justify-center" : "flex-row-reverse"
       } ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
       style={{ animationDelay: `${messageIndex * 0.2}s` }}
@@ -200,26 +200,26 @@ const DialogueMessage = ({
                 "https://api.dicebear.com/7.x/avataaars/svg?seed=default"
               }
               alt={character?.name || "Character"}
-              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full border-3 transition-all duration-300 shadow-md ${
+              className={`w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 rounded-full border-3 transition-all duration-300 shadow-md ${
                 isActive
-                  ? "border-blue-500 scale-110 shadow-lg shadow-blue-400/30 ring-4 ring-blue-400/20"
+                  ? "border-blue-500 scale-110 shadow-lg shadow-blue-400/30 ring-2 xs:ring-4 ring-blue-400/20"
                   : "border-slate-400"
               }`}
             />
             {isActive && (
               <>
-                <div className="absolute -top-1 -right-1 bg-green-500 rounded-full p-1 animate-pulse shadow-sm">
-                  <Volume2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                <div className="absolute -top-0.5 xs:-top-1 -right-0.5 xs:-right-1 bg-green-500 rounded-full p-0.5 xs:p-1 animate-pulse shadow-sm">
+                  <Volume2 className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-white" />
                 </div>
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
-                  <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                <div className="absolute -bottom-1.5 xs:-bottom-2 left-1/2 transform -translate-x-1/2">
+                  <div className="flex gap-0.5 xs:gap-1">
+                    <div className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"></div>
                     <div
-                      className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"
+                      className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"
                       style={{ animationDelay: "0.1s" }}
                     ></div>
                     <div
-                      className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"
+                      className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"
                       style={{ animationDelay: "0.2s" }}
                     ></div>
                   </div>
@@ -227,14 +227,14 @@ const DialogueMessage = ({
               </>
             )}
           </div>
-          <p className="text-xs text-center text-slate-600 mt-2 font-semibold">
+          <p className="text-xs text-center text-slate-600 mt-1 xs:mt-2 font-semibold">
             {character?.name || "Character"}
           </p>
         </div>
       )}
 
       <div
-        className={`max-w-xs sm:max-w-lg p-3 sm:p-4 rounded-2xl relative transition-all duration-300 shadow-lg ${
+        className={`max-w-[240px] xs:max-w-xs sm:max-w-lg p-2 xs:p-3 sm:p-4 rounded-xl xs:rounded-2xl relative transition-all duration-300 shadow-lg ${
           isLeft
             ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tl-sm"
             : isCenter
@@ -242,7 +242,7 @@ const DialogueMessage = ({
             : "bg-gradient-to-br from-green-500 to-green-600 text-white rounded-tr-sm"
         } ${
           isActive
-            ? "scale-105 border border-white/20 ring-2 ring-white/10 shadow-xl"
+            ? "scale-105 border border-white/20 ring-1 xs:ring-2 ring-white/10 shadow-xl"
             : ""
         }`}
       >
@@ -255,18 +255,18 @@ const DialogueMessage = ({
 
         {!isCenter && (
           <div
-            className={`absolute top-4 w-0 h-0 ${
+            className={`absolute top-3 xs:top-4 w-0 h-0 ${
               isLeft
-                ? "-left-2 border-r-8 border-r-blue-500 border-t-8 border-t-transparent border-b-8 border-b-transparent"
-                : "-right-2 border-l-8 border-l-green-500 border-t-8 border-t-transparent border-b-8 border-b-transparent"
+                ? "-left-1.5 xs:-left-2 border-r-6 xs:border-r-8 border-r-blue-500 border-t-6 xs:border-t-8 border-t-transparent border-b-6 xs:border-b-8 border-b-transparent"
+                : "-right-1.5 xs:-right-2 border-l-6 xs:border-l-8 border-l-green-500 border-t-6 xs:border-t-8 border-t-transparent border-b-6 xs:border-b-8 border-b-transparent"
             }`}
           />
         )}
 
         <div
-          className={`absolute -top-2 ${
-            isLeft ? "-right-2" : "-left-2"
-          } bg-amber-400 text-slate-800 rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs font-bold shadow-sm`}
+          className={`absolute -top-1.5 xs:-top-2 ${
+            isLeft ? "-right-1.5 xs:-right-2" : "-left-1.5 xs:-left-2"
+          } bg-amber-400 text-slate-800 rounded-full w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs font-bold shadow-sm`}
         >
           {messageIndex + 1}
         </div>
@@ -346,6 +346,11 @@ const LearningSegmentPage = ({
   const [xp, setXp] = useState(1250);
   const [sessionStartTime] = useState(Date.now());
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [isStoryPlaying, setIsStoryPlaying] = useState(false);
+  const [displayedStoryText, setDisplayedStoryText] = useState("");
+  const [storyTextComplete, setStoryTextComplete] = useState(false);
+  const [showHintFor, setShowHintFor] = useState<string | null>(null);
+  const storyTextRef = useRef(null);
 
   const shuffleArray = (array: any) => {
     const shuffled = [...array];
@@ -355,6 +360,7 @@ const LearningSegmentPage = ({
     }
     return shuffled;
   };
+
   // Celebration states
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationType, setCelebrationType] = useState<
@@ -373,6 +379,7 @@ const LearningSegmentPage = ({
   const [visibleMessageCount, setVisibleMessageCount] = useState(0);
   const dialogueContainerRef = useRef<HTMLDivElement>(null);
   const [openEndedAnswer, setOpenEndedAnswer] = useState("");
+
   // Question states
   const [selectedAnswer, setSelectedAnswer] = useState<any>(null);
   const [showResult, setShowResult] = useState(false);
@@ -636,42 +643,6 @@ const LearningSegmentPage = ({
     }, 1500);
   };
 
-  const renderFillInBlanks = () => {
-    const question = currentSegment.content.question;
-    const parts = question.text.split("_____");
-    const elements: JSX.Element[] = [];
-
-    parts.forEach((part: string, index: number) => {
-      elements.push(<span key={`text-${index}`}>{part}</span>);
-
-      if (index < parts.length - 1) {
-        elements.push(
-          <input
-            key={`blank-${index}`}
-            type="text"
-            value={blankAnswers[index] || ""}
-            onChange={(e) => handleBlankAnswer(index, e.target.value)}
-            disabled={showResult}
-            className={`mx-2 px-2 sm:px-3 py-1 sm:py-2 border-2 border-dashed rounded-lg bg-blue-50 text-slate-800 text-center min-w-24 sm:min-w-32 font-bold transition-all text-sm sm:text-base ${
-              showResult
-                ? blankAnswers[index]?.toLowerCase().trim() ===
-                  question.correctAnswer
-                    ?.split(",")
-                    [index]?.toLowerCase()
-                    .trim()
-                  ? "border-green-500 bg-green-100 ring-2 ring-green-400/20"
-                  : "border-red-500 bg-red-100 ring-2 ring-red-400/20"
-                : "border-blue-500 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400/50 hover:border-blue-600"
-            }`}
-            placeholder="?"
-          />
-        );
-      }
-    });
-
-    return elements;
-  };
-
   const completeSegment = async () => {
     try {
       await childCourseApi.updateSegmentProgress(courseId, currentSegment.id, {
@@ -821,43 +792,20 @@ const LearningSegmentPage = ({
     setScenarioAnswers({});
   };
 
-  const handleDragDrop = (item: string, target: string) => {
-    setDraggedItems((prev) => ({
-      ...prev,
-      [target]: item,
-    }));
-
-    const practice = currentSegment.content.practice;
-    const allTargetsFilled = practice.components.targets.every(
-      (target: string) => draggedItems[target] || target === item
-    );
-
-    if (allTargetsFilled) {
-      setPracticeCompleted(true);
-      setTimeout(() => {
-        setCelebrationPoints(currentSegment.basePoints);
-        setCelebrationType("complete");
-        setShowCelebration(true);
-        setXp(xp + currentSegment.basePoints);
-        setTimeout(completeSegment, 3000);
-      }, 1000);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 rounded-lg to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 rounded-lg to-indigo-50 flex items-center justify-center p-2 xs:p-4">
         <div className="text-center">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-700 text-xl sm:text-2xl font-bold">
+          <div className="w-12 h-12 xs:w-16 xs:h-16 sm:w-20 sm:h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3 xs:mb-4"></div>
+          <p className="text-slate-700 text-lg xs:text-xl sm:text-2xl font-bold">
             Loading your adventure...
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 animate-pulse" />
-            <span className="text-slate-600 text-sm sm:text-base">
+          <div className="flex items-center justify-center gap-1 xs:gap-2 mt-3 xs:mt-4">
+            <Sparkles className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-blue-500 animate-pulse" />
+            <span className="text-slate-600 text-xs xs:text-sm sm:text-base">
               Preparing something amazing!
             </span>
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 animate-pulse" />
+            <Sparkles className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-blue-500 animate-pulse" />
           </div>
         </div>
       </div>
@@ -865,23 +813,8 @@ const LearningSegmentPage = ({
   }
 
   if (!currentPath || !currentSegment) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 rounded-lg flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="text-4xl sm:text-6xl mb-4">😕</div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4">
-            Oops! Adventure not found
-          </h2>
-          <button
-            onClick={() => router.push(`/child/courses/${courseId}`)}
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform shadow-lg"
-          >
-            <Home className="w-4 h-4 sm:w-5 sm:h-5 inline mr-2" />
-            Back to Course
-          </button>
-        </div>
-      </div>
-    );
+    router.push(`/child/courses/${courseId}`);
+    return null;
   }
 
   const progress =
@@ -892,22 +825,22 @@ const LearningSegmentPage = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 text-slate-800 rounded-lg">
-      {/* Enhanced Header with Gamification */}
-      <div className="bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm p-3 sticky top-0 z-[100000] sm:p-4 border-b rounded-tr-lg rounded-tl-lg border-blue-200 shadow-sm">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+      {/* Enhanced Header with Gamification - Mobile First */}
+      <div className="bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm p-2 xs:p-3 sm:p-4 sticky top-0 z-[100000] border-b rounded-tr-lg rounded-tl-lg border-blue-200 shadow-sm">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 xs:gap-3 sm:gap-4">
           <button
             onClick={() => router.push(`/child/courses/${courseId}`)}
-            className="p-2 sm:p-3 hover:bg-white/60 rounded-full transition-all duration-300 group hover:rotate-90 flex-shrink-0"
+            className="p-1.5 xs:p-2 sm:p-3 hover:bg-white/60 rounded-full transition-all duration-300 group hover:rotate-90 flex-shrink-0"
           >
-            <X className="w-5 h-5 sm:w-6 sm:h-6 transition-transform" />
+            <X className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 transition-transform" />
           </button>
 
-          {/* Enhanced Progress Section */}
-          <div className="flex-1 mx-2 sm:mx-6">
-            <div className="flex items-center justify-center gap-2 sm:gap-4 mb-2">
-              <ProgressRing progress={progress} size={40} />
+          {/* Enhanced Progress Section - Responsive */}
+          <div className="flex-1 mx-1 xs:mx-2 sm:mx-6">
+            <div className="flex items-center justify-center gap-1 xs:gap-2 sm:gap-4 mb-1 xs:mb-2">
+              <ProgressRing progress={progress} size={32} />
               <div className="text-center">
-                <div className="bg-white/60 rounded-full h-3 sm:h-4 w-32 sm:w-48 overflow-hidden border border-blue-200 shadow-sm">
+                <div className="bg-white/60 rounded-full h-2 xs:h-3 sm:h-4 w-24 xs:w-32 sm:w-48 overflow-hidden border border-blue-200 shadow-sm">
                   <div
                     className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 transition-all duration-700 relative"
                     style={{ width: `${progress}%` }}
@@ -915,7 +848,7 @@ const LearningSegmentPage = ({
                     <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
                   </div>
                 </div>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-xs text-slate-600 mt-0.5 xs:mt-1">
                   Level {currentSegmentIndex + 1} of{" "}
                   {currentPath.segments.length}
                 </p>
@@ -923,27 +856,27 @@ const LearningSegmentPage = ({
             </div>
           </div>
 
-          {/* Enhanced Stats */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-1 sm:gap-2 bg-red-100 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-red-300 shadow-sm">
-              <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
-              <span className="font-bold text-red-600 text-sm sm:text-base">
+          {/* Enhanced Stats - Mobile Responsive */}
+          <div className="flex items-center gap-1 xs:gap-2 sm:gap-4">
+            <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2 bg-red-100 backdrop-blur-sm px-1 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-2 rounded-full border border-red-300 shadow-sm">
+              <Heart className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-red-500" />
+              <span className="font-bold text-red-600 text-xs xs:text-sm sm:text-base">
                 {hearts}
               </span>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 bg-orange-100 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-orange-300 shadow-sm">
-              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
-              <span className="font-bold text-orange-600 text-sm sm:text-base">
+            <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2 bg-orange-100 backdrop-blur-sm px-1 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-2 rounded-full border border-orange-300 shadow-sm">
+              <Zap className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-orange-500" />
+              <span className="font-bold text-orange-600 text-xs xs:text-sm sm:text-base">
                 {streak}
               </span>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 bg-amber-100 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-amber-300 shadow-sm">
-              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
-              <span className="font-bold text-amber-700 text-sm sm:text-base">
+            <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2 bg-amber-100 backdrop-blur-sm px-1 xs:px-2 sm:px-3 py-0.5 xs:py-1 sm:py-2 rounded-full border border-amber-300 shadow-sm">
+              <Star className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 text-amber-600" />
+              <span className="font-bold text-amber-700 text-xs xs:text-sm sm:text-base">
                 {xp.toLocaleString()}
               </span>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 bg-blue-100 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-blue-300 shadow-sm">
+            <div className="hidden xs:flex items-center gap-1 sm:gap-2 bg-blue-100 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-blue-300 shadow-sm">
               <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
               <span className="font-mono text-blue-600 text-xs sm:text-sm">
                 {minutes}:{seconds.toString().padStart(2, "0")}
@@ -953,146 +886,356 @@ const LearningSegmentPage = ({
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="w-full mx-auto p-4 sm:p-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-4 sm:p-6 lg:p-8 text-slate-800 shadow-xl border border-blue-200 relative overflow-hidden">
+      {/* Main Content - Mobile First */}
+      <div className="w-full mx-auto p-2 xs:p-4 sm:p-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl xs:rounded-3xl p-3 xs:p-4 sm:p-6 lg:p-8 text-slate-800 shadow-xl border border-blue-200 relative overflow-hidden">
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-10 left-10 w-16 h-16 sm:w-20 sm:h-20 bg-blue-500/5 rounded-full blur-xl animate-pulse"></div>
+            <div className="absolute top-5 xs:top-10 left-5 xs:left-10 w-8 h-8 xs:w-16 xs:h-16 sm:w-20 sm:h-20 bg-blue-500/5 rounded-full blur-xl animate-pulse"></div>
             <div
-              className="absolute bottom-20 right-20 w-24 h-24 sm:w-32 sm:h-32 bg-indigo-500/5 rounded-full blur-xl animate-pulse"
+              className="absolute bottom-10 xs:bottom-20 right-10 xs:right-20 w-12 h-12 xs:w-24 xs:h-24 sm:w-32 sm:h-32 bg-indigo-500/5 rounded-full blur-xl animate-pulse"
               style={{ animationDelay: "1s" }}
             ></div>
             <div
-              className="absolute top-1/2 left-1/4 w-12 h-12 sm:w-16 sm:h-16 bg-sky-400/5 rounded-full blur-xl animate-pulse"
+              className="absolute top-1/2 left-1/4 w-6 h-6 xs:w-12 xs:h-12 sm:w-16 sm:h-16 bg-sky-400/5 rounded-full blur-xl animate-pulse"
               style={{ animationDelay: "2s" }}
             ></div>
           </div>
-
-          {/* Enhanced Progressive Dialogue Segment */}
-          {currentSegment.type === "dialogue" && (
+          {currentSegment.type === "storytelling" && (
             <div className="space-y-4 sm:space-y-6 relative z-10">
               <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-blue-300 shadow-sm">
-                  <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                    <div
-                      className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "0.1s" }}
-                    ></div>
-                    <div
-                      className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "0.2s" }}
-                    ></div>
-                  </div>
-                  <h3 className="text-lg sm:text-2xl font-bold text-blue-600 bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
-                    Interactive Conversation
-                  </h3>
-                  <div className="bg-blue-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                    <span className="text-xs sm:text-sm font-semibold text-blue-700">
-                      {visibleMessageCount}/{allDialogueMessages.length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Enhanced Dialogue Messages Container with Auto-scroll */}
-              <div
-                ref={dialogueContainerRef}
-                className="max-h-80 sm:max-h-96 overflow-y-auto p-4 sm:p-6 bg-gradient-to-br from-slate-50/80 to-blue-50/80 rounded-2xl border border-slate-200 backdrop-blur-sm relative shadow-inner"
-              >
-                {/* Dialogue progress indicator */}
-                <div className="sticky top-0 bg-gradient-to-r from-transparent via-slate-50/90 to-transparent p-2 mb-4 z-10">
-                  <div className="flex justify-center">
-                    <div className="flex gap-1 sm:gap-2">
-                      {allDialogueMessages.map((_, index) => (
-                        <div
-                          key={index}
-                          className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-500 ${
-                            index < visibleMessageCount
-                              ? "bg-blue-500 scale-125"
-                              : index === visibleMessageCount
-                              ? "bg-amber-500 animate-pulse scale-110"
-                              : "bg-slate-300 scale-75"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {allDialogueMessages.map((message, index) => (
-                  <DialogueMessage
-                    key={index}
-                    message={message.text}
-                    character={message.character}
-                    position={message.position}
-                    isVisible={index < visibleMessageCount}
-                    isActive={index === currentDialogueIndex}
-                    messageIndex={index}
-                    onComplete={() => {
-                      // Animation complete callback
-                    }}
-                  />
-                ))}
-
-                {/* Empty state when no messages visible */}
-                {visibleMessageCount === 0 && (
-                  <div className="text-center py-8 sm:py-12">
-                    <div className="text-3xl sm:text-4xl mb-4 animate-pulse">
-                      💭
-                    </div>
-                    <p className="text-slate-500 text-base sm:text-lg">
-                      Ready to start the conversation?
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Enhanced Controls */}
-              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mt-6 sm:mt-8">
-                <button
-                  onClick={playDialogue}
-                  disabled={isPlayingDialogue}
-                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-105 transition-all shadow-lg border border-blue-400/30 relative overflow-hidden group"
-                >
-                  {/* Button shine effect */}
-                  <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
-
-                  {isPlayingDialogue ? (
-                    <>
-                      <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
-                      <span className="text-sm sm:text-base">
-                        Playing... ({visibleMessageCount}/
-                        {allDialogueMessages.length})
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-violet-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-violet-300 shadow-sm mb-4">
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600 animate-pulse" />
+                  Interactive Story
+                  {isStoryPlaying && (
+                    <div className="bg-violet-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                      <span className="text-xs sm:text-sm font-semibold text-violet-700 flex items-center gap-1">
+                        <Volume2 className="w-3 h-3 animate-pulse" />
+                        Playing
                       </span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-5 h-5 sm:w-6 sm:h-6" />
-                      <span className="text-sm sm:text-base">
-                        {visibleMessageCount === 0
-                          ? "Start Conversation"
-                          : "Continue Conversation"}
-                      </span>
-                    </>
+                    </div>
                   )}
-                </button>
-
-                {dialogueCompleted && (
-                  <button
-                    onClick={completeSegment}
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full font-bold flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-105 transition-all shadow-lg border border-green-400/30 relative overflow-hidden group animate-pulse"
-                  >
-                    <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
-                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
-                    <span className="text-sm sm:text-base">
-                      Complete & Continue
-                    </span>
-                    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </button>
-                )}
+                </div>
               </div>
+
+              {!currentStoryChapter && (
+                <div className="text-center">
+                  <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 mb-6 border border-violet-200 backdrop-blur-sm shadow-inner">
+                    <h4 className="text-2xl sm:text-3xl font-bold text-violet-800 mb-4">
+                      {currentSegment.content.storytelling.title}
+                    </h4>
+                    {currentSegment.content.storytelling.background && (
+                      <p className="text-lg text-violet-700 leading-relaxed mb-6">
+                        {currentSegment.content.storytelling.background}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setCurrentStoryChapter(
+                        currentSegment.content.storytelling.startChapter
+                      );
+                      setIsStoryPlaying(false);
+                      setStoryTextComplete(false);
+                    }}
+                    className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-bold text-lg transform hover:scale-105 transition-all shadow-lg"
+                  >
+                    <Play className="w-5 h-5 inline mr-2" />
+                    Begin Story
+                  </button>
+                </div>
+              )}
+
+              {currentStoryChapter && (
+                <div className="space-y-6">
+                  {(() => {
+                    const chapter =
+                      currentSegment.content.storytelling.chapters.find(
+                        (ch: any) => ch.id === currentStoryChapter
+                      );
+
+                    if (!chapter) return null;
+
+                    return (
+                      <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 border border-violet-200 backdrop-blur-sm shadow-inner">
+                        <h4 className="text-xl sm:text-2xl font-bold text-violet-800 mb-4">
+                          {chapter.title}
+                        </h4>
+
+                        {/* Story Content with Typing Animation */}
+                        <div className="prose prose-lg text-violet-700 mb-6 relative min-h-24">
+                          <p className="text-lg leading-relaxed">
+                            <span ref={storyTextRef} className="inline">
+                              {displayedStoryText}
+                            </span>
+                            {isStoryPlaying && (
+                              <span className="inline-block w-0.5 h-6 bg-violet-600 ml-1 animate-pulse"></span>
+                            )}
+                          </p>
+
+                          {/* Audio Controls */}
+                          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-violet-200">
+                            <button
+                              onClick={async () => {
+                                const chapter =
+                                  currentSegment.content.storytelling.chapters.find(
+                                    (ch: any) => ch.id === currentStoryChapter
+                                  );
+
+                                if (!chapter) return;
+
+                                setIsStoryPlaying(true);
+                                setDisplayedStoryText("");
+                                setStoryTextComplete(false);
+
+                                // Stop any ongoing speech
+                                if ("speechSynthesis" in window) {
+                                  speechSynthesis.cancel();
+                                }
+
+                                // Start typing animation with speech
+                                const speakText = (
+                                  text: string
+                                ): Promise<void> => {
+                                  return new Promise((resolve) => {
+                                    if ("speechSynthesis" in window) {
+                                      speechSynthesis.cancel();
+                                      const utterance =
+                                        new SpeechSynthesisUtterance(text);
+                                      utterance.rate = 0.8;
+                                      utterance.pitch = 1;
+                                      utterance.volume = 1;
+                                      utterance.onend = () => resolve();
+                                      speechSynthesis.speak(utterance);
+                                    } else {
+                                      setTimeout(resolve, text.length * 50);
+                                    }
+                                  });
+                                };
+
+                                // Start speech synthesis
+                                const speechPromise = speakText(
+                                  chapter.content
+                                );
+
+                                // Start typing animation (faster than speech)
+                                let currentIndex = 0;
+                                const typingInterval = setInterval(() => {
+                                  if (currentIndex < chapter.content.length) {
+                                    setDisplayedStoryText(
+                                      chapter.content.substring(
+                                        0,
+                                        currentIndex + 1
+                                      )
+                                    );
+                                    currentIndex++;
+                                  } else {
+                                    clearInterval(typingInterval);
+                                  }
+                                }, 30); // Faster typing to sync with speech
+
+                                // Wait for speech to complete
+                                await speechPromise;
+
+                                // Ensure full text is displayed
+                                clearInterval(typingInterval);
+                                setDisplayedStoryText(chapter.content);
+                                setIsStoryPlaying(false);
+                                setStoryTextComplete(true);
+                              }}
+                              disabled={isStoryPlaying}
+                              className="bg-violet-500 hover:bg-violet-600 disabled:bg-violet-300 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all transform hover:scale-105 disabled:hover:scale-100"
+                            >
+                              {isStoryPlaying ? (
+                                <>
+                                  <Volume2 className="w-4 h-4 animate-pulse" />
+                                  <span>Narrating...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="w-4 h-4" />
+                                  <span>
+                                    {displayedStoryText ? "Replay" : "Listen"}
+                                  </span>
+                                </>
+                              )}
+                            </button>
+
+                            {isStoryPlaying && (
+                              <button
+                                onClick={() => {
+                                  // Stop speech synthesis
+                                  if ("speechSynthesis" in window) {
+                                    speechSynthesis.cancel();
+                                  }
+
+                                  // Complete the text immediately
+                                  const chapter =
+                                    currentSegment.content.storytelling.chapters.find(
+                                      (ch: any) => ch.id === currentStoryChapter
+                                    );
+
+                                  if (chapter) {
+                                    setDisplayedStoryText(chapter.content);
+                                    setIsStoryPlaying(false);
+                                    setStoryTextComplete(true);
+                                  }
+                                }}
+                                className="text-violet-600 hover:text-violet-800 px-3 py-2 text-sm font-medium transition-colors"
+                              >
+                                Skip ⏭
+                              </button>
+                            )}
+
+                            {/* Progress indicator - visual only since speech timing is different */}
+                            {isStoryPlaying && (
+                              <div className="flex-1 bg-violet-200 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-violet-500 h-full transition-all duration-100 ease-out"
+                                  style={{
+                                    width: `${
+                                      (displayedStoryText.length /
+                                        chapter.content.length) *
+                                      100
+                                    }%`,
+                                  }}
+                                ></div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Choices - Only show when narration is complete */}
+                        {storyTextComplete && chapter.choices ? (
+                          <div className="space-y-3 animate-fadeIn">
+                            <p className="font-semibold text-violet-800 mb-4 flex items-center gap-2">
+                              <span>What do you choose?</span>
+                              <div className="flex gap-1">
+                                <div className="w-1 h-1 bg-violet-500 rounded-full animate-bounce"></div>
+                                <div
+                                  className="w-1 h-1 bg-violet-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.1s" }}
+                                ></div>
+                                <div
+                                  className="w-1 h-1 bg-violet-500 rounded-full animate-bounce"
+                                  style={{ animationDelay: "0.2s" }}
+                                ></div>
+                              </div>
+                            </p>
+                            {chapter.choices.map(
+                              (choice: any, index: number) => (
+                                <button
+                                  key={index}
+                                  onClick={() => {
+                                    if (choice.nextChapter) {
+                                      setCurrentStoryChapter(
+                                        choice.nextChapter
+                                      );
+                                      setDisplayedStoryText("");
+                                      setStoryTextComplete(false);
+                                      setIsStoryPlaying(false);
+                                    } else {
+                                      setStoryCompleted(true);
+                                      setCelebrationPoints(
+                                        currentSegment.basePoints
+                                      );
+                                      setCelebrationType("complete");
+                                      setShowCelebration(true);
+                                      setXp(xp + currentSegment.basePoints);
+                                      setTimeout(completeSegment, 3000);
+                                    }
+                                  }}
+                                  className="w-full text-left p-4 bg-white/80 hover:bg-violet-100 border-2 border-violet-200 hover:border-violet-400 rounded-xl transition-all transform hover:scale-[1.02] group"
+                                  style={{
+                                    animationDelay: `${index * 0.1}s`,
+                                    animation:
+                                      "slideInFromRight 0.5s ease-out forwards",
+                                  }}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-violet-500 group-hover:bg-violet-600 text-white rounded-full flex items-center justify-center font-bold text-sm transition-colors">
+                                      {index + 1}
+                                    </div>
+                                    <span className="font-semibold text-violet-800 group-hover:text-violet-900">
+                                      {choice.text}
+                                    </span>
+                                    <ArrowRight className="w-4 h-4 ml-auto text-violet-400 group-hover:text-violet-600 transform group-hover:translate-x-1 transition-all" />
+                                  </div>
+                                </button>
+                              )
+                            )}
+                          </div>
+                        ) : storyTextComplete && !chapter.choices ? (
+                          <div className="text-center animate-fadeIn">
+                            <button
+                              onClick={() => {
+                                setStoryCompleted(true);
+                                setCelebrationPoints(currentSegment.basePoints);
+                                setCelebrationType("complete");
+                                setShowCelebration(true);
+                                setXp(xp + currentSegment.basePoints);
+                                setTimeout(completeSegment, 3000);
+                              }}
+                              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 rounded-full font-bold transform hover:scale-105 transition-all shadow-lg"
+                            >
+                              <Trophy className="w-5 h-5 inline mr-2" />
+                              Complete Story
+                            </button>
+                          </div>
+                        ) : (
+                          !storyTextComplete && (
+                            <div className="text-center py-4">
+                              <div className="text-sm text-violet-600 flex items-center justify-center gap-2">
+                                <div className="flex gap-1">
+                                  <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce"></div>
+                                  <div
+                                    className="w-2 h-2 bg-violet-400 rounded-full animate-bounce"
+                                    style={{ animationDelay: "0.1s" }}
+                                  ></div>
+                                  <div
+                                    className="w-2 h-2 bg-violet-400 rounded-full animate-bounce"
+                                    style={{ animationDelay: "0.2s" }}
+                                  ></div>
+                                </div>
+                                <span>Listen to continue...</span>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              <style jsx>{`
+                @keyframes fadeIn {
+                  from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                  }
+                  to {
+                    opacity: 1;
+                    transform: translateY(0);
+                  }
+                }
+
+                @keyframes slideInFromRight {
+                  from {
+                    opacity: 0;
+                    transform: translateX(30px);
+                  }
+                  to {
+                    opacity: 1;
+                    transform: translateX(0);
+                  }
+                }
+
+                .animate-fadeIn {
+                  animation: fadeIn 0.6s ease-out forwards;
+                }
+              `}</style>
             </div>
           )}
 
@@ -2064,129 +2207,6 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Storytelling Segment */}
-          {currentSegment.type === "storytelling" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-violet-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-violet-300 shadow-sm mb-4">
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-violet-600">
-                    Interactive Story
-                  </h3>
-                </div>
-              </div>
-
-              {!currentStoryChapter && (
-                <div className="text-center">
-                  <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 mb-6 border border-violet-200 backdrop-blur-sm shadow-inner">
-                    <h4 className="text-2xl sm:text-3xl font-bold text-violet-800 mb-4">
-                      {currentSegment.content.storytelling.title}
-                    </h4>
-                    {currentSegment.content.storytelling.background && (
-                      <p className="text-lg text-violet-700 leading-relaxed mb-6">
-                        {currentSegment.content.storytelling.background}
-                      </p>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      setCurrentStoryChapter(
-                        currentSegment.content.storytelling.startChapter
-                      )
-                    }
-                    className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-bold text-lg transform hover:scale-105 transition-all shadow-lg"
-                  >
-                    <Play className="w-5 h-5 inline mr-2" />
-                    Begin Story
-                  </button>
-                </div>
-              )}
-
-              {currentStoryChapter && (
-                <div className="space-y-6">
-                  {(() => {
-                    const chapter =
-                      currentSegment.content.storytelling.chapters.find(
-                        (ch: any) => ch.id === currentStoryChapter
-                      );
-
-                    if (!chapter) return null;
-
-                    return (
-                      <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 border border-violet-200 backdrop-blur-sm shadow-inner">
-                        <h4 className="text-xl sm:text-2xl font-bold text-violet-800 mb-4">
-                          {chapter.title}
-                        </h4>
-                        <div className="prose prose-lg text-violet-700 mb-6">
-                          <p>{chapter.content}</p>
-                        </div>
-
-                        {chapter.choices ? (
-                          <div className="space-y-3">
-                            <p className="font-semibold text-violet-800 mb-4">
-                              What do you choose?
-                            </p>
-                            {chapter.choices.map(
-                              (choice: any, index: number) => (
-                                <button
-                                  key={index}
-                                  onClick={() => {
-                                    if (choice.nextChapter) {
-                                      setCurrentStoryChapter(
-                                        choice.nextChapter
-                                      );
-                                    } else {
-                                      setStoryCompleted(true);
-                                      setCelebrationPoints(
-                                        currentSegment.basePoints
-                                      );
-                                      setCelebrationType("complete");
-                                      setShowCelebration(true);
-                                      setXp(xp + currentSegment.basePoints);
-                                      setTimeout(completeSegment, 3000);
-                                    }
-                                  }}
-                                  className="w-full text-left p-4 bg-white/80 hover:bg-violet-100 border-2 border-violet-200 hover:border-violet-400 rounded-xl transition-all transform hover:scale-[1.02]"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-violet-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                                      {index + 1}
-                                    </div>
-                                    <span className="font-semibold text-violet-800">
-                                      {choice.text}
-                                    </span>
-                                  </div>
-                                </button>
-                              )
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center">
-                            <button
-                              onClick={() => {
-                                setStoryCompleted(true);
-                                setCelebrationPoints(currentSegment.basePoints);
-                                setCelebrationType("complete");
-                                setShowCelebration(true);
-                                setXp(xp + currentSegment.basePoints);
-                                setTimeout(completeSegment, 3000);
-                              }}
-                              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 rounded-full font-bold transform hover:scale-105 transition-all shadow-lg"
-                            >
-                              <Trophy className="w-5 h-5 inline mr-2" />
-                              Complete Story
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Enhanced Drag & Drop Activity */}
           {currentSegment.type === "dragdrop" && (
             <div className="space-y-4 sm:space-y-6 relative z-10">
@@ -2427,7 +2447,6 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Fill Blanks Activity */}
           {currentSegment.type === "fillblanks" && (
             <div className="space-y-4 sm:space-y-6 relative z-10">
               <div className="text-center mb-6 sm:mb-8">
@@ -2443,73 +2462,227 @@ const LearningSegmentPage = ({
                 <div className="text-lg sm:text-xl text-yellow-800 leading-relaxed">
                   {(() => {
                     const content = currentSegment.content.fillblanks;
-                    let textParts = content.text.split(/(\[BLANK_\d+\])/);
+                    // Split by {{gap1}}, {{gap2}}, etc. pattern
+                    let textParts = content.text.split(/(\{\{gap\d+\}\})/);
 
                     return textParts.map((part: string, index: number) => {
-                      const blankMatch = part.match(/\[BLANK_(\d+)\]/);
-                      if (blankMatch) {
-                        const blankId = blankMatch[1];
+                      const gapMatch = part.match(/\{\{gap(\d+)\}\}/);
+                      if (gapMatch) {
+                        const gapId = gapMatch[1];
+                        const gapData = content.gaps.find(
+                          (gap: any) => gap.id === `gap${gapId}`
+                        );
+                        const currentAnswer = fillBlanksAnswers[gapId] || "";
+                        const isAnswered = currentAnswer.trim() !== "";
+                        const isCorrect =
+                          isAnswered &&
+                          currentAnswer.toLowerCase().trim() ===
+                            gapData?.correctAnswer.toLowerCase().trim();
+                        const isIncorrect = isAnswered && !isCorrect;
 
                         return (
-                          <input
+                          <div
                             key={index}
-                            type="text"
-                            value={fillBlanksAnswers[blankId] || ""}
-                            onChange={(e) => {
-                              setFillBlanksAnswers((prev) => ({
-                                ...prev,
-                                [blankId]: e.target.value,
-                              }));
+                            className="inline-block relative group mx-2"
+                          >
+                            <input
+                              type="text"
+                              value={currentAnswer}
+                              onChange={(e) => {
+                                const newValue = e.target.value;
+                                setFillBlanksAnswers((prev) => ({
+                                  ...prev,
+                                  [gapId]: newValue,
+                                }));
 
-                              // Check completion when all blanks are filled
-                              const updatedAnswers = {
-                                ...fillBlanksAnswers,
-                                [blankId]: e.target.value,
-                              };
-                              if (
-                                Object.keys(updatedAnswers).length ===
-                                  content.gaps.length &&
-                                Object.values(updatedAnswers).every(
-                                  (val) => val.trim() !== ""
-                                )
-                              ) {
-                                // Validate answers
-                                let allCorrect = true;
-                                content.gaps.forEach((gap: any) => {
-                                  const userAnswer = updatedAnswers[gap.id]
-                                    ?.toLowerCase()
-                                    .trim();
-                                  const correctAnswer = gap.correctAnswer
-                                    .toLowerCase()
-                                    .trim();
-                                  if (userAnswer !== correctAnswer) {
-                                    allCorrect = false;
+                                // Individual answer validation with animation
+                                if (newValue.trim() !== "") {
+                                  const correct =
+                                    newValue.toLowerCase().trim() ===
+                                    gapData?.correctAnswer.toLowerCase().trim();
+
+                                  if (correct) {
+                                    // Trigger success animation
+                                    const input = e.target;
+                                    input.classList.add("animate-bounce");
+                                    setTimeout(() => {
+                                      input.classList.remove("animate-bounce");
+                                    }, 600);
                                   }
-                                });
-
-                                if (allCorrect) {
-                                  setPracticeCompleted(true);
-                                  setTimeout(() => {
-                                    setCelebrationPoints(
-                                      currentSegment.basePoints
-                                    );
-                                    setCelebrationType("complete");
-                                    setShowCelebration(true);
-                                    setXp(xp + currentSegment.basePoints);
-                                    setTimeout(completeSegment, 3000);
-                                  }, 1000);
                                 }
-                              }
-                            }}
-                            className="inline-block mx-2 px-3 py-1 border-2 border-yellow-400 bg-yellow-100 rounded-lg min-w-24 text-center font-bold focus:border-yellow-500 focus:outline-none"
-                            placeholder="?"
-                          />
+
+                                // Check overall completion
+                                const updatedAnswers = {
+                                  ...fillBlanksAnswers,
+                                  [gapId]: newValue,
+                                };
+
+                                if (
+                                  Object.keys(updatedAnswers).length ===
+                                    content.gaps.length &&
+                                  Object.values(updatedAnswers).every(
+                                    (val) => val.trim() !== ""
+                                  )
+                                ) {
+                                  // Validate all answers
+                                  let allCorrect = true;
+                                  content.gaps.forEach((gap: any) => {
+                                    const userAnswer = updatedAnswers[gap.id]
+                                      ?.toLowerCase()
+                                      .trim();
+                                    const correctAnswer = gap.correctAnswer
+                                      .toLowerCase()
+                                      .trim();
+                                    if (userAnswer !== correctAnswer) {
+                                      allCorrect = false;
+                                    }
+                                  });
+
+                                  if (allCorrect) {
+                                    setPracticeCompleted(true);
+                                    setTimeout(() => {
+                                      setCelebrationPoints(
+                                        currentSegment.basePoints
+                                      );
+                                      setCelebrationType("complete");
+                                      setShowCelebration(true);
+                                      setXp(xp + currentSegment.basePoints);
+                                      setTimeout(completeSegment, 3000);
+                                    }, 1000);
+                                  }
+                                }
+                              }}
+                              onBlur={() => {
+                                // Show feedback on blur if answered
+                                if (isAnswered && isIncorrect) {
+                                  const input = document.querySelector(
+                                    `input[value="${currentAnswer}"]`
+                                  ) as HTMLElement;
+                                  if (input) {
+                                    input.classList.add("animate-pulse");
+                                    setTimeout(() => {
+                                      input.classList.remove("animate-pulse");
+                                    }, 1000);
+                                  }
+                                }
+                              }}
+                              className={`
+                      inline-block px-3 py-1 rounded-lg min-w-24 text-center font-bold 
+                      focus:outline-none transition-all duration-300 transform
+                      ${
+                        !isAnswered
+                          ? "border-2 border-yellow-400 bg-yellow-100 focus:border-yellow-500 focus:scale-105"
+                          : isCorrect
+                          ? "border-2 border-green-400 bg-green-100 text-green-800 shadow-md"
+                          : "border-2 border-red-400 bg-red-100 text-red-800 animate-pulse"
+                      }
+                      hover:scale-105 focus:scale-110
+                    `}
+                              placeholder="?"
+                              maxLength={gapData?.correctAnswer.length + 5}
+                            />
+
+                            {/* Feedback Icons */}
+                            {isAnswered && (
+                              <div
+                                className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold transition-all duration-300 ${
+                                  isCorrect
+                                    ? "bg-green-500 animate-bounce"
+                                    : "bg-red-500 animate-pulse"
+                                }`}
+                              >
+                                {isCorrect ? "✓" : "✗"}
+                              </div>
+                            )}
+                            {/* Show continue button when all blanks are filled */}
+
+                            {/* Hint on hover */}
+                            {!isCorrect && gapData?.hint && (
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-sm px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+                                💡 {gapData.hint}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                              </div>
+                            )}
+                          </div>
                         );
                       }
                       return <span key={index}>{part}</span>;
                     });
                   })()}
                 </div>
+
+                {/* Progress indicator */}
+                <div className="mt-6 pt-4 border-t border-yellow-200">
+                  <div className="flex items-center justify-between text-sm text-yellow-600 mb-2">
+                    <span>Progress</span>
+                    <span>
+                      {
+                        Object.values(fillBlanksAnswers).filter(
+                          (answer) => answer.trim() !== ""
+                        ).length
+                      }{" "}
+                      / {currentSegment.content.fillblanks.gaps.length}
+                    </span>
+                  </div>
+                  <div className="w-full bg-yellow-200 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full transition-all duration-500 ease-out"
+                      style={{
+                        width: `${
+                          (Object.values(fillBlanksAnswers).filter(
+                            (answer) => answer.trim() !== ""
+                          ).length /
+                            currentSegment.content.fillblanks.gaps.length) *
+                          100
+                        }%`,
+                      }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Encouragement message */}
+                {Object.values(fillBlanksAnswers).filter(
+                  (answer) => answer.trim() !== ""
+                ).length > 0 && (
+                  <div className="mt-4 text-center">
+                    <div
+                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                        Object.values(fillBlanksAnswers).filter(
+                          (answer) => answer.trim() !== ""
+                        ).length ===
+                        currentSegment.content.fillblanks.gaps.length
+                          ? "bg-green-100 text-green-700 animate-pulse"
+                          : "bg-blue-100 text-blue-700"
+                      }`}
+                    >
+                      {Object.values(fillBlanksAnswers).filter(
+                        (answer) => answer.trim() !== ""
+                      ).length ===
+                      currentSegment.content.fillblanks.gaps.length ? (
+                        <>🎉 All blanks filled! Checking answers...</>
+                      ) : (
+                        <>⚡ Keep going! You're doing great!</>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="w-full flex justify-center">
+                {Object.values(fillBlanksAnswers).filter(
+                  (answer) => answer.trim() !== ""
+                ).length === currentSegment.content.fillblanks.gaps.length && (
+                  <button
+                    onClick={completeSegment}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full font-bold flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-105 transition-all shadow-lg border border-green-400/30 relative overflow-hidden group animate-pulse"
+                  >
+                    <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
+                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <span className="text-sm sm:text-base">
+                      Complete & Continue
+                    </span>
+                    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -2703,79 +2876,6 @@ const LearningSegmentPage = ({
               )}
             </div>
           )}
-
-          {/* [EXISTING SEGMENTS - dialogue, question, fill-blank, true-false, multiple-choice, instruction, practice, review] */}
-          {/* ... keeping all the existing segment renderings unchanged ... */}
-
-          {/* Enhanced Fill in the Blanks Question */}
-          {currentSegment.type === "question" &&
-            currentSegment.content.question.type === "fill-blank" && (
-              <div className="space-y-4 sm:space-y-6 relative z-10">
-                <div className="text-center mb-6 sm:mb-8">
-                  <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-100/80 to-yellow-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-amber-300 shadow-sm mb-4">
-                    <div className="text-2xl sm:text-4xl animate-bounce">
-                      ✏️
-                    </div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-amber-600">
-                      Fill in the Blanks!
-                    </h3>
-                    <div className="bg-amber-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                      <Award className="w-3 h-3 sm:w-4 sm:h-4 text-amber-700 inline" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 text-center border border-amber-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-100/20 to-transparent animate-pulse"></div>
-                  <p className="text-lg sm:text-xl lg:text-2xl leading-relaxed text-amber-800 relative z-10">
-                    {renderFillInBlanks()}
-                  </p>
-                </div>
-
-                {showResult && (
-                  <div
-                    className={`text-center p-4 sm:p-6 lg:p-8 rounded-2xl border-2 backdrop-blur-sm relative overflow-hidden shadow-lg ${
-                      isCorrect
-                        ? "bg-gradient-to-br from-green-50/80 to-emerald-50/80 border-green-400"
-                        : "bg-gradient-to-br from-red-50/80 to-pink-50/80 border-red-400"
-                    }`}
-                  >
-                    <div className="text-4xl sm:text-6xl lg:text-8xl mb-4 animate-bounce">
-                      {isCorrect ? "🎉" : "🤔"}
-                    </div>
-                    <h3
-                      className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-4 ${
-                        isCorrect ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {isCorrect ? "Perfect!" : "Not quite right!"}
-                    </h3>
-                    {isCorrect && (
-                      <div className="flex items-center justify-center gap-2 mb-4">
-                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 animate-pulse" />
-                        <p className="text-blue-600 text-lg sm:text-xl lg:text-2xl font-bold">
-                          +{currentSegment.basePoints} XP
-                          {attempts === 0 && currentSegment.bonusPoints && (
-                            <span className="text-amber-600 animate-pulse">
-                              {" "}
-                              (+{currentSegment.bonusPoints} bonus!)
-                            </span>
-                          )}
-                        </p>
-                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 animate-pulse" />
-                      </div>
-                    )}
-                    {currentSegment.content.question.explanation && (
-                      <div className="bg-blue-50/80 rounded-xl p-3 sm:p-4 mt-4 border border-blue-200 backdrop-blur-sm shadow-inner">
-                        <p className="text-blue-700 text-sm sm:text-base lg:text-lg leading-relaxed">
-                          {currentSegment.content.question.explanation}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
 
           {/* Enhanced True/False Question */}
           {currentSegment.type === "question" &&
@@ -3125,45 +3225,32 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Segment Navigation */}
-          <div className="mt-8 sm:mt-12 pt-4 sm:pt-6 border-t border-indigo-200 relative z-10">
-            <div className="flex justify-between items-center text-xs sm:text-sm text-indigo-600">
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                <span>
-                  Level {currentSegmentIndex + 1} of{" "}
-                  {currentPath.segments.length}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="capitalize">
-                  {currentSegment.type.charAt(0).toUpperCase() +
-                    currentSegment.type.slice(1)}{" "}
-                  Challenge
-                </span>
-                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-amber-500 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-
-            {/* Mini progress indicators */}
-            <div className="flex justify-center gap-1 mt-3 sm:mt-4">
-              {currentPath.segments.map((_: any, index: number) => (
-                <div
-                  key={index}
-                  className={`w-2 h-0.5 sm:w-3 sm:h-1 rounded-full transition-all duration-500 ${
-                    index < currentSegmentIndex
-                      ? "bg-green-500"
-                      : index === currentSegmentIndex
-                      ? "bg-amber-500 animate-pulse"
-                      : "bg-slate-300"
-                  }`}
-                />
-              ))}
-            </div>
+          <div className="flex items-center gap-1 xs:gap-2">
+            <span className="capitalize">
+              {currentSegment.type.charAt(0).toUpperCase() +
+                currentSegment.type.slice(1)}{" "}
+              Challenge
+            </span>
+            <div className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-amber-500 rounded-full animate-pulse"></div>
           </div>
         </div>
-      </div>
 
+        {/* Mini progress indicators - Mobile Responsive */}
+        <div className="flex justify-center gap-0.5 xs:gap-1 mt-2 xs:mt-3 sm:mt-4">
+          {currentPath.segments.map((_: any, index: number) => (
+            <div
+              key={index}
+              className={`w-1.5 h-0.5 xs:w-2 xs:h-0.5 sm:w-3 sm:h-1 rounded-full transition-all duration-500 ${
+                index < currentSegmentIndex
+                  ? "bg-green-500"
+                  : index === currentSegmentIndex
+                  ? "bg-amber-500 animate-pulse"
+                  : "bg-slate-300"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
       {/* Enhanced Celebration Popup */}
       <CelebrationPopup
         show={showCelebration}
@@ -3176,19 +3263,19 @@ const LearningSegmentPage = ({
         }}
       />
 
-      {/* Enhanced Hearts Warning */}
+      {/* Enhanced Hearts Warning - Mobile Responsive */}
       {hearts <= 2 && hearts > 0 && (
-        <div className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 bg-gradient-to-r from-red-100/95 to-pink-100/95 backdrop-blur-sm text-red-700 p-3 sm:p-4 rounded-2xl shadow-lg animate-pulse border border-red-300 max-w-xs">
-          <div className="flex items-center gap-2">
-            <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 animate-pulse" />
-            <span className="font-bold text-sm sm:text-base">
+        <div className="fixed bottom-3 xs:bottom-4 sm:bottom-6 left-3 xs:left-4 sm:left-6 bg-gradient-to-r from-red-100/95 to-pink-100/95 backdrop-blur-sm text-red-700 p-2 xs:p-3 sm:p-4 rounded-xl xs:rounded-2xl shadow-lg animate-pulse border border-red-300 max-w-[280px] xs:max-w-xs">
+          <div className="flex items-center gap-1 xs:gap-2">
+            <Heart className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 text-red-500 animate-pulse flex-shrink-0" />
+            <span className="font-bold text-xs xs:text-sm sm:text-base">
               Only {hearts} hearts left! Be careful!
             </span>
-            <div className="ml-2 flex gap-1">
+            <div className="ml-1 xs:ml-2 flex gap-0.5 xs:gap-1">
               {[...Array(hearts)].map((_, i) => (
                 <Heart
                   key={i}
-                  className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 fill-current animate-pulse"
+                  className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 text-red-500 fill-current animate-pulse"
                   style={{ animationDelay: `${i * 0.2}s` }}
                 />
               ))}
@@ -3197,22 +3284,22 @@ const LearningSegmentPage = ({
         </div>
       )}
 
-      {/* Enhanced Hearts Depleted Modal */}
+      {/* Enhanced Hearts Depleted Modal - Mobile Responsive */}
       {hearts === 0 && (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 text-center max-w-sm w-full shadow-2xl border-4 border-red-400 relative overflow-hidden">
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 xs:p-4">
+          <div className="bg-white rounded-2xl xs:rounded-3xl p-4 xs:p-6 sm:p-8 text-center max-w-[300px] xs:max-w-sm w-full shadow-2xl border-4 border-red-400 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-red-50/50 to-pink-50/50 animate-pulse"></div>
-            <div className="text-4xl sm:text-6xl mb-4 animate-bounce relative z-10">
+            <div className="text-3xl xs:text-4xl sm:text-6xl mb-3 xs:mb-4 animate-bounce relative z-10">
               💔
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4 relative z-10">
+            <h3 className="text-lg xs:text-xl sm:text-2xl font-bold text-slate-800 mb-3 xs:mb-4 relative z-10">
               Out of Hearts!
             </h3>
-            <p className="text-slate-600 mb-6 relative z-10 text-sm sm:text-base">
+            <p className="text-slate-600 mb-4 xs:mb-6 relative z-10 text-sm xs:text-base">
               Don't worry! You can try again or take a break and come back
               later.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10">
+            <div className="flex flex-col xs:flex-row gap-2 xs:gap-3 justify-center relative z-10">
               <button
                 onClick={() => {
                   setHearts(5);
@@ -3220,16 +3307,16 @@ const LearningSegmentPage = ({
                   setShowResult(false);
                   setSelectedAnswer(null);
                 }}
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold transform hover:scale-105 transition-all shadow-lg text-sm sm:text-base"
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-3 xs:px-4 sm:px-6 py-2 xs:py-2 sm:py-3 rounded-full font-bold transform hover:scale-105 transition-all shadow-lg text-xs xs:text-sm sm:text-base"
               >
-                <Heart className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
+                <Heart className="w-3 h-3 xs:w-4 xs:h-4 inline mr-1 xs:mr-2" />
                 Try Again
               </button>
               <button
                 onClick={() => router.push(`/child/courses/${courseId}`)}
-                className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold transform hover:scale-105 transition-all shadow-lg text-sm sm:text-base"
+                className="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white px-3 xs:px-4 sm:px-6 py-2 xs:py-2 sm:py-3 rounded-full font-bold transform hover:scale-105 transition-all shadow-lg text-xs xs:text-sm sm:text-base"
               >
-                <Home className="w-3 h-3 sm:w-4 sm:h-4 inline mr-2" />
+                <Home className="w-3 h-3 xs:w-4 xs:h-4 inline mr-1 xs:mr-2" />
                 Exit Lesson
               </button>
             </div>

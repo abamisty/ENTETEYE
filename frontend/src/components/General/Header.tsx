@@ -116,47 +116,46 @@ const Header: React.FC = () => {
       <button className="md:hidden p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 ml-auto mr-2">
         <Search className="w-5 h-5" />
       </button>
-
       {/* User controls */}
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        {/* Notifications */}
-        <div className="relative">
+      {/* <div className="flex items-center space-x-2 sm:space-x-4"> */}
+      {/* Notifications */}
+      {/* <div className="relative">
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+          onClick={() => setShowNotifications(!showNotifications)}
             className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-          >
+            >
             <Bell className="w-5 h-5 text-gray-600" />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                 {unreadCount}
               </span>
             )}
-          </button>
+          </button> */}
 
-          {/* Notifications Dropdown */}
-          {showNotifications && (
+      {/* Notifications Dropdown */}
+      {/* {showNotifications && (
             <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
               <div className="px-4 py-2 border-b border-gray-100">
                 <h3 className="font-semibold text-gray-800">Notifications</h3>
-              </div>
-              <div className="max-h-64 overflow-y-auto">
+                </div>
+                <div className="max-h-64 overflow-y-auto">
                 {notifications.map((notification) => (
                   <div
-                    key={notification.id}
-                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer ${
-                      notification.unread ? "bg-blue-50/50" : ""
+                  key={notification.id}
+                  className={`px-4 py-3 hover:bg-gray-50 cursor-pointer ${
+                    notification.unread ? "bg-blue-50/50" : ""
                     }`}
-                  >
+                    >
                     <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm text-gray-800">
-                          {notification.title}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {notification.message}
-                        </p>
-                      </div>
-                      {notification.unread && (
+                    <div className="flex-1">
+                    <p className="font-medium text-sm text-gray-800">
+                    {notification.title}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                    {notification.message}
+                    </p>
+                    </div>
+                    {notification.unread && (
                         <div className="w-2 h-2 bg-blue-500 rounded-full mt-1 ml-2"></div>
                       )}
                     </div>
@@ -164,7 +163,7 @@ const Header: React.FC = () => {
                       {notification.time}
                     </p>
                   </div>
-                ))}
+                  ))}
               </div>
               <div className="px-4 py-2 border-t border-gray-100">
                 <button className="text-sm text-[#4f9cf9] hover:text-[#043873] font-medium">
@@ -172,9 +171,9 @@ const Header: React.FC = () => {
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          )} */}
 
+      <div>
         {/* User Profile - Desktop */}
         <div className="relative hidden sm:block">
           <button

@@ -181,7 +181,7 @@ const GameCourseTrail = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br rounded-lg overflow-hidden from-blue-50 via-sky-50 to-indigo-50 text-slate-800">
       {/* Header */}
-      <div className="relative p-4 sm:p-6 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm shadow-sm">
+      <div className="relative p-4 pt-[4rem] sm:p-6 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 backdrop-blur-sm shadow-sm">
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-4 gap-4">
             <div className="flex-1">
@@ -387,7 +387,7 @@ const GameCourseTrail = () => {
         </div>
 
         {/* Completion Celebration */}
-        {overallProgress === 100 && (
+        {/* {overallProgress === 100 && (
           <div className="text-center mt-12 sm:mt-16 p-6 sm:p-8 bg-gradient-to-r from-amber-100/80 to-orange-100/80 rounded-xl border-2 border-amber-200 shadow-xl backdrop-blur-sm">
             <div className="text-4xl sm:text-6xl mb-4">🏆</div>
             <h2 className="text-2xl sm:text-3xl font-bold text-amber-600 mb-2">
@@ -400,7 +400,7 @@ const GameCourseTrail = () => {
               View Certificate
             </button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

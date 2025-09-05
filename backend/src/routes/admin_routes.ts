@@ -18,6 +18,8 @@ router.get(
   getEnrollmentAnalytics
 );
 
+router.get("/users", protect, requireAdmin, getAllParents);
+
 router.get("/subscriptions", protect, requireAdmin, getAllSubscriptions);
 
 router.get("/courses", protect, requireAdmin, getAllCourses);

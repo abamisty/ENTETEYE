@@ -887,30 +887,34 @@ const LearningSegmentPage = ({
       </div>
 
       {/* Main Content - Mobile First */}
-      <div className="w-full mx-auto p-2 xs:p-4 sm:p-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl xs:rounded-3xl p-3 xs:p-4 sm:p-6 lg:p-8 text-slate-800 shadow-xl border border-blue-200 relative overflow-hidden">
+      <div className="w-full mx-auto p-3 py-[4rem]  sm:py-[8rem] ">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl md:rounded-3xl p-4 sm:p-5 md:p-6 lg:p-8 text-slate-800 shadow-xl border border-blue-200 relative overflow-hidden">
           {/* Animated Background Elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-5 xs:top-10 left-5 xs:left-10 w-8 h-8 xs:w-16 xs:h-16 sm:w-20 sm:h-20 bg-blue-500/5 rounded-full blur-xl animate-pulse"></div>
+            <div className="absolute top-5 left-5 sm:top-10 sm:left-10 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-blue-500/5 rounded-full blur-xl animate-pulse"></div>
             <div
-              className="absolute bottom-10 xs:bottom-20 right-10 xs:right-20 w-12 h-12 xs:w-24 xs:h-24 sm:w-32 sm:h-32 bg-indigo-500/5 rounded-full blur-xl animate-pulse"
+              className="absolute bottom-10 right-10 sm:bottom-20 sm:right-20 w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-indigo-500/5 rounded-full blur-xl animate-pulse"
               style={{ animationDelay: "1s" }}
             ></div>
             <div
-              className="absolute top-1/2 left-1/4 w-6 h-6 xs:w-12 xs:h-12 sm:w-16 sm:h-16 bg-sky-400/5 rounded-full blur-xl animate-pulse"
+              className="absolute top-1/2 left-1/4 w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-sky-400/5 rounded-full blur-xl animate-pulse"
               style={{ animationDelay: "2s" }}
             ></div>
           </div>
+
+          {/* Storytelling Segment */}
           {currentSegment.type === "storytelling" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-violet-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-violet-300 shadow-sm mb-4">
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600 animate-pulse" />
-                  Interactive Story
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-violet-100/80 to-purple-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-violet-300 shadow-sm">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-violet-600 animate-pulse" />
+                  <span className="text-sm sm:text-base md:text-lg font-bold text-violet-600">
+                    Interactive Story
+                  </span>
                   {isStoryPlaying && (
-                    <div className="bg-violet-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                      <span className="text-xs sm:text-sm font-semibold text-violet-700 flex items-center gap-1">
-                        <Volume2 className="w-3 h-3 animate-pulse" />
+                    <div className="bg-violet-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
+                      <span className="text-[10px] sm:text-xs md:text-sm font-semibold text-violet-700 flex items-center gap-0.5 sm:gap-1">
+                        <Volume2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-pulse" />
                         Playing
                       </span>
                     </div>
@@ -919,13 +923,13 @@ const LearningSegmentPage = ({
               </div>
 
               {!currentStoryChapter && (
-                <div className="text-center">
-                  <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 mb-6 border border-violet-200 backdrop-blur-sm shadow-inner">
-                    <h4 className="text-2xl sm:text-3xl font-bold text-violet-800 mb-4">
+                <div className="text-center px-2 sm:px-0">
+                  <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 border border-violet-200 backdrop-blur-sm shadow-inner">
+                    <h4 className="text-lg sm:text-2xl md:text-3xl font-bold text-violet-800 mb-3 sm:mb-4">
                       {currentSegment.content.storytelling.title}
                     </h4>
                     {currentSegment.content.storytelling.background && (
-                      <p className="text-lg text-violet-700 leading-relaxed mb-6">
+                      <p className="text-sm sm:text-base md:text-lg text-violet-700 leading-relaxed mb-4 sm:mb-6">
                         {currentSegment.content.storytelling.background}
                       </p>
                     )}
@@ -939,16 +943,16 @@ const LearningSegmentPage = ({
                       setIsStoryPlaying(false);
                       setStoryTextComplete(false);
                     }}
-                    className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-8 py-4 rounded-full font-bold text-lg transform hover:scale-105 transition-all shadow-lg"
+                    className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base md:text-lg transform hover:scale-105 transition-all shadow-lg"
                   >
-                    <Play className="w-5 h-5 inline mr-2" />
+                    <Play className="w-4 h-4 sm:w-5 sm:h-5 inline mr-1.5 sm:mr-2" />
                     Begin Story
                   </button>
                 </div>
               )}
 
               {currentStoryChapter && (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {(() => {
                     const chapter =
                       currentSegment.content.storytelling.chapters.find(
@@ -958,24 +962,24 @@ const LearningSegmentPage = ({
                     if (!chapter) return null;
 
                     return (
-                      <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 border border-violet-200 backdrop-blur-sm shadow-inner">
-                        <h4 className="text-xl sm:text-2xl font-bold text-violet-800 mb-4">
+                      <div className="bg-gradient-to-br from-violet-50/80 to-purple-50/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-violet-200 backdrop-blur-sm shadow-inner">
+                        <h4 className="text-base sm:text-xl md:text-2xl font-bold text-violet-800 mb-3 sm:mb-4">
                           {chapter.title}
                         </h4>
 
                         {/* Story Content with Typing Animation */}
-                        <div className="prose prose-lg text-violet-700 mb-6 relative min-h-24">
-                          <p className="text-lg leading-relaxed">
+                        <div className="prose prose-sm sm:prose-base md:prose-lg text-violet-700 mb-4 sm:mb-6 relative min-h-[80px] sm:min-h-[100px] md:min-h-[120px]">
+                          <p className="text-sm sm:text-base md:text-lg leading-relaxed">
                             <span ref={storyTextRef} className="inline">
                               {displayedStoryText}
                             </span>
                             {isStoryPlaying && (
-                              <span className="inline-block w-0.5 h-6 bg-violet-600 ml-1 animate-pulse"></span>
+                              <span className="inline-block w-0.5 h-4 sm:h-5 md:h-6 bg-violet-600 ml-0.5 sm:ml-1 animate-pulse"></span>
                             )}
                           </p>
 
                           {/* Audio Controls */}
-                          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-violet-200">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-violet-200">
                             <button
                               onClick={async () => {
                                 const chapter =
@@ -989,12 +993,10 @@ const LearningSegmentPage = ({
                                 setDisplayedStoryText("");
                                 setStoryTextComplete(false);
 
-                                // Stop any ongoing speech
                                 if ("speechSynthesis" in window) {
                                   speechSynthesis.cancel();
                                 }
 
-                                // Start typing animation with speech
                                 const speakText = (
                                   text: string
                                 ): Promise<void> => {
@@ -1014,12 +1016,10 @@ const LearningSegmentPage = ({
                                   });
                                 };
 
-                                // Start speech synthesis
                                 const speechPromise = speakText(
                                   chapter.content
                                 );
 
-                                // Start typing animation (faster than speech)
                                 let currentIndex = 0;
                                 const typingInterval = setInterval(() => {
                                   if (currentIndex < chapter.content.length) {
@@ -1033,28 +1033,26 @@ const LearningSegmentPage = ({
                                   } else {
                                     clearInterval(typingInterval);
                                   }
-                                }, 30); // Faster typing to sync with speech
+                                }, 30);
 
-                                // Wait for speech to complete
                                 await speechPromise;
 
-                                // Ensure full text is displayed
                                 clearInterval(typingInterval);
                                 setDisplayedStoryText(chapter.content);
                                 setIsStoryPlaying(false);
                                 setStoryTextComplete(true);
                               }}
                               disabled={isStoryPlaying}
-                              className="bg-violet-500 hover:bg-violet-600 disabled:bg-violet-300 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all transform hover:scale-105 disabled:hover:scale-100"
+                              className="bg-violet-500 hover:bg-violet-600 disabled:bg-violet-300 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 transition-all transform hover:scale-105 disabled:hover:scale-100"
                             >
                               {isStoryPlaying ? (
                                 <>
-                                  <Volume2 className="w-4 h-4 animate-pulse" />
+                                  <Volume2 className="w-3 h-3 sm:w-4 sm:h-4 animate-pulse" />
                                   <span>Narrating...</span>
                                 </>
                               ) : (
                                 <>
-                                  <Play className="w-4 h-4" />
+                                  <Play className="w-3 h-3 sm:w-4 sm:h-4" />
                                   <span>
                                     {displayedStoryText ? "Replay" : "Listen"}
                                   </span>
@@ -1065,32 +1063,27 @@ const LearningSegmentPage = ({
                             {isStoryPlaying && (
                               <button
                                 onClick={() => {
-                                  // Stop speech synthesis
                                   if ("speechSynthesis" in window) {
                                     speechSynthesis.cancel();
                                   }
-
-                                  // Complete the text immediately
                                   const chapter =
                                     currentSegment.content.storytelling.chapters.find(
                                       (ch: any) => ch.id === currentStoryChapter
                                     );
-
                                   if (chapter) {
                                     setDisplayedStoryText(chapter.content);
                                     setIsStoryPlaying(false);
                                     setStoryTextComplete(true);
                                   }
                                 }}
-                                className="text-violet-600 hover:text-violet-800 px-3 py-2 text-sm font-medium transition-colors"
+                                className="text-violet-600 hover:text-violet-800 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-colors"
                               >
                                 Skip ⏭
                               </button>
                             )}
 
-                            {/* Progress indicator - visual only since speech timing is different */}
                             {isStoryPlaying && (
-                              <div className="flex-1 bg-violet-200 rounded-full h-1.5 overflow-hidden">
+                              <div className="flex-1 min-w-[100px] bg-violet-200 rounded-full h-1 sm:h-1.5 overflow-hidden">
                                 <div
                                   className="bg-violet-500 h-full transition-all duration-100 ease-out"
                                   style={{
@@ -1106,12 +1099,12 @@ const LearningSegmentPage = ({
                           </div>
                         </div>
 
-                        {/* Choices - Only show when narration is complete */}
+                        {/* Choices */}
                         {storyTextComplete && chapter.choices ? (
-                          <div className="space-y-3 animate-fadeIn">
-                            <p className="font-semibold text-violet-800 mb-4 flex items-center gap-2">
+                          <div className="space-y-2 sm:space-y-3 animate-fadeIn">
+                            <p className="font-semibold text-violet-800 mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
                               <span>What do you choose?</span>
-                              <div className="flex gap-1">
+                              <div className="flex gap-0.5 sm:gap-1">
                                 <div className="w-1 h-1 bg-violet-500 rounded-full animate-bounce"></div>
                                 <div
                                   className="w-1 h-1 bg-violet-500 rounded-full animate-bounce"
@@ -1146,21 +1139,21 @@ const LearningSegmentPage = ({
                                       setTimeout(completeSegment, 3000);
                                     }
                                   }}
-                                  className="w-full text-left p-4 bg-white/80 hover:bg-violet-100 border-2 border-violet-200 hover:border-violet-400 rounded-xl transition-all transform hover:scale-[1.02] group"
+                                  className="w-full text-left p-3 sm:p-4 bg-white/80 hover:bg-violet-100 border-2 border-violet-200 hover:border-violet-400 rounded-lg sm:rounded-xl transition-all transform hover:scale-[1.02] group"
                                   style={{
                                     animationDelay: `${index * 0.1}s`,
                                     animation:
                                       "slideInFromRight 0.5s ease-out forwards",
                                   }}
                                 >
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-violet-500 group-hover:bg-violet-600 text-white rounded-full flex items-center justify-center font-bold text-sm transition-colors">
+                                  <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-violet-500 group-hover:bg-violet-600 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-colors">
                                       {index + 1}
                                     </div>
-                                    <span className="font-semibold text-violet-800 group-hover:text-violet-900">
+                                    <span className="font-semibold text-violet-800 group-hover:text-violet-900 text-sm sm:text-base flex-1">
                                       {choice.text}
                                     </span>
-                                    <ArrowRight className="w-4 h-4 ml-auto text-violet-400 group-hover:text-violet-600 transform group-hover:translate-x-1 transition-all" />
+                                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-violet-400 group-hover:text-violet-600 transform group-hover:translate-x-1 transition-all" />
                                   </div>
                                 </button>
                               )
@@ -1177,24 +1170,24 @@ const LearningSegmentPage = ({
                                 setXp(xp + currentSegment.basePoints);
                                 setTimeout(completeSegment, 3000);
                               }}
-                              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 rounded-full font-bold transform hover:scale-105 transition-all shadow-lg"
+                              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-bold text-sm sm:text-base transform hover:scale-105 transition-all shadow-lg"
                             >
-                              <Trophy className="w-5 h-5 inline mr-2" />
+                              <Trophy className="w-4 h-4 sm:w-5 sm:h-5 inline mr-1.5 sm:mr-2" />
                               Complete Story
                             </button>
                           </div>
                         ) : (
                           !storyTextComplete && (
-                            <div className="text-center py-4">
-                              <div className="text-sm text-violet-600 flex items-center justify-center gap-2">
-                                <div className="flex gap-1">
-                                  <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce"></div>
+                            <div className="text-center py-3 sm:py-4">
+                              <div className="text-xs sm:text-sm text-violet-600 flex items-center justify-center gap-1.5 sm:gap-2">
+                                <div className="flex gap-0.5 sm:gap-1">
+                                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-violet-400 rounded-full animate-bounce"></div>
                                   <div
-                                    className="w-2 h-2 bg-violet-400 rounded-full animate-bounce"
+                                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-violet-400 rounded-full animate-bounce"
                                     style={{ animationDelay: "0.1s" }}
                                   ></div>
                                   <div
-                                    className="w-2 h-2 bg-violet-400 rounded-full animate-bounce"
+                                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-violet-400 rounded-full animate-bounce"
                                     style={{ animationDelay: "0.2s" }}
                                   ></div>
                                 </div>
@@ -1239,17 +1232,17 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Flashcards Segment */}
+          {/* Flashcards Segment */}
           {currentSegment.type === "flashcards" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-purple-100/80 to-pink-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-purple-300 shadow-sm mb-4">
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-purple-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-purple-100/80 to-pink-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-purple-300 shadow-sm">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-purple-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-purple-600">
                     Flashcard Review
                   </h3>
-                  <div className="bg-purple-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                    <span className="text-xs sm:text-sm font-semibold text-purple-700">
+                  <div className="bg-purple-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
+                    <span className="text-[10px] sm:text-xs md:text-sm font-semibold text-purple-700">
                       {currentFlashcardIndex + 1}/
                       {currentSegment.content.flashcards.cards.length}
                     </span>
@@ -1258,9 +1251,9 @@ const LearningSegmentPage = ({
               </div>
 
               {currentSegment.content.flashcards.cards.length > 0 && (
-                <div className="max-w-md mx-auto">
+                <div className="max-w-sm sm:max-w-md mx-auto px-4 sm:px-0">
                   <div
-                    className="relative w-full h-64 sm:h-80 cursor-pointer transform transition-transform duration-500 hover:scale-105"
+                    className="relative w-full h-56 sm:h-64 md:h-80 cursor-pointer transform transition-transform duration-500 hover:scale-105"
                     style={{ perspective: "1000px" }}
                     onClick={() => setShowFlashcardBack(!showFlashcardBack)}
                   >
@@ -1269,39 +1262,39 @@ const LearningSegmentPage = ({
                         showFlashcardBack ? "rotate-y-180" : ""
                       }`}
                     >
-                      {/* Front of card */}
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-2xl shadow-xl flex items-center justify-center p-6 backface-hidden">
+                      {/* Front */}
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-xl sm:rounded-2xl shadow-xl flex items-center justify-center p-4 sm:p-6 backface-hidden">
                         <div className="text-center">
-                          <div className="text-sm font-medium text-purple-100 mb-2">
+                          <div className="text-xs sm:text-sm font-medium text-purple-100 mb-1.5 sm:mb-2">
                             FRONT
                           </div>
-                          <p className="text-lg sm:text-xl font-bold leading-relaxed">
+                          <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold leading-relaxed">
                             {
                               currentSegment.content.flashcards.cards[
                                 currentFlashcardIndex
                               ].front
                             }
                           </p>
-                          <div className="mt-4 text-purple-200 text-sm">
+                          <div className="mt-3 sm:mt-4 text-purple-200 text-xs sm:text-sm">
                             Tap to reveal answer
                           </div>
                         </div>
                       </div>
 
-                      {/* Back of card */}
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl shadow-xl flex items-center justify-center p-6 backface-hidden rotate-y-180">
+                      {/* Back */}
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl sm:rounded-2xl shadow-xl flex items-center justify-center p-4 sm:p-6 backface-hidden rotate-y-180">
                         <div className="text-center">
-                          <div className="text-sm font-medium text-green-100 mb-2">
+                          <div className="text-xs sm:text-sm font-medium text-green-100 mb-1.5 sm:mb-2">
                             BACK
                           </div>
-                          <p className="text-lg sm:text-xl font-bold leading-relaxed">
+                          <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold leading-relaxed">
                             {
                               currentSegment.content.flashcards.cards[
                                 currentFlashcardIndex
                               ].back
                             }
                           </p>
-                          <div className="mt-4 text-green-200 text-sm">
+                          <div className="mt-3 sm:mt-4 text-green-200 text-xs sm:text-sm">
                             Tap to flip back
                           </div>
                         </div>
@@ -1309,8 +1302,8 @@ const LearningSegmentPage = ({
                     </div>
                   </div>
 
-                  {/* Navigation Controls */}
-                  <div className="flex justify-between items-center mt-6 sm:mt-8">
+                  {/* Navigation */}
+                  <div className="flex justify-between items-center mt-4 sm:mt-6 md:mt-8 px-2 sm:px-0">
                     <button
                       onClick={() => {
                         if (currentFlashcardIndex > 0) {
@@ -1319,18 +1312,19 @@ const LearningSegmentPage = ({
                         }
                       }}
                       disabled={currentFlashcardIndex === 0}
-                      className="flex items-center gap-2 px-4 py-2 bg-purple-100 hover:bg-purple-200 disabled:bg-slate-100 disabled:text-slate-400 text-purple-700 rounded-full font-semibold transition-all"
+                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-100 hover:bg-purple-200 disabled:bg-slate-100 disabled:text-slate-400 text-purple-700 rounded-full font-semibold text-xs sm:text-sm transition-all"
                     >
-                      <ChevronLeft className="w-4 h-4" />
-                      Previous
+                      <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
                     </button>
 
                     <div className="flex gap-1">
                       {currentSegment.content.flashcards.cards.map(
-                        (_: any, index: any) => (
+                        (_: any, index: number) => (
                           <div
                             key={index}
-                            className={`w-2 h-2 rounded-full transition-all ${
+                            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${
                               index === currentFlashcardIndex
                                 ? "bg-purple-500 scale-125"
                                 : index < currentFlashcardIndex
@@ -1359,7 +1353,7 @@ const LearningSegmentPage = ({
                           setTimeout(completeSegment, 3000);
                         }
                       }}
-                      className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-full font-semibold transition-all"
+                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-full font-semibold text-xs sm:text-sm transition-all"
                     >
                       {currentFlashcardIndex ===
                       currentSegment.content.flashcards.cards.length - 1
@@ -1367,9 +1361,9 @@ const LearningSegmentPage = ({
                         : "Next"}
                       {currentFlashcardIndex ===
                       currentSegment.content.flashcards.cards.length - 1 ? (
-                        <Trophy className="w-4 h-4" />
+                        <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
                       ) : (
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                       )}
                     </button>
                   </div>
@@ -1378,17 +1372,17 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Matching Activity */}
+          {/* Matching Activity */}
           {currentSegment.type === "matching" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-teal-100/80 to-cyan-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-teal-300 shadow-sm mb-4">
-                  <Puzzle className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-teal-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-teal-100/80 to-cyan-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-teal-300 shadow-sm">
+                  <Puzzle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-teal-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-teal-600">
                     Match the Pairs
                   </h3>
-                  <div className="bg-teal-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                    <span className="text-xs sm:text-sm font-semibold text-teal-700">
+                  <div className="bg-teal-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
+                    <span className="text-[10px] sm:text-xs md:text-sm font-semibold text-teal-700">
                       {Object.keys(matchingPairs).length}/
                       {currentSegment.content.matching.pairs.length}
                     </span>
@@ -1396,17 +1390,17 @@ const LearningSegmentPage = ({
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-teal-50/80 to-cyan-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-center border border-teal-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
-                <p className="text-lg sm:text-xl font-bold text-teal-800 relative z-10">
+              <div className="bg-gradient-to-br from-teal-50/80 to-cyan-50/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8 text-center border border-teal-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-teal-800 relative z-10">
                   {currentSegment.content.matching.instructions ||
                     "Drag items from the left to match with items on the right!"}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-                {/* Left column - items to match */}
-                <div className="space-y-3">
-                  <h4 className="text-center font-bold text-teal-700 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+                {/* Left column */}
+                <div className="space-y-2 sm:space-y-3">
+                  <h4 className="text-center font-bold text-teal-700 mb-3 sm:mb-4 text-sm sm:text-base">
                     Items to Match
                   </h4>
                   {currentSegment.content.matching.pairs.map(
@@ -1420,7 +1414,20 @@ const LearningSegmentPage = ({
                             JSON.stringify({ item: pair.leftItem, index })
                           )
                         }
-                        className={`p-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl font-semibold cursor-grab active:cursor-grabbing hover:scale-105 transition-all shadow-lg ${
+                        onTouchStart={(e) => {
+                          // Mobile touch support
+                          const touch = e.touches[0];
+                          const element = e.currentTarget as HTMLElement;
+                          element.style.position = "fixed";
+                          element.style.zIndex = "1000";
+                          element.style.left = `${
+                            touch.pageX - element.offsetWidth / 2
+                          }px`;
+                          element.style.top = `${
+                            touch.pageY - element.offsetHeight / 2
+                          }px`;
+                        }}
+                        className={`p-3 sm:p-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base cursor-grab active:cursor-grabbing hover:scale-105 transition-all shadow-lg touch-none ${
                           Object.values(matchingPairs).includes(pair.leftItem)
                             ? "opacity-50 cursor-not-allowed"
                             : ""
@@ -1432,9 +1439,9 @@ const LearningSegmentPage = ({
                   )}
                 </div>
 
-                {/* Right column - targets */}
-                <div className="space-y-3">
-                  <h4 className="text-center font-bold text-teal-700 mb-4">
+                {/* Right column */}
+                <div className="space-y-2 sm:space-y-3">
+                  <h4 className="text-center font-bold text-teal-700 mb-3 sm:mb-4 text-sm sm:text-base">
                     Match With
                   </h4>
                   {shuffleArray(currentSegment.content.matching.pairs).map(
@@ -1453,7 +1460,6 @@ const LearningSegmentPage = ({
                               [pair.rightItem]: dragData.item,
                             }));
 
-                            // Check if all pairs are matched
                             if (
                               Object.keys(matchingPairs).length + 1 ===
                               currentSegment.content.matching.pairs.length
@@ -1469,16 +1475,18 @@ const LearningSegmentPage = ({
                             }
                           }
                         }}
-                        className={`p-4 border-3 border-dashed rounded-xl min-h-16 flex items-center justify-center text-center transition-all ${
+                        className={`p-3 sm:p-4 border-2 sm:border-3 border-dashed rounded-lg sm:rounded-xl min-h-[50px] sm:min-h-[60px] md:min-h-16 flex items-center justify-center text-center transition-all ${
                           matchingPairs[pair.rightItem]
                             ? "border-green-500 bg-green-100 text-green-700"
                             : "border-teal-400 bg-teal-50 text-teal-600 hover:border-teal-500 hover:bg-teal-100"
                         }`}
                       >
                         <div>
-                          <div className="font-semibold">{pair.rightItem}</div>
+                          <div className="font-semibold text-sm sm:text-base">
+                            {pair.rightItem}
+                          </div>
                           {matchingPairs[pair.rightItem] && (
-                            <div className="mt-2 px-3 py-1 bg-green-500 text-white rounded-full text-sm font-bold">
+                            <div className="mt-1.5 sm:mt-2 px-2 sm:px-3 py-0.5 sm:py-1 bg-green-500 text-white rounded-full text-[10px] sm:text-xs md:text-sm font-bold">
                               ✓ {matchingPairs[pair.rightItem]}
                             </div>
                           )}
@@ -1491,17 +1499,17 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Scenario Segment */}
+          {/* Scenario Segment */}
           {currentSegment.type === "scenario" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-blue-300 shadow-sm mb-4">
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-blue-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-blue-300 shadow-sm">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-blue-600">
                     Scenario Challenge
                   </h3>
-                  <div className="bg-blue-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                    <span className="text-xs sm:text-sm font-semibold text-blue-700">
+                  <div className="bg-blue-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
+                    <span className="text-[10px] sm:text-xs md:text-sm font-semibold text-blue-700">
                       {currentQuestionIndex + 1}/
                       {currentSegment.content.scenario.questions.length}
                     </span>
@@ -1509,22 +1517,22 @@ const LearningSegmentPage = ({
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-blue-200 backdrop-blur-sm shadow-inner">
-                <h4 className="text-lg sm:text-xl font-bold text-blue-800 mb-4">
+              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8 border border-blue-200 backdrop-blur-sm shadow-inner">
+                <h4 className="text-base sm:text-lg md:text-xl font-bold text-blue-800 mb-2 sm:mb-3 md:mb-4">
                   {currentSegment.content.scenario.title}
                 </h4>
-                <p className="text-sm sm:text-base text-blue-700 mb-4">
+                <p className="text-xs sm:text-sm md:text-base text-blue-700 mb-2 sm:mb-3 md:mb-4">
                   {currentSegment.content.scenario.description}
                 </p>
-                <p className="text-base sm:text-lg text-blue-900 leading-relaxed">
+                <p className="text-sm sm:text-base md:text-lg text-blue-900 leading-relaxed">
                   {currentSegment.content.scenario.situation}
                 </p>
               </div>
 
               {currentSegment.content.scenario.questions.length > 0 && (
-                <div className="max-w-2xl mx-auto">
-                  <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-blue-200">
-                    <h5 className="text-base sm:text-lg font-semibold text-blue-800 mb-3">
+                <div className="max-w-full sm:max-w-xl md:max-w-2xl mx-auto px-2 sm:px-0">
+                  <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg border border-blue-200">
+                    <h5 className="text-sm sm:text-base md:text-lg font-semibold text-blue-800 mb-2 sm:mb-3">
                       Question {currentQuestionIndex + 1}:{" "}
                       {
                         currentSegment.content.scenario.questions[
@@ -1535,10 +1543,10 @@ const LearningSegmentPage = ({
                     {currentSegment.content.scenario.questions[
                       currentQuestionIndex
                     ].type === "multiple-choice" ? (
-                      <div className="space-y-3">
+                      <div className="space-y-2 sm:space-y-3">
                         {currentSegment.content.scenario.questions[
                           currentQuestionIndex
-                        ].options.map((option: any, optionIndex: any) => (
+                        ].options.map((option: any, optionIndex: number) => (
                           <button
                             key={optionIndex}
                             onClick={() => {
@@ -1549,7 +1557,7 @@ const LearningSegmentPage = ({
                                 setCorrectAnswers((prev) => prev + 1);
                               }
                             }}
-                            className={`w-full p-3 text-left rounded-lg border transition-all ${
+                            className={`w-full p-2.5 sm:p-3 text-left rounded-lg border transition-all text-xs sm:text-sm md:text-base ${
                               selectedAnswer === optionIndex && showFeedback
                                 ? option.isCorrect
                                   ? "bg-green-100 border-green-500 text-green-800"
@@ -1566,15 +1574,15 @@ const LearningSegmentPage = ({
                       <textarea
                         value={openEndedAnswer}
                         onChange={(e) => setOpenEndedAnswer(e.target.value)}
-                        rows={4}
-                        className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={3}
+                        className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm md:text-base"
                         placeholder="Type your answer here..."
                         maxLength={500}
                       />
                     )}
                     {showFeedback && (
-                      <div className="mt-4 p-3 rounded-lg bg-blue-50 text-blue-800">
-                        <p className="text-sm font-medium">
+                      <div className="mt-3 sm:mt-4 p-2 sm:p-3 rounded-lg bg-blue-50 text-blue-800">
+                        <p className="text-xs sm:text-sm font-medium">
                           {currentSegment.content.scenario.questions[
                             currentQuestionIndex
                           ].type === "multiple-choice"
@@ -1589,8 +1597,8 @@ const LearningSegmentPage = ({
                     )}
                   </div>
 
-                  {/* Navigation Controls */}
-                  <div className="flex justify-between items-center mt-6 sm:mt-8">
+                  {/* Navigation */}
+                  <div className="flex justify-between items-center mt-4 sm:mt-6 md:mt-8 px-2 sm:px-0">
                     <button
                       onClick={() => {
                         if (currentQuestionIndex > 0) {
@@ -1601,10 +1609,11 @@ const LearningSegmentPage = ({
                         }
                       }}
                       disabled={currentQuestionIndex === 0}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 disabled:bg-slate-100 disabled:text-slate-400 text-blue-700 rounded-full font-semibold transition-all"
+                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-100 hover:bg-blue-200 disabled:bg-slate-100 disabled:text-slate-400 text-blue-700 rounded-full font-semibold text-xs sm:text-sm transition-all"
                     >
-                      <ChevronLeft className="w-4 h-4" />
-                      Previous
+                      <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
                     </button>
 
                     <div className="flex gap-1">
@@ -1612,7 +1621,7 @@ const LearningSegmentPage = ({
                         (_: any, index: number) => (
                           <div
                             key={index}
-                            className={`w-2 h-2 rounded-full transition-all ${
+                            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all ${
                               index === currentQuestionIndex
                                 ? "bg-blue-500 scale-125"
                                 : index < currentQuestionIndex
@@ -1642,7 +1651,7 @@ const LearningSegmentPage = ({
                           setTimeout(completeSegment, 3000);
                         }
                       }}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-semibold transition-all"
+                      className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-semibold text-xs sm:text-sm transition-all"
                     >
                       {currentQuestionIndex ===
                       currentSegment.content.scenario.questions.length - 1
@@ -1650,9 +1659,9 @@ const LearningSegmentPage = ({
                         : "Next"}
                       {currentQuestionIndex ===
                       currentSegment.content.scenario.questions.length - 1 ? (
-                        <Trophy className="w-4 h-4" />
+                        <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
                       ) : (
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                       )}
                     </button>
                   </div>
@@ -1661,28 +1670,28 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Question Segment */}
+          {/* Question Segment */}
           {currentSegment.type === "question" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-indigo-300 shadow-sm mb-4">
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-indigo-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-indigo-300 shadow-sm">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-indigo-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-indigo-600">
                     Question Challenge
                   </h3>
                 </div>
               </div>
 
-              <div className="max-w-2xl mx-auto">
-                <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-indigo-200">
-                  <h5 className="text-base sm:text-lg font-semibold text-indigo-800 mb-3">
+              <div className="max-w-full sm:max-w-xl md:max-w-2xl mx-auto px-2 sm:px-0">
+                <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-lg border border-indigo-200">
+                  <h5 className="text-sm sm:text-base md:text-lg font-semibold text-indigo-800 mb-2 sm:mb-3">
                     {currentSegment.content.question.text}
                   </h5>
                   {currentSegment.content.question.type ===
                   "multiple-choice" ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {currentSegment.content.question.options.map(
-                        (option: any, optionIndex: any) => (
+                        (option: any, optionIndex: number) => (
                           <button
                             key={optionIndex}
                             onClick={() => {
@@ -1693,7 +1702,7 @@ const LearningSegmentPage = ({
                                 setCorrectAnswers((prev) => prev + 1);
                               }
                             }}
-                            className={`w-full p-3 text-left rounded-lg border transition-all ${
+                            className={`w-full p-2.5 sm:p-3 text-left rounded-lg border transition-all text-xs sm:text-sm md:text-base ${
                               selectedAnswer === optionIndex && showFeedback
                                 ? option.isCorrect
                                   ? "bg-green-100 border-green-500 text-green-800"
@@ -1708,7 +1717,7 @@ const LearningSegmentPage = ({
                       )}
                     </div>
                   ) : currentSegment.content.question.type === "true-false" ? (
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
                       {["true", "false"].map((value, index) => (
                         <button
                           key={index}
@@ -1722,7 +1731,7 @@ const LearningSegmentPage = ({
                               setCorrectAnswers((prev) => prev + 1);
                             }
                           }}
-                          className={`w-full p-3 text-left rounded-lg border transition-all ${
+                          className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-xs sm:text-sm md:text-base ${
                             selectedAnswer === value && showFeedback
                               ? value ===
                                 currentSegment.content.question.correctAnswer
@@ -1741,14 +1750,14 @@ const LearningSegmentPage = ({
                       value={openEndedAnswer}
                       onChange={(e) => setOpenEndedAnswer(e.target.value)}
                       rows={4}
-                      className="w-full px-3 py-2 border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs sm:text-sm md:text-base"
                       placeholder="Type your answer here..."
                       maxLength={500}
                     />
                   )}
                   {showFeedback && (
-                    <div className="mt-4 p-3 rounded-lg bg-indigo-50 text-indigo-800">
-                      <p className="text-sm font-medium">
+                    <div className="mt-3 sm:mt-4 p-2 sm:p-3 rounded-lg bg-indigo-50 text-indigo-800">
+                      <p className="text-xs sm:text-sm font-medium">
                         {currentSegment.content.question.type ===
                         "multiple-choice"
                           ? currentSegment.content.question.options[
@@ -1765,7 +1774,7 @@ const LearningSegmentPage = ({
                           : "Your response has been recorded."}
                       </p>
                       {currentSegment.content.question.explanation && (
-                        <p className="text-sm mt-2">
+                        <p className="text-xs sm:text-sm mt-1.5 sm:mt-2">
                           {currentSegment.content.question.explanation}
                         </p>
                       )}
@@ -1773,8 +1782,8 @@ const LearningSegmentPage = ({
                   )}
                 </div>
 
-                {/* Navigation Controls */}
-                <div className="flex justify-end mt-6 sm:mt-8">
+                {/* Navigation */}
+                <div className="flex justify-end mt-4 sm:mt-6 md:mt-8 px-2 sm:px-0">
                   <button
                     onClick={() => {
                       setCelebrationPoints(currentSegment.basePoints);
@@ -1783,368 +1792,66 @@ const LearningSegmentPage = ({
                       setXp(xp + currentSegment.basePoints);
                       setTimeout(completeSegment, 3000);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-semibold transition-all"
+                    className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-semibold text-xs sm:text-sm transition-all"
                   >
                     Complete
-                    <Trophy className="w-4 h-4" />
+                    <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Enhanced Scenario Segment */}
+          {/* Interactive Scenario Activity */}
           {currentSegment.type === "scenario" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-blue-300 shadow-sm mb-4">
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-blue-600">
-                    Scenario Challenge
-                  </h3>
-                  <div className="bg-blue-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                    <span className="text-xs sm:text-sm font-semibold text-blue-700">
-                      {currentQuestionIndex + 1}/
-                      {currentSegment.content.scenario.questions.length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-blue-200 backdrop-blur-sm shadow-inner">
-                <h4 className="text-lg sm:text-xl font-bold text-blue-800 mb-4">
-                  {currentSegment.content.scenario.title}
-                </h4>
-                <p className="text-sm sm:text-base text-blue-700 mb-4">
-                  {currentSegment.content.scenario.description}
-                </p>
-                <p className="text-base sm:text-lg text-blue-900 leading-relaxed">
-                  {currentSegment.content.scenario.situation}
-                </p>
-              </div>
-
-              {currentSegment.content.scenario.questions.length > 0 && (
-                <div className="max-w-2xl mx-auto">
-                  <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-blue-200">
-                    <h5 className="text-base sm:text-lg font-semibold text-blue-800 mb-3">
-                      Question {currentQuestionIndex + 1}:{" "}
-                      {
-                        currentSegment.content.scenario.questions[
-                          currentQuestionIndex
-                        ].text
-                      }
-                    </h5>
-                    {currentSegment.content.scenario.questions[
-                      currentQuestionIndex
-                    ].type === "multiple-choice" ? (
-                      <div className="space-y-3">
-                        {currentSegment.content.scenario.questions[
-                          currentQuestionIndex
-                        ].options.map((option: any, optionIndex: any) => (
-                          <button
-                            key={optionIndex}
-                            onClick={() => {
-                              const isCorrect = option.isCorrect;
-                              setSelectedAnswer(optionIndex);
-                              setShowFeedback(true);
-                              if (isCorrect) {
-                                setCorrectAnswers((prev: any) => prev + 1);
-                              }
-                            }}
-                            className={`w-full p-3 text-left rounded-lg border transition-all ${
-                              selectedAnswer === optionIndex && showFeedback
-                                ? option.isCorrect
-                                  ? "bg-green-100 border-green-500 text-green-800"
-                                  : "bg-red-100 border-red-500 text-red-800"
-                                : "bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100"
-                            }`}
-                            disabled={showFeedback}
-                          >
-                            {option.text}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <textarea
-                        value={openEndedAnswer}
-                        onChange={(e) => setOpenEndedAnswer(e.target.value)}
-                        rows={4}
-                        className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Type your answer here..."
-                        maxLength={500}
-                      />
-                    )}
-                    {showFeedback && (
-                      <div className="mt-4 p-3 rounded-lg bg-blue-50 text-blue-800">
-                        <p className="text-sm font-medium">
-                          {currentSegment.content.scenario.questions[
-                            currentQuestionIndex
-                          ].type === "multiple-choice"
-                            ? currentSegment.content.scenario.questions[
-                                currentQuestionIndex
-                              ].options[selectedAnswer].isCorrect
-                              ? "Correct! Well done."
-                              : "Incorrect. Try again or move to the next question."
-                            : "Your response has been recorded."}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Navigation Controls */}
-                  <div className="flex justify-between items-center mt-6 sm:mt-8">
-                    <button
-                      onClick={() => {
-                        if (currentQuestionIndex > 0) {
-                          setCurrentQuestionIndex(currentQuestionIndex - 1);
-                          setSelectedAnswer(null);
-                          setShowFeedback(false);
-                          setOpenEndedAnswer("");
-                        }
-                      }}
-                      disabled={currentQuestionIndex === 0}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-100 hover:bg-blue-200 disabled:bg-slate-100 disabled:text-slate-400 text-blue-700 rounded-full font-semibold transition-all"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Previous
-                    </button>
-
-                    <div className="flex gap-1">
-                      {currentSegment.content.scenario.questions.map(
-                        (_: any, index: number) => (
-                          <div
-                            key={index}
-                            className={`w-2 h-2 rounded-full transition-all ${
-                              index === currentQuestionIndex
-                                ? "bg-blue-500 scale-125"
-                                : index < currentQuestionIndex
-                                ? "bg-green-500"
-                                : "bg-slate-300"
-                            }`}
-                          />
-                        )
-                      )}
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        if (
-                          currentQuestionIndex <
-                          currentSegment.content.scenario.questions.length - 1
-                        ) {
-                          setCurrentQuestionIndex(currentQuestionIndex + 1);
-                          setSelectedAnswer(null);
-                          setShowFeedback(false);
-                          setOpenEndedAnswer("");
-                        } else {
-                          setCelebrationPoints(currentSegment.basePoints);
-                          setCelebrationType("complete");
-                          setShowCelebration(true);
-                          setXp(xp + currentSegment.basePoints);
-                          setTimeout(completeSegment, 3000);
-                        }
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-semibold transition-all"
-                    >
-                      {currentQuestionIndex ===
-                      currentSegment.content.scenario.questions.length - 1
-                        ? "Complete"
-                        : "Next"}
-                      {currentQuestionIndex ===
-                      currentSegment.content.scenario.questions.length - 1 ? (
-                        <Trophy className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Enhanced Question Segment */}
-          {currentSegment.type === "question" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-indigo-300 shadow-sm mb-4">
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-indigo-600">
-                    Question Challenge
-                  </h3>
-                </div>
-              </div>
-
-              <div className="max-w-2xl mx-auto">
-                <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-indigo-200">
-                  <h5 className="text-base sm:text-lg font-semibold text-indigo-800 mb-3">
-                    {currentSegment.content.question.text}
-                  </h5>
-                  {currentSegment.content.question.type ===
-                  "multiple-choice" ? (
-                    <div className="space-y-3">
-                      {currentSegment.content.question.options.map(
-                        (option: any, optionIndex: any) => (
-                          <button
-                            key={optionIndex}
-                            onClick={() => {
-                              const isCorrect = option.isCorrect;
-                              setSelectedAnswer(optionIndex);
-                              setShowFeedback(true);
-                              if (isCorrect) {
-                                setCorrectAnswers((prev) => prev + 1);
-                              }
-                            }}
-                            className={`w-full p-3 text-left rounded-lg border transition-all ${
-                              selectedAnswer === optionIndex && showFeedback
-                                ? option.isCorrect
-                                  ? "bg-green-100 border-green-500 text-green-800"
-                                  : "bg-red-100 border-red-500 text-red-800"
-                                : "bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100"
-                            }`}
-                            disabled={showFeedback}
-                          >
-                            {option.text}
-                          </button>
-                        )
-                      )}
-                    </div>
-                  ) : currentSegment.content.question.type === "true-false" ? (
-                    <div className="space-y-3">
-                      {["true", "false"].map((value, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            const isCorrect =
-                              value ===
-                              currentSegment.content.question.correctAnswer;
-                            setSelectedAnswer(value);
-                            setShowFeedback(true);
-                            if (isCorrect) {
-                              setCorrectAnswers((prev) => prev + 1);
-                            }
-                          }}
-                          className={`w-full p-3 text-left rounded-lg border transition-all ${
-                            selectedAnswer === value && showFeedback
-                              ? value ===
-                                currentSegment.content.question.correctAnswer
-                                ? "bg-green-100 border-green-500 text-green-800"
-                                : "bg-red-100 border-red-500 text-red-800"
-                              : "bg-indigo-50 border-indigo-200 text-indigo-800 hover:bg-indigo-100"
-                          }`}
-                          disabled={showFeedback}
-                        >
-                          {value.charAt(0).toUpperCase() + value.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <textarea
-                      value={openEndedAnswer}
-                      onChange={(e) => setOpenEndedAnswer(e.target.value)}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="Type your answer here..."
-                      maxLength={500}
-                    />
-                  )}
-                  {showFeedback && (
-                    <div className="mt-4 p-3 rounded-lg bg-indigo-50 text-indigo-800">
-                      <p className="text-sm font-medium">
-                        {currentSegment.content.question.type ===
-                        "multiple-choice"
-                          ? currentSegment.content.question.options[
-                              selectedAnswer
-                            ].isCorrect
-                            ? "Correct! Well done."
-                            : "Incorrect. Try again or complete the segment."
-                          : currentSegment.content.question.type ===
-                            "true-false"
-                          ? selectedAnswer ===
-                            currentSegment.content.question.correctAnswer
-                            ? "Correct! Well done."
-                            : "Incorrect. Try again or complete the segment."
-                          : "Your response has been recorded."}
-                      </p>
-                      {currentSegment.content.question.explanation && (
-                        <p className="text-sm mt-2">
-                          {currentSegment.content.question.explanation}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Navigation Controls */}
-                <div className="flex justify-end mt-6 sm:mt-8">
-                  <button
-                    onClick={() => {
-                      setCelebrationPoints(currentSegment.basePoints);
-                      setCelebrationType("complete");
-                      setShowCelebration(true);
-                      setXp(xp + currentSegment.basePoints);
-                      setTimeout(completeSegment, 3000);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-semibold transition-all"
-                  >
-                    Complete
-                    <Trophy className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Enhanced Scenario Activity */}
-          {currentSegment.type === "scenario" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-orange-100/80 to-red-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-orange-300 shadow-sm mb-4">
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-orange-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-orange-100/80 to-red-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-orange-300 shadow-sm">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-orange-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-orange-600">
                     Interactive Scenario
                   </h3>
                 </div>
               </div>
 
               {currentSegment.content.scenario.backgroundImage && (
-                <div className="text-center mb-6">
+                <div className="text-center mb-4 sm:mb-6">
                   <img
                     src={currentSegment.content.scenario.backgroundImage}
                     alt="Scenario Background"
-                    className="max-w-md mx-auto rounded-2xl shadow-lg border border-orange-200"
+                    className="max-w-full sm:max-w-sm md:max-w-md mx-auto rounded-xl sm:rounded-2xl shadow-lg border border-orange-200"
                   />
                 </div>
               )}
 
-              <div className="bg-gradient-to-br from-orange-50/80 to-red-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border border-orange-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
-                <h4 className="text-xl sm:text-2xl font-bold text-orange-800 mb-4">
+              <div className="bg-gradient-to-br from-orange-50/80 to-red-50/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8 border border-orange-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+                <h4 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-orange-800 mb-2 sm:mb-3 md:mb-4">
                   {currentSegment.content.scenario.title}
                 </h4>
-                <p className="text-lg text-orange-700 leading-relaxed mb-4">
+                <p className="text-sm sm:text-base md:text-lg text-orange-700 leading-relaxed mb-2 sm:mb-3 md:mb-4">
                   {currentSegment.content.scenario.situation}
                 </p>
                 {currentSegment.content.scenario.description && (
-                  <p className="text-base text-orange-600">
+                  <p className="text-xs sm:text-sm md:text-base text-orange-600">
                     {currentSegment.content.scenario.description}
                   </p>
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {currentSegment.content.scenario.questions.map(
                   (question: any, index: number) => (
                     <div
                       key={index}
-                      className="bg-white/80 rounded-xl p-4 shadow-lg border border-orange-200"
+                      className="bg-white/80 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-lg border border-orange-200"
                     >
-                      <h5 className="font-bold text-orange-800 mb-3">
+                      <h5 className="font-bold text-orange-800 mb-2 sm:mb-3 text-xs sm:text-sm md:text-base">
                         Question {index + 1}: {question.text}
                       </h5>
 
                       {question.type === "multiple-choice" &&
                         question.options && (
-                          <div className="space-y-2">
+                          <div className="space-y-1.5 sm:space-y-2">
                             {question.options.map(
                               (option: any, optIndex: number) => (
                                 <button
@@ -2155,7 +1862,6 @@ const LearningSegmentPage = ({
                                       [index]: option.id,
                                     }));
 
-                                    // Check if all questions are answered
                                     if (
                                       Object.keys(scenarioAnswers).length +
                                         1 ===
@@ -2173,7 +1879,7 @@ const LearningSegmentPage = ({
                                       }, 1000);
                                     }
                                   }}
-                                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                                  className={`w-full text-left p-2 sm:p-3 rounded-lg border-2 transition-all text-xs sm:text-sm md:text-base ${
                                     scenarioAnswers[index] === option.id
                                       ? "border-orange-500 bg-orange-100"
                                       : "border-orange-200 hover:border-orange-400"
@@ -2195,7 +1901,7 @@ const LearningSegmentPage = ({
                               [index]: e.target.value,
                             }));
                           }}
-                          className="w-full p-3 border-2 border-orange-200 rounded-lg resize-none focus:border-orange-500 focus:outline-none"
+                          className="w-full p-2 sm:p-3 border-2 border-orange-200 rounded-lg resize-none focus:border-orange-500 focus:outline-none text-xs sm:text-sm md:text-base"
                           rows={3}
                           placeholder="Type your answer here..."
                         />
@@ -2207,34 +1913,34 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Drag & Drop Activity */}
+          {/* Drag & Drop Activity */}
           {currentSegment.type === "dragdrop" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-emerald-100/80 to-teal-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-emerald-300 shadow-sm mb-4">
-                  <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-emerald-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-emerald-100/80 to-teal-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-emerald-300 shadow-sm">
+                  <Gamepad2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-emerald-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-emerald-600">
                     Drag & Drop Challenge
                   </h3>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-center border border-emerald-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
-                <p className="text-lg sm:text-xl font-bold text-emerald-800 relative z-10">
+              <div className="bg-gradient-to-br from-emerald-50/80 to-teal-50/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8 text-center border border-emerald-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-emerald-800 relative z-10">
                   {currentSegment.content.dragdrop.instructions}
                 </p>
               </div>
 
               <div className="relative">
                 {currentSegment.content.dragdrop.backgroundImage && (
-                  <div className="w-full h-96 bg-cover bg-center rounded-2xl relative overflow-hidden border border-emerald-200">
+                  <div className="w-full h-64 sm:h-80 md:h-96 bg-cover bg-center rounded-xl sm:rounded-2xl relative overflow-hidden border border-emerald-200">
                     <img
                       src={currentSegment.content.dragdrop.backgroundImage}
                       alt="Drop Background"
                       className="w-full h-full object-cover"
                     />
 
-                    {/* Drop zones overlay */}
+                    {/* Drop zones */}
                     {currentSegment.content.dragdrop.dropZones.map(
                       (zone: any, index: number) => (
                         <div
@@ -2258,7 +1964,6 @@ const LearningSegmentPage = ({
                                 },
                               }));
 
-                              // Check completion
                               const totalItems =
                                 currentSegment.content.dragdrop.draggableItems
                                   .length;
@@ -2285,16 +1990,18 @@ const LearningSegmentPage = ({
                           style={{
                             left: `${zone.x}%`,
                             top: `${zone.y}%`,
-                            width: "120px",
-                            height: "60px",
+                            width: "80px",
+                            height: "40px",
                           }}
                         >
                           {dragDropItems[zone.correctItem]?.placed ? (
-                            <div className="bg-emerald-500 text-white px-3 py-1 rounded-full text-sm">
+                            <div className="bg-emerald-500 text-white px-2 py-0.5 rounded-full text-[10px] sm:text-xs">
                               ✓ Placed!
                             </div>
                           ) : (
-                            <div className="text-xs text-center">Drop Here</div>
+                            <div className="text-[10px] sm:text-xs text-center">
+                              Drop Here
+                            </div>
                           )}
                         </div>
                       )
@@ -2303,16 +2010,16 @@ const LearningSegmentPage = ({
                 )}
 
                 {/* Draggable items */}
-                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <div className="mt-4 sm:mt-6 flex flex-wrap justify-center gap-2 sm:gap-3">
                   {currentSegment.content.dragdrop.draggableItems.map(
-                    (item: any, index: number) => (
+                    (item: any) => (
                       <div
                         key={item.id}
                         draggable={!dragDropItems[item.id]?.placed}
                         onDragStart={(e) =>
                           e.dataTransfer.setData("text/plain", item.id)
                         }
-                        className={`px-4 py-2 rounded-xl font-semibold cursor-grab active:cursor-grabbing transition-all shadow-lg ${
+                        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm cursor-grab active:cursor-grabbing transition-all shadow-lg ${
                           dragDropItems[item.id]?.placed
                             ? "bg-green-500 text-white cursor-not-allowed opacity-50"
                             : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:scale-105"
@@ -2327,20 +2034,20 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced Drag Words Activity */}
+          {/* Drag Words Activity */}
           {currentSegment.type === "dragwords" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-blue-300 shadow-sm mb-4">
-                  <Puzzle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-blue-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-blue-300 shadow-sm">
+                  <Puzzle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-blue-600">
                     Fill the Gaps
                   </h3>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-2xl p-6 sm:p-8 mb-6 border border-blue-200 backdrop-blur-sm shadow-inner">
-                <div className="text-lg sm:text-xl text-blue-800 leading-relaxed">
+              <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 border border-blue-200 backdrop-blur-sm shadow-inner">
+                <div className="text-sm sm:text-base md:text-lg lg:text-xl text-blue-800 leading-relaxed">
                   {(() => {
                     const content = currentSegment.content.dragwords;
                     let textParts = content.text.split(/(\[GAP_\d+\])/);
@@ -2349,9 +2056,6 @@ const LearningSegmentPage = ({
                       const gapMatch = part.match(/\[GAP_(\d+)\]/);
                       if (gapMatch) {
                         const gapId = gapMatch[1];
-                        const gap = content.gaps.find(
-                          (g: any) => g.id === gapId
-                        );
 
                         return (
                           <span
@@ -2371,12 +2075,10 @@ const LearningSegmentPage = ({
                                   [gapId]: word.word,
                                 }));
 
-                                // Check completion
                                 if (
                                   Object.keys(dragWordsAnswers).length + 1 ===
                                   content.gaps.length
                                 ) {
-                                  // Validate answers
                                   let allCorrect = true;
                                   content.gaps.forEach((gap: any) => {
                                     const userAnswer =
@@ -2406,7 +2108,7 @@ const LearningSegmentPage = ({
                                 }
                               }
                             }}
-                            className="inline-block mx-2 px-3 py-1 border-2 border-dashed border-blue-400 bg-blue-100 rounded-lg min-w-20 text-center font-bold"
+                            className="inline-block mx-1 sm:mx-2 px-2 sm:px-3 py-0.5 sm:py-1 border-2 border-dashed border-blue-400 bg-blue-100 rounded-lg min-w-[50px] sm:min-w-[60px] md:min-w-20 text-center font-bold text-xs sm:text-sm md:text-base"
                           >
                             {dragWordsAnswers[gapId] || "____"}
                           </span>
@@ -2420,8 +2122,10 @@ const LearningSegmentPage = ({
 
               {/* Word bank */}
               <div className="text-center">
-                <h4 className="font-bold text-blue-700 mb-4">Word Bank</h4>
-                <div className="flex flex-wrap justify-center gap-3">
+                <h4 className="font-bold text-blue-700 mb-3 sm:mb-4 text-sm sm:text-base">
+                  Word Bank
+                </h4>
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                   {currentSegment.content.dragwords.wordBank.map(
                     (word: any) => (
                       <div
@@ -2432,7 +2136,7 @@ const LearningSegmentPage = ({
                         onDragStart={(e) =>
                           e.dataTransfer.setData("text/plain", word.id)
                         }
-                        className={`px-4 py-2 rounded-xl font-semibold transition-all shadow-lg ${
+                        className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all shadow-lg ${
                           Object.values(dragWordsAnswers).includes(word.word)
                             ? "bg-green-500 text-white cursor-not-allowed opacity-50"
                             : "bg-gradient-to-r from-blue-500 to-indigo-600 text-white cursor-grab active:cursor-grabbing hover:scale-105"
@@ -2447,22 +2151,22 @@ const LearningSegmentPage = ({
             </div>
           )}
 
+          {/* Fill Blanks Activity */}
           {currentSegment.type === "fillblanks" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-yellow-100/80 to-amber-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-yellow-300 shadow-sm mb-4">
-                  <Target className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-yellow-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-yellow-100/80 to-amber-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-yellow-300 shadow-sm">
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-yellow-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-yellow-600">
                     Complete the Text
                   </h3>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-yellow-50/80 to-amber-50/80 rounded-2xl p-6 sm:p-8 mb-6 border border-yellow-200 backdrop-blur-sm shadow-inner">
-                <div className="text-lg sm:text-xl text-yellow-800 leading-relaxed">
+              <div className="bg-gradient-to-br from-yellow-50/80 to-amber-50/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 border border-yellow-200 backdrop-blur-sm shadow-inner">
+                <div className="text-sm sm:text-base md:text-lg lg:text-xl text-yellow-800 leading-relaxed">
                   {(() => {
                     const content = currentSegment.content.fillblanks;
-                    // Split by {{gap1}}, {{gap2}}, etc. pattern
                     let textParts = content.text.split(/(\{\{gap\d+\}\})/);
 
                     return textParts.map((part: string, index: number) => {
@@ -2483,7 +2187,7 @@ const LearningSegmentPage = ({
                         return (
                           <div
                             key={index}
-                            className="inline-block relative group mx-2"
+                            className="inline-block relative group mx-1 sm:mx-2"
                           >
                             <input
                               type="text"
@@ -2495,14 +2199,11 @@ const LearningSegmentPage = ({
                                   [gapId]: newValue,
                                 }));
 
-                                // Individual answer validation with animation
                                 if (newValue.trim() !== "") {
                                   const correct =
                                     newValue.toLowerCase().trim() ===
                                     gapData?.correctAnswer.toLowerCase().trim();
-
                                   if (correct) {
-                                    // Trigger success animation
                                     const input = e.target;
                                     input.classList.add("animate-bounce");
                                     setTimeout(() => {
@@ -2511,7 +2212,6 @@ const LearningSegmentPage = ({
                                   }
                                 }
 
-                                // Check overall completion
                                 const updatedAnswers = {
                                   ...fillBlanksAnswers,
                                   [gapId]: newValue,
@@ -2524,7 +2224,6 @@ const LearningSegmentPage = ({
                                     (val) => val.trim() !== ""
                                   )
                                 ) {
-                                  // Validate all answers
                                   let allCorrect = true;
                                   content.gaps.forEach((gap: any) => {
                                     const userAnswer = updatedAnswers[gap.id]
@@ -2553,7 +2252,6 @@ const LearningSegmentPage = ({
                                 }
                               }}
                               onBlur={() => {
-                                // Show feedback on blur if answered
                                 if (isAnswered && isIncorrect) {
                                   const input = document.querySelector(
                                     `input[value="${currentAnswer}"]`
@@ -2567,17 +2265,17 @@ const LearningSegmentPage = ({
                                 }
                               }}
                               className={`
-                      inline-block px-3 py-1 rounded-lg min-w-24 text-center font-bold 
-                      focus:outline-none transition-all duration-300 transform
-                      ${
-                        !isAnswered
-                          ? "border-2 border-yellow-400 bg-yellow-100 focus:border-yellow-500 focus:scale-105"
-                          : isCorrect
-                          ? "border-2 border-green-400 bg-green-100 text-green-800 shadow-md"
-                          : "border-2 border-red-400 bg-red-100 text-red-800 animate-pulse"
-                      }
-                      hover:scale-105 focus:scale-110
-                    `}
+                          inline-block px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg min-w-[60px] sm:min-w-[80px] md:min-w-24 text-center font-bold text-xs sm:text-sm md:text-base
+                          focus:outline-none transition-all duration-300 transform
+                          ${
+                            !isAnswered
+                              ? "border-2 border-yellow-400 bg-yellow-100 focus:border-yellow-500 focus:scale-105"
+                              : isCorrect
+                              ? "border-2 border-green-400 bg-green-100 text-green-800 shadow-md"
+                              : "border-2 border-red-400 bg-red-100 text-red-800 animate-pulse"
+                          }
+                          hover:scale-105 focus:scale-110
+                        `}
                               placeholder="?"
                               maxLength={gapData?.correctAnswer.length + 5}
                             />
@@ -2585,7 +2283,7 @@ const LearningSegmentPage = ({
                             {/* Feedback Icons */}
                             {isAnswered && (
                               <div
-                                className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold transition-all duration-300 ${
+                                className={`absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-white text-[10px] sm:text-xs font-bold transition-all duration-300 ${
                                   isCorrect
                                     ? "bg-green-500 animate-bounce"
                                     : "bg-red-500 animate-pulse"
@@ -2594,13 +2292,12 @@ const LearningSegmentPage = ({
                                 {isCorrect ? "✓" : "✗"}
                               </div>
                             )}
-                            {/* Show continue button when all blanks are filled */}
 
-                            {/* Hint on hover */}
+                            {/* Hint */}
                             {!isCorrect && gapData?.hint && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-sm px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 sm:mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded whitespace-nowrap pointer-events-none">
                                 💡 {gapData.hint}
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-800 rotate-45"></div>
                               </div>
                             )}
                           </div>
@@ -2611,9 +2308,9 @@ const LearningSegmentPage = ({
                   })()}
                 </div>
 
-                {/* Progress indicator */}
-                <div className="mt-6 pt-4 border-t border-yellow-200">
-                  <div className="flex items-center justify-between text-sm text-yellow-600 mb-2">
+                {/* Progress */}
+                <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-yellow-200">
+                  <div className="flex items-center justify-between text-xs sm:text-sm text-yellow-600 mb-1.5 sm:mb-2">
                     <span>Progress</span>
                     <span>
                       {
@@ -2624,9 +2321,9 @@ const LearningSegmentPage = ({
                       / {currentSegment.content.fillblanks.gaps.length}
                     </span>
                   </div>
-                  <div className="w-full bg-yellow-200 rounded-full h-2">
+                  <div className="w-full bg-yellow-200 rounded-full h-1.5 sm:h-2">
                     <div
-                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-2 rounded-full transition-all duration-500 ease-out"
+                      className="bg-gradient-to-r from-yellow-400 to-amber-500 h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${
                           (Object.values(fillBlanksAnswers).filter(
@@ -2640,13 +2337,13 @@ const LearningSegmentPage = ({
                   </div>
                 </div>
 
-                {/* Encouragement message */}
+                {/* Encouragement */}
                 {Object.values(fillBlanksAnswers).filter(
                   (answer) => answer.trim() !== ""
                 ).length > 0 && (
-                  <div className="mt-4 text-center">
+                  <div className="mt-3 sm:mt-4 text-center">
                     <div
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${
                         Object.values(fillBlanksAnswers).filter(
                           (answer) => answer.trim() !== ""
                         ).length ===
@@ -2667,37 +2364,36 @@ const LearningSegmentPage = ({
                   </div>
                 )}
               </div>
+
               <div className="w-full flex justify-center">
                 {Object.values(fillBlanksAnswers).filter(
                   (answer) => answer.trim() !== ""
                 ).length === currentSegment.content.fillblanks.gaps.length && (
                   <button
                     onClick={completeSegment}
-                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full font-bold flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-105 transition-all shadow-lg border border-green-400/30 relative overflow-hidden group animate-pulse"
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-5 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-4 rounded-full font-bold flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-105 transition-all shadow-lg border border-green-400/30 relative overflow-hidden group animate-pulse text-sm sm:text-base"
                   >
                     <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
-                    <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
-                    <span className="text-sm sm:text-base">
-                      Complete & Continue
-                    </span>
-                    <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                    <span>Complete & Continue</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </button>
                 )}
               </div>
             </div>
           )}
 
-          {/* Enhanced Question Set Activity */}
+          {/* Question Set Activity */}
           {currentSegment.type === "questionset" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-indigo-300 shadow-sm mb-4">
-                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 animate-pulse" />
-                  <h3 className="text-lg sm:text-2xl font-bold text-indigo-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-indigo-300 shadow-sm">
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-indigo-600 animate-pulse" />
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-indigo-600">
                     Question Challenge
                   </h3>
-                  <div className="bg-indigo-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                    <span className="text-xs sm:text-sm font-semibold text-indigo-700">
+                  <div className="bg-indigo-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
+                    <span className="text-[10px] sm:text-xs md:text-sm font-semibold text-indigo-700">
                       {currentQuestionIndex + 1}/
                       {currentSegment.content.questionset.questions.length}
                     </span>
@@ -2706,7 +2402,7 @@ const LearningSegmentPage = ({
               </div>
 
               {currentSegment.content.questionset.questions.length > 0 && (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {(() => {
                     const question =
                       currentSegment.content.questionset.questions[
@@ -2714,14 +2410,14 @@ const LearningSegmentPage = ({
                       ];
 
                     return (
-                      <div className="bg-gradient-to-br from-indigo-50/80 to-purple-50/80 rounded-2xl p-6 sm:p-8 border border-indigo-200 backdrop-blur-sm shadow-inner">
-                        <h4 className="text-xl sm:text-2xl font-bold text-indigo-800 mb-6">
+                      <div className="bg-gradient-to-br from-indigo-50/80 to-purple-50/80 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 border border-indigo-200 backdrop-blur-sm shadow-inner">
+                        <h4 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-indigo-800 mb-4 sm:mb-6">
                           {question.text}
                         </h4>
 
                         {question.type === "multiple-choice" &&
                           question.options && (
-                            <div className="space-y-3">
+                            <div className="space-y-2 sm:space-y-3">
                               {question.options.map(
                                 (option: any, index: number) => (
                                   <button
@@ -2732,7 +2428,7 @@ const LearningSegmentPage = ({
                                         [currentQuestionIndex]: option.id,
                                       }));
                                     }}
-                                    className={`w-full text-left p-4 rounded-xl border-2 transition-all transform hover:scale-[1.02] ${
+                                    className={`w-full text-left p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all transform hover:scale-[1.02] text-sm sm:text-base ${
                                       questionSetAnswers[
                                         currentQuestionIndex
                                       ] === option.id
@@ -2740,8 +2436,8 @@ const LearningSegmentPage = ({
                                         : "border-indigo-200 hover:border-indigo-400"
                                     }`}
                                   >
-                                    <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-xs sm:text-sm">
                                         {String.fromCharCode(65 + index)}
                                       </div>
                                       <span className="font-semibold">
@@ -2755,7 +2451,7 @@ const LearningSegmentPage = ({
                           )}
 
                         {question.type === "true-false" && (
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {["true", "false"].map((answer) => (
                               <button
                                 key={answer}
@@ -2765,14 +2461,14 @@ const LearningSegmentPage = ({
                                     [currentQuestionIndex]: answer,
                                   }));
                                 }}
-                                className={`p-6 rounded-xl border-2 font-bold text-lg transition-all transform hover:scale-105 ${
+                                className={`p-4 sm:p-6 rounded-lg sm:rounded-xl border-2 font-bold text-sm sm:text-base md:text-lg transition-all transform hover:scale-105 ${
                                   questionSetAnswers[currentQuestionIndex] ===
                                   answer
                                     ? "border-indigo-500 bg-indigo-100"
                                     : "border-indigo-200 hover:border-indigo-400"
                                 }`}
                               >
-                                <div className="text-4xl mb-2">
+                                <div className="text-2xl sm:text-3xl md:text-4xl mb-1 sm:mb-2">
                                   {answer === "true" ? "✅" : "❌"}
                                 </div>
                                 {answer.toUpperCase()}
@@ -2792,14 +2488,14 @@ const LearningSegmentPage = ({
                                 [currentQuestionIndex]: e.target.value,
                               }));
                             }}
-                            className="w-full p-4 border-2 border-indigo-200 rounded-xl resize-none focus:border-indigo-500 focus:outline-none"
+                            className="w-full p-3 sm:p-4 border-2 border-indigo-200 rounded-lg sm:rounded-xl resize-none focus:border-indigo-500 focus:outline-none text-sm sm:text-base"
                             rows={4}
                             placeholder="Type your answer here..."
                           />
                         )}
 
                         {/* Navigation */}
-                        <div className="flex justify-between items-center mt-8">
+                        <div className="flex justify-between items-center mt-6 sm:mt-8">
                           <button
                             onClick={() =>
                               setCurrentQuestionIndex(
@@ -2807,18 +2503,19 @@ const LearningSegmentPage = ({
                               )
                             }
                             disabled={currentQuestionIndex === 0}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-100 hover:bg-indigo-200 disabled:bg-slate-100 disabled:text-slate-400 text-indigo-700 rounded-full font-semibold transition-all"
+                            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-100 hover:bg-indigo-200 disabled:bg-slate-100 disabled:text-slate-400 text-indigo-700 rounded-full font-semibold text-xs sm:text-sm transition-all"
                           >
-                            <ChevronLeft className="w-4 h-4" />
-                            Previous
+                            <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span className="hidden sm:inline">Previous</span>
+                            <span className="sm:hidden">Prev</span>
                           </button>
 
-                          <div className="flex gap-2">
+                          <div className="flex gap-0.5 sm:gap-1 md:gap-2">
                             {currentSegment.content.questionset.questions.map(
                               (_: any, index: number) => (
                                 <div
                                   key={index}
-                                  className={`w-3 h-3 rounded-full transition-all ${
+                                  className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all ${
                                     index === currentQuestionIndex
                                       ? "bg-indigo-500 scale-125"
                                       : questionSetAnswers[index] !== undefined
@@ -2842,7 +2539,6 @@ const LearningSegmentPage = ({
                                   currentQuestionIndex + 1
                                 );
                               } else {
-                                // Complete the question set
                                 setPracticeCompleted(true);
                                 setCelebrationPoints(currentSegment.basePoints);
                                 setCelebrationType("complete");
@@ -2851,7 +2547,7 @@ const LearningSegmentPage = ({
                                 setTimeout(completeSegment, 3000);
                               }
                             }}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-semibold transition-all"
+                            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full font-semibold text-xs sm:text-sm transition-all"
                           >
                             {currentQuestionIndex ===
                             currentSegment.content.questionset.questions
@@ -2863,9 +2559,9 @@ const LearningSegmentPage = ({
                             currentSegment.content.questionset.questions
                               .length -
                               1 ? (
-                              <Trophy className="w-4 h-4" />
+                              <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
                             ) : (
-                              <ChevronRight className="w-4 h-4" />
+                              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                             )}
                           </button>
                         </div>
@@ -2877,32 +2573,32 @@ const LearningSegmentPage = ({
             </div>
           )}
 
-          {/* Enhanced True/False Question */}
+          {/* True/False Question */}
           {currentSegment.type === "question" &&
             currentSegment.content.question.type === "true-false" && (
-              <div className="space-y-4 sm:space-y-6 relative z-10">
-                <div className="text-center mb-6 sm:mb-8">
-                  <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-100/80 to-yellow-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-amber-300 shadow-sm mb-4">
-                    <div className="text-2xl sm:text-4xl animate-bounce">
+              <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+                <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                  <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-100/80 to-yellow-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-amber-300 shadow-sm">
+                    <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl animate-bounce">
                       🤔
                     </div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-amber-600">
+                    <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-amber-600">
                       True or False?
                     </h3>
-                    <div className="bg-amber-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                    <div className="bg-amber-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
                       <Target className="w-3 h-3 sm:w-4 sm:h-4 text-amber-700 inline" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 text-center border border-amber-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+                <div className="bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 mb-4 sm:mb-6 md:mb-8 text-center border border-amber-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-100/20 to-transparent animate-pulse"></div>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-amber-800 leading-relaxed relative z-10">
+                  <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-amber-800 leading-relaxed relative z-10">
                     {currentSegment.content.question.text}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
                   {[
                     { id: "true", label: "TRUE", emoji: "✅", color: "green" },
                     { id: "false", label: "FALSE", emoji: "❌", color: "red" },
@@ -2912,36 +2608,36 @@ const LearningSegmentPage = ({
                       onClick={() => handleAnswerSelect(option.id)}
                       disabled={showResult}
                       className={`
-                        p-4 sm:p-6 lg:p-8 rounded-2xl border-3 font-bold text-lg sm:text-xl lg:text-2xl transition-all transform hover:scale-105 shadow-lg backdrop-blur-sm relative overflow-hidden group
-                        ${
-                          selectedAnswer === option.id
-                            ? showResult
-                              ? currentSegment.content.question
-                                  .correctAnswer === option.id
-                                ? "border-green-500 bg-gradient-to-br from-green-50/80 to-emerald-50/80 text-green-700 shadow-green-200 ring-2 ring-green-400/30"
-                                : "border-red-500 bg-gradient-to-br from-red-50/80 to-pink-50/80 text-red-700 shadow-red-200 ring-2 ring-red-400/30"
-                              : "border-blue-500 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 text-blue-700 shadow-blue-200 ring-2 ring-blue-400/30"
-                            : showResult &&
-                              currentSegment.content.question.correctAnswer ===
-                                option.id
-                            ? "border-green-500 bg-gradient-to-br from-green-50/80 to-emerald-50/80 text-green-700 shadow-green-200 ring-2 ring-green-400/30"
-                            : `border-slate-300 bg-gradient-to-br from-slate-50/80 to-slate-100/80 hover:border-${option.color}-400 hover:bg-gradient-to-br hover:from-${option.color}-50/30 hover:to-${option.color}-100/30 text-slate-700 hover:text-${option.color}-700 shadow-slate-200`
-                        }
-                      `}
+                p-3 sm:p-4 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl border-2 sm:border-3 font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl transition-all transform hover:scale-105 shadow-lg backdrop-blur-sm relative overflow-hidden group
+                ${
+                  selectedAnswer === option.id
+                    ? showResult
+                      ? currentSegment.content.question.correctAnswer ===
+                        option.id
+                        ? "border-green-500 bg-gradient-to-br from-green-50/80 to-emerald-50/80 text-green-700 shadow-green-200 ring-2 ring-green-400/30"
+                        : "border-red-500 bg-gradient-to-br from-red-50/80 to-pink-50/80 text-red-700 shadow-red-200 ring-2 ring-red-400/30"
+                      : "border-blue-500 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 text-blue-700 shadow-blue-200 ring-2 ring-blue-400/30"
+                    : showResult &&
+                      currentSegment.content.question.correctAnswer ===
+                        option.id
+                    ? "border-green-500 bg-gradient-to-br from-green-50/80 to-emerald-50/80 text-green-700 shadow-green-200 ring-2 ring-green-400/30"
+                    : `border-slate-300 bg-gradient-to-br from-slate-50/80 to-slate-100/80 hover:border-${option.color}-400 text-slate-700 shadow-slate-200`
+                }
+              `}
                     >
                       <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-700"></div>
-                      <div className="flex flex-col items-center gap-2 sm:gap-3 relative z-10">
-                        <div className="text-3xl sm:text-4xl lg:text-5xl transform group-hover:scale-110 transition-transform">
+                      <div className="flex flex-col items-center gap-1 sm:gap-2 md:gap-3 relative z-10">
+                        <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl transform group-hover:scale-110 transition-transform">
                           {option.emoji}
                         </div>
                         <span>{option.label}</span>
                         {showResult && selectedAnswer === option.id && (
-                          <div className="mt-2 animate-bounce">
+                          <div className="mt-1 sm:mt-2 animate-bounce">
                             {currentSegment.content.question.correctAnswer ===
                             option.id ? (
-                              <Check className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mx-auto" />
+                              <Check className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-green-500 mx-auto" />
                             ) : (
-                              <X className="w-6 h-6 sm:w-8 sm:h-8 text-red-500 mx-auto" />
+                              <X className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-red-500 mx-auto" />
                             )}
                           </div>
                         )}
@@ -2952,26 +2648,26 @@ const LearningSegmentPage = ({
 
                 {showResult && (
                   <div
-                    className={`text-center p-4 sm:p-6 lg:p-8 rounded-2xl border-2 backdrop-blur-sm relative overflow-hidden shadow-lg ${
+                    className={`text-center p-3 sm:p-4 md:p-6 lg:p-8 rounded-xl sm:rounded-2xl border-2 backdrop-blur-sm relative overflow-hidden shadow-lg ${
                       isCorrect
                         ? "bg-gradient-to-br from-green-50/80 to-emerald-50/80 border-green-400"
                         : "bg-gradient-to-br from-red-50/80 to-pink-50/80 border-red-400"
                     }`}
                   >
-                    <div className="text-4xl sm:text-6xl lg:text-8xl mb-4 animate-bounce">
+                    <div className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl mb-3 sm:mb-4 animate-bounce">
                       {isCorrect ? "🎉" : "🤔"}
                     </div>
                     <h3
-                      className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-4 ${
+                      className={`text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold mb-3 sm:mb-4 ${
                         isCorrect ? "text-green-600" : "text-red-600"
                       }`}
                     >
                       {isCorrect ? "Excellent!" : "Try again!"}
                     </h3>
                     {isCorrect && (
-                      <div className="flex items-center justify-center gap-2 mb-4">
-                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 animate-pulse" />
-                        <p className="text-blue-600 text-lg sm:text-xl lg:text-2xl font-bold">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2 mb-3 sm:mb-4">
+                        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-500 animate-pulse" />
+                        <p className="text-blue-600 text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold">
                           +{currentSegment.basePoints} XP
                           {attempts === 0 && currentSegment.bonusPoints && (
                             <span className="text-amber-600 animate-pulse">
@@ -2980,12 +2676,12 @@ const LearningSegmentPage = ({
                             </span>
                           )}
                         </p>
-                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 animate-pulse" />
+                        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-500 animate-pulse" />
                       </div>
                     )}
                     {currentSegment.content.question.explanation && (
-                      <div className="bg-blue-50/80 rounded-xl p-3 sm:p-4 mt-4 border border-blue-200 backdrop-blur-sm shadow-inner">
-                        <p className="text-blue-700 text-sm sm:text-base lg:text-lg leading-relaxed">
+                      <div className="bg-blue-50/80 rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 mt-3 sm:mt-4 border border-blue-200 backdrop-blur-sm shadow-inner">
+                        <p className="text-blue-700 text-xs sm:text-sm md:text-base lg:text-lg leading-relaxed">
                           {currentSegment.content.question.explanation}
                         </p>
                       </div>
@@ -2995,165 +2691,52 @@ const LearningSegmentPage = ({
               </div>
             )}
 
-          {/* Enhanced Multiple Choice Question */}
-          {currentSegment.type === "question" &&
-            currentSegment.content.question.type === "multiple-choice" && (
-              <div className="space-y-4 sm:space-y-6 relative z-10">
-                <div className="text-center mb-6 sm:mb-8">
-                  <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-amber-100/80 to-yellow-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-amber-300 shadow-sm mb-4">
-                    <div className="text-2xl sm:text-4xl animate-bounce">
-                      🎯
-                    </div>
-                    <h3 className="text-lg sm:text-2xl font-bold text-amber-600">
-                      Choose the Best Answer!
-                    </h3>
-                    <div className="bg-amber-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
-                      <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-amber-700 inline" />
-                    </div>
-                  </div>
-                </div>
+          {/* Multiple Choice Question */}
 
-                <div className="bg-gradient-to-br from-amber-50/80 to-yellow-50/80 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 text-center border border-amber-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-100/20 to-transparent animate-pulse"></div>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-amber-800 leading-relaxed relative z-10">
-                    {currentSegment.content.question.text}
-                  </p>
-                </div>
-
-                <div className="grid gap-3 sm:gap-4 mb-6 sm:mb-8">
-                  {currentSegment.content.question.options?.map(
-                    (option: any, index: number) => (
-                      <button
-                        key={option.id}
-                        onClick={() => handleAnswerSelect(option.id)}
-                        disabled={showResult}
-                        className={`
-                        p-4 sm:p-6 rounded-2xl border-3 text-left font-semibold text-sm sm:text-base lg:text-lg transition-all transform hover:scale-[1.02] shadow-lg backdrop-blur-sm relative overflow-hidden group
-                        ${
-                          selectedAnswer === option.id
-                            ? showResult
-                              ? option.isCorrect
-                                ? "border-green-500 bg-gradient-to-br from-green-50/80 to-emerald-50/80 text-green-700 shadow-green-200 ring-2 ring-green-400/20"
-                                : "border-red-500 bg-gradient-to-br from-red-50/80 to-pink-50/80 text-red-700 shadow-red-200 ring-2 ring-red-400/20"
-                              : "border-blue-500 bg-gradient-to-br from-blue-50/80 to-indigo-50/80 text-blue-700 shadow-blue-200 ring-2 ring-blue-400/20"
-                            : showResult && option.isCorrect
-                            ? "border-green-500 bg-gradient-to-br from-green-50/80 to-emerald-50/80 text-green-700 shadow-green-200 ring-2 ring-green-400/20"
-                            : "border-slate-300 bg-gradient-to-br from-slate-50/80 to-slate-100/80 hover:border-blue-400 hover:bg-gradient-to-br hover:from-blue-50/30 hover:to-indigo-50/30 text-slate-700 hover:text-blue-700 shadow-slate-200"
-                        }
-                      `}
-                      >
-                        <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/10 transition-transform duration-700"></div>
-                        <div className="flex items-center justify-between relative z-10">
-                          <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-current/20 flex items-center justify-center text-xs sm:text-sm font-bold">
-                              {String.fromCharCode(65 + index)}
-                            </div>
-                            <span>{option.text}</span>
-                          </div>
-                          {showResult && selectedAnswer === option.id && (
-                            <div className="flex-shrink-0 animate-bounce">
-                              {option.isCorrect ? (
-                                <Check className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
-                              ) : (
-                                <X className="w-6 h-6 sm:w-8 sm:h-8 text-red-500" />
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    )
-                  )}
-                </div>
-
-                {showResult && (
-                  <div
-                    className={`text-center p-4 sm:p-6 lg:p-8 rounded-2xl border-2 backdrop-blur-sm relative overflow-hidden shadow-lg ${
-                      isCorrect
-                        ? "bg-gradient-to-br from-green-50/80 to-emerald-50/80 border-green-400"
-                        : "bg-gradient-to-br from-red-50/80 to-pink-50/80 border-red-400"
-                    }`}
-                  >
-                    <div className="text-4xl sm:text-6xl lg:text-8xl mb-4 animate-bounce">
-                      {isCorrect ? "🎉" : "🤔"}
-                    </div>
-                    <h3
-                      className={`text-xl sm:text-2xl lg:text-3xl font-bold mb-4 ${
-                        isCorrect ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {isCorrect ? "Fantastic!" : "Not quite right!"}
-                    </h3>
-                    {isCorrect && (
-                      <div className="flex items-center justify-center gap-2 mb-4">
-                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 animate-pulse" />
-                        <p className="text-blue-600 text-lg sm:text-xl lg:text-2xl font-bold">
-                          +{currentSegment.basePoints} XP
-                          {attempts === 0 && currentSegment.bonusPoints && (
-                            <span className="text-amber-600 animate-pulse">
-                              {" "}
-                              (+{currentSegment.bonusPoints} bonus!)
-                            </span>
-                          )}
-                        </p>
-                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 animate-pulse" />
-                      </div>
-                    )}
-                    {currentSegment.content.question.explanation && (
-                      <div className="bg-blue-50/80 rounded-xl p-3 sm:p-4 mt-4 border border-blue-200 backdrop-blur-sm shadow-inner">
-                        <p className="text-blue-700 text-sm sm:text-base lg:text-lg leading-relaxed">
-                          {currentSegment.content.question.explanation}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-          {/* Enhanced Instruction Segment */}
+          {/* Instruction Segment */}
           {currentSegment.type === "instruction" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-indigo-300 shadow-sm mb-4">
-                  <div className="text-2xl sm:text-4xl animate-bounce">📚</div>
-                  <h3 className="text-lg sm:text-2xl font-bold text-indigo-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-indigo-300 shadow-sm">
+                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl animate-bounce">
+                    📚
+                  </div>
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-indigo-600">
                     Learning Time!
                   </h3>
-                  <div className="bg-indigo-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                  <div className="bg-indigo-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
                     <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-700 inline" />
                   </div>
                 </div>
               </div>
 
               {currentSegment.content.instruction.mediaUrl && (
-                <div className="text-center mb-4 sm:mb-6">
+                <div className="text-center mb-3 sm:mb-4 md:mb-6">
                   <img
                     src={currentSegment.content.instruction.mediaUrl}
                     alt="Learning Material"
-                    className="max-w-xs sm:max-w-md mx-auto rounded-2xl shadow-lg border border-indigo-200 hover:scale-105 transition-transform"
+                    className="max-w-[200px] sm:max-w-xs md:max-w-md mx-auto rounded-xl sm:rounded-2xl shadow-lg border border-indigo-200 hover:scale-105 transition-transform"
                   />
                 </div>
               )}
 
-              <div className="bg-gradient-to-br from-indigo-50/80 to-purple-50/80 rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 border border-indigo-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+              <div className="bg-gradient-to-br from-indigo-50/80 to-purple-50/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 mb-4 sm:mb-6 md:mb-8 border border-indigo-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-100/20 to-transparent animate-pulse"></div>
-                <p className="text-lg sm:text-xl leading-relaxed text-center relative z-10 text-indigo-800">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed text-center relative z-10 text-indigo-800">
                   {currentSegment.content.instruction.text}
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 md:gap-4">
                 <button
                   onClick={() =>
                     speakText(currentSegment.content.instruction.text)
                   }
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg border border-indigo-400/30 transition-all hover:scale-105 relative overflow-hidden group"
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full font-bold flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg border border-indigo-400/30 transition-all hover:scale-105 relative overflow-hidden group text-xs sm:text-sm md:text-base"
                 >
                   <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
-                  <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 relative z-10" />
-                  <span className="relative z-10 text-sm sm:text-base">
-                    Read Aloud
-                  </span>
+                  <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 relative z-10" />
+                  <span className="relative z-10">Read Aloud</span>
                 </button>
 
                 <button
@@ -3165,39 +2748,39 @@ const LearningSegmentPage = ({
                     setXp(xp + currentSegment.basePoints);
                     setTimeout(completeSegment, 3000);
                   }}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg transform hover:scale-105 transition-all border border-green-400/30 relative overflow-hidden group"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 rounded-full font-bold flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg transform hover:scale-105 transition-all border border-green-400/30 relative overflow-hidden group text-xs sm:text-sm md:text-base"
                 >
                   <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
-                  <span className="relative z-10 text-sm sm:text-base">
-                    Got it!
-                  </span>
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 relative z-10" />
+                  <span className="relative z-10">Got it!</span>
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 relative z-10" />
                 </button>
               </div>
             </div>
           )}
 
-          {/* Enhanced Review Segment */}
+          {/* Review Segment */}
           {currentSegment.type === "review" && (
-            <div className="space-y-4 sm:space-y-6 relative z-10">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-indigo-300 shadow-sm mb-4">
-                  <div className="text-2xl sm:text-4xl animate-bounce">📝</div>
-                  <h3 className="text-lg sm:text-2xl font-bold text-indigo-600">
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-indigo-100/80 to-purple-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-indigo-300 shadow-sm">
+                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl animate-bounce">
+                    📝
+                  </div>
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-indigo-600">
                     Review Time!
                   </h3>
-                  <div className="bg-indigo-200 rounded-full px-2 sm:px-3 py-1 shadow-sm">
+                  <div className="bg-indigo-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
                     <Award className="w-3 h-3 sm:w-4 sm:h-4 text-indigo-700 inline" />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-indigo-50/80 to-purple-50/80 rounded-2xl p-4 sm:p-6 lg:p-8 text-center border border-indigo-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
+              <div className="bg-gradient-to-br from-indigo-50/80 to-purple-50/80 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 text-center border border-indigo-200 backdrop-blur-sm relative overflow-hidden shadow-inner">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-100/20 to-transparent animate-pulse"></div>
-                <h4 className="text-xl sm:text-2xl font-bold text-indigo-700 mb-4 relative z-10">
+                <h4 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-indigo-700 mb-3 sm:mb-4 relative z-10">
                   Let's Review What You've Learned!
                 </h4>
-                <p className="text-base sm:text-lg text-indigo-600 leading-relaxed relative z-10">
+                <p className="text-xs sm:text-sm md:text-base lg:text-lg text-indigo-600 leading-relaxed relative z-10">
                   Take a moment to think about the concepts we've covered. This
                   helps strengthen your understanding!
                 </p>
@@ -3212,35 +2795,145 @@ const LearningSegmentPage = ({
                     setXp(xp + currentSegment.basePoints);
                     setTimeout(completeSegment, 3000);
                   }}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full font-bold flex items-center gap-2 sm:gap-3 mx-auto transform hover:scale-105 transition-all shadow-lg border border-indigo-400/30 relative overflow-hidden group"
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-5 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-4 rounded-full font-bold flex items-center gap-2 sm:gap-3 mx-auto transform hover:scale-105 transition-all shadow-lg border border-indigo-400/30 relative overflow-hidden group text-xs sm:text-sm md:text-base"
                 >
                   <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
-                  <Target className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
-                  <span className="relative z-10 text-sm sm:text-base">
-                    Complete Review
-                  </span>
-                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 relative z-10" />
+                  <span className="relative z-10">Complete Review</span>
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 relative z-10" />
                 </button>
               </div>
             </div>
           )}
 
-          <div className="flex items-center gap-1 xs:gap-2">
-            <span className="capitalize">
-              {currentSegment.type.charAt(0).toUpperCase() +
-                currentSegment.type.slice(1)}{" "}
-              Challenge
-            </span>
-            <div className="w-1 h-1 xs:w-1.5 xs:h-1.5 sm:w-2 sm:h-2 bg-amber-500 rounded-full animate-pulse"></div>
-          </div>
+          {/* Dialogue Segment */}
+          {currentSegment.type === "dialogue" && (
+            <div className="space-y-4 sm:space-y-5 md:space-y-6 relative z-10">
+              <div className="text-center mb-4 sm:mb-6 md:mb-8">
+                <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-blue-100/80 to-indigo-100/80 rounded-full px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 border border-blue-300 shadow-sm">
+                  <div className="flex gap-0.5 sm:gap-1">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                  </div>
+                  <h3 className="text-sm sm:text-base md:text-lg lg:text-2xl font-bold text-blue-600 bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+                    Interactive Conversation
+                  </h3>
+                  <div className="bg-blue-200 rounded-full px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 shadow-sm">
+                    <span className="text-[10px] sm:text-xs md:text-sm font-semibold text-blue-700">
+                      {visibleMessageCount}/{allDialogueMessages.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dialogue Messages Container */}
+              <div
+                ref={dialogueContainerRef}
+                className="max-h-64 sm:max-h-80 md:max-h-96 overflow-y-auto p-3 sm:p-4 md:p-6 bg-gradient-to-br from-slate-50/80 to-blue-50/80 rounded-xl sm:rounded-2xl border border-slate-200 backdrop-blur-sm relative shadow-inner"
+              >
+                {/* Progress indicator */}
+                <div className="sticky top-0 bg-gradient-to-r from-transparent via-slate-50/90 to-transparent p-1.5 sm:p-2 mb-3 sm:mb-4 z-10">
+                  <div className="flex justify-center">
+                    <div className="flex gap-1 sm:gap-1.5 md:gap-2">
+                      {allDialogueMessages.map((_, index) => (
+                        <div
+                          key={index}
+                          className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full transition-all duration-500 ${
+                            index < visibleMessageCount
+                              ? "bg-blue-500 scale-125"
+                              : index === visibleMessageCount
+                              ? "bg-amber-500 animate-pulse scale-110"
+                              : "bg-slate-300 scale-75"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {allDialogueMessages.map((message, index) => (
+                  <DialogueMessage
+                    key={index}
+                    message={message.text}
+                    character={message.character}
+                    position={message.position}
+                    isVisible={index < visibleMessageCount}
+                    isActive={index === currentDialogueIndex}
+                    messageIndex={index}
+                    onComplete={() => {}}
+                  />
+                ))}
+
+                {/* Empty state */}
+                {visibleMessageCount === 0 && (
+                  <div className="text-center py-6 sm:py-8 md:py-12">
+                    <div className="text-2xl sm:text-3xl md:text-4xl mb-3 sm:mb-4 animate-pulse">
+                      💭
+                    </div>
+                    <p className="text-slate-500 text-sm sm:text-base md:text-lg">
+                      Ready to start the conversation?
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Controls */}
+              <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6 md:mt-8">
+                <button
+                  onClick={playDialogue}
+                  disabled={isPlayingDialogue}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed text-white px-4 sm:px-6 md:px-8 py-2.5 sm:py-3 md:py-4 rounded-full font-bold flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-105 transition-all shadow-lg border border-blue-400/30 relative overflow-hidden group text-xs sm:text-sm md:text-base"
+                >
+                  <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
+                  {isPlayingDialogue ? (
+                    <>
+                      <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 animate-pulse" />
+                      <span>
+                        Playing... ({visibleMessageCount}/
+                        {allDialogueMessages.length})
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                      <span>
+                        {visibleMessageCount === 0
+                          ? "Start Conversation"
+                          : "Continue Conversation"}
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                {dialogueCompleted && (
+                  <button
+                    onClick={completeSegment}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-5 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-4 rounded-full font-bold flex items-center justify-center gap-2 sm:gap-3 transform hover:scale-105 transition-all shadow-lg border border-green-400/30 relative overflow-hidden group animate-pulse text-xs sm:text-sm md:text-base"
+                  >
+                    <div className="absolute inset-0 -skew-x-12 -translate-x-full group-hover:translate-x-full bg-white/20 transition-transform duration-1000"></div>
+                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                    <span>Complete & Continue</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Mini progress indicators - Mobile Responsive */}
-        <div className="flex justify-center gap-0.5 xs:gap-1 mt-2 xs:mt-3 sm:mt-4">
+        {/* Progress indicators */}
+        <div className="flex justify-center gap-1 mt-3 sm:mt-4">
           {currentPath.segments.map((_: any, index: number) => (
             <div
               key={index}
-              className={`w-1.5 h-0.5 xs:w-2 xs:h-0.5 sm:w-3 sm:h-1 rounded-full transition-all duration-500 ${
+              className={`w-1.5 h-0.5 sm:w-2 sm:h-1 md:w-3 md:h-1 rounded-full transition-all duration-500 ${
                 index < currentSegmentIndex
                   ? "bg-green-500"
                   : index === currentSegmentIndex

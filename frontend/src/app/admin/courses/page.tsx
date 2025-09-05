@@ -279,7 +279,14 @@ const AdminCoursesDashboard = () => {
 
                     {/* Action Buttons */}
                     <div className="flex justify-between">
-                      <button className="text-primary-main hover:text-primary-secondary text-sm font-medium">
+                      <button
+                        onClick={() => {
+                          router.push(
+                            `/admin/courses/create?courseId=${course.id}`
+                          );
+                        }}
+                        className="text-primary-main hover:text-primary-secondary text-sm font-medium"
+                      >
                         View Details
                       </button>
                       <div className="flex space-x-2">

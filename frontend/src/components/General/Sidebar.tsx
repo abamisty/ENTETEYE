@@ -66,19 +66,13 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
         icon: PersonStanding,
         href: "/admin/characters",
       },
-      {
-        id: "analytics",
-        label: "Analytics",
-        icon: BarChart3,
-        href: "/admin/analytics",
-      },
     ],
     [UserRole.PARENT]: [
       {
         id: "dashboard",
         label: "Dashboard",
         icon: Home,
-        href: `/admin/parent`,
+        href: `/parent/dashboard`,
       },
       // { id: "family", label: "Family", icon: Users, href: "/family" },
       {
@@ -99,39 +93,20 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
         icon: BookOpen,
         href: "/parent/courses",
       },
-      {
-        id: "billing",
-        label: "Billing",
-        icon: CreditCard,
-        href: "/parent/billing",
-      },
     ],
     [UserRole.CHILD]: [
       {
         id: "dashboard",
         label: "Dashboard",
         icon: Home,
-        href: `/admin/child`,
+        href: `/child/dashboard`,
       },
       {
         id: "courses",
         label: "Courses",
         icon: BookOpen,
-        badge: "3",
+        badge: undefined,
         href: "/child/courses",
-      },
-      {
-        id: "challenges",
-        label: "Challenges",
-        icon: Target,
-        href: "/child/challenges",
-      },
-      {
-        id: "achievements",
-        label: "Achievements",
-        icon: Trophy,
-        badge: "12",
-        href: "/child/achievements",
       },
     ],
   };
@@ -168,7 +143,7 @@ const SideBar: React.FC<{ userRole: UserRole }> = ({ userRole }) => {
 
   return (
     <div
-      className={`bg-white  z-[100000] h-[90vh] shadow-lg transition-all duration-300 ease-in-out ${
+      className={`bg-white   h-[90vh] shadow-lg transition-all duration-300 ease-in-out ${
         isOpen ? "w-64" : "w-11"
       } flex flex-col  z-20`}
     >

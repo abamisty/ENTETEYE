@@ -27,12 +27,58 @@ import {
   Pause,
   Archive,
 } from "lucide-react";
-import {
-  courseRequestApi,
-  type CourseRequestFilters,
-  type CourseRequestStatusUpdate,
-  type CourseRequestCommentData,
-} from "@/api/course_requests";
+
+// Type definitions for the API (keeping the same structure)
+type CourseRequestFilters = {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "ASC" | "DESC";
+  search?: string;
+  status?: string;
+};
+
+type CourseRequestStatusUpdate = {
+  status: string;
+  rejectionReason?: string;
+  adminNotes?: string;
+  implementedCourseId?: string;
+};
+
+type CourseRequestCommentData = {
+  content: string;
+  isAdminComment: boolean;
+};
+
+// Mock API object (replace with actual import)
+const courseRequestApi = {
+  getCourseRequests: async (filters: CourseRequestFilters) => {
+    // Mock implementation - replace with actual API call
+    return { data: { requests: [] }, total: 0 };
+  },
+  getCourseRequestStats: async () => {
+    // Mock implementation - replace with actual API call
+    return { data: {} };
+  },
+  getCourseRequestComments: async (requestId: string) => {
+    // Mock implementation - replace with actual API call
+    return { data: [] };
+  },
+  addCommentToCourseRequest: async (
+    requestId: string,
+    data: CourseRequestCommentData
+  ) => {
+    // Mock implementation - replace with actual API call
+    return {};
+  },
+  updateCourseRequestStatus: async (
+    requestId: string,
+    data: CourseRequestStatusUpdate
+  ) => {
+    // Mock implementation - replace with actual API call
+    return {};
+  },
+};
 
 const statusConfig: any = {
   pending: {
@@ -311,51 +357,56 @@ export default function AdminCourseRequests() {
   }, [searchTerm]);
 
   const StatCard = ({ title, value, icon: Icon, color, trend }: any) => (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
+    <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value || 0}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
+            {title}
+          </p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+            {value || 0}
+          </p>
           {trend && (
-            <div className="flex items-center mt-2 text-sm">
-              <TrendingUp className="w-4 h-4 mr-1 text-green-500" />
+            <div className="flex items-center mt-2 text-xs sm:text-sm">
+              <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
               <span className="text-green-600">{trend}</span>
             </div>
           )}
         </div>
-        <div className={`p-3 rounded-lg ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+        <div className={`p-2 sm:p-3 rounded-lg ${color}`}>
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Course Requests Admin
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
               Manage and review course requests from parents
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={loadStats}
-              className="px-4 py-2 text-primary-main border border-primary-main rounded-lg hover:bg-primary-main hover:text-white transition-colors"
+              className="px-3 py-2 sm:px-4 text-sm sm:text-base text-primary-main border border-primary-main rounded-lg hover:bg-primary-main hover:text-white transition-colors flex items-center"
             >
-              <BarChart3 className="w-4 h-4 mr-2 inline" />
-              Refresh Stats
+              <BarChart3 className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Refresh Stats</span>
+              <span className="sm:hidden">Refresh</span>
             </button>
           </div>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           <StatCard
             title="Total Requests"
             value={stats.total}
@@ -384,23 +435,23 @@ export default function AdminCourseRequests() {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-sm border p-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
               <input
                 type="text"
-                placeholder="Search by title, description, or requester..."
+                placeholder="Search requests..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                className="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
               />
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
@@ -413,7 +464,7 @@ export default function AdminCourseRequests() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -429,7 +480,9 @@ export default function AdminCourseRequests() {
           {loading ? (
             <div className="p-8 text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary-main" />
-              <p className="text-gray-600">Loading course requests...</p>
+              <p className="text-sm sm:text-base text-gray-600">
+                Loading course requests...
+              </p>
             </div>
           ) : (
             <div className="space-y-0">
@@ -446,61 +499,63 @@ export default function AdminCourseRequests() {
                     }`}
                   >
                     {/* Main Row */}
-                    <div className="p-6">
-                      <div className="flex items-start gap-4">
+                    <div className="p-3 sm:p-6">
+                      <div className="flex items-start gap-2 sm:gap-4">
                         <button
                           onClick={() => handleExpandRequest(request.id)}
-                          className="mt-1 p-1 hover:bg-gray-200 rounded transition-colors"
+                          className="mt-1 p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
                         >
                           {isExpanded ? (
-                            <ChevronDown className="w-5 h-5 text-gray-600" />
+                            <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                           ) : (
-                            <ChevronRight className="w-5 h-5 text-gray-600" />
+                            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                           )}
                         </button>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-1 sm:mb-2">
                                 {request.title}
                               </h3>
-                              <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                              <p className="text-sm sm:text-base text-gray-600 line-clamp-2 mb-2 sm:mb-3">
                                 {request.description}
                               </p>
 
-                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                                 <div className="flex items-center">
-                                  <User className="w-4 h-4 mr-1" />
-                                  {request.requestedBy?.name || "Anonymous"}
+                                  <User className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                                  <span className="truncate max-w-[100px] sm:max-w-none">
+                                    {request.requestedBy?.name || "Anonymous"}
+                                  </span>
                                 </div>
                                 <div className="flex items-center">
-                                  <Calendar className="w-4 h-4 mr-1" />
+                                  <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                                   {new Date(
                                     request.createdAt
                                   ).toLocaleDateString()}
                                 </div>
                                 <div className="flex items-center">
-                                  <Heart className="w-4 h-4 mr-1" />
+                                  <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                                   {request.voteCount || 0} votes
                                 </div>
                                 {requestComments.length > 0 && (
                                   <div className="flex items-center">
-                                    <MessageCircle className="w-4 h-4 mr-1" />
+                                    <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                                     {requestComments.length} comments
                                   </div>
                                 )}
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-row sm:flex-col items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
                               <div
-                                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${
+                                className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${
                                   statusConfig[request.status]?.color ||
                                   "bg-gray-100 text-gray-800 border-gray-200"
                                 }`}
                               >
-                                <StatusIcon className="w-4 h-4 mr-2" />
+                                <StatusIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                                 {statusConfig[request.status]?.label ||
                                   "Unknown"}
                               </div>
@@ -509,7 +564,7 @@ export default function AdminCourseRequests() {
                                 onClick={() =>
                                   openStatusModal(request.id, request.status)
                                 }
-                                className="px-3 py-1 text-sm bg-primary-main text-white rounded-lg hover:bg-primary-main/90 transition-colors"
+                                className="px-3 py-1 text-xs sm:text-sm bg-primary-main text-white rounded-lg hover:bg-primary-main/90 transition-colors"
                               >
                                 {statusConfig[request.status]?.action ||
                                   "Update"}
@@ -522,14 +577,14 @@ export default function AdminCourseRequests() {
 
                     {/* Expanded Details */}
                     {isExpanded && (
-                      <div className="border-t bg-white p-6 space-y-6">
+                      <div className="border-t bg-white p-3 sm:p-6 space-y-4 sm:space-y-6">
                         {/* Request Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-3">
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900 mb-2 sm:mb-3">
                               Request Details
                             </h4>
-                            <div className="space-y-3 text-sm">
+                            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                               {request.suggestedAgeGroup && (
                                 <div>
                                   <span className="font-medium text-gray-700">
@@ -584,10 +639,10 @@ export default function AdminCourseRequests() {
                           </div>
 
                           <div>
-                            <h4 className="font-medium text-gray-900 mb-3">
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900 mb-2 sm:mb-3">
                               Admin Information
                             </h4>
-                            <div className="space-y-3 text-sm">
+                            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
                               {request.adminNotes && (
                                 <div>
                                   <span className="font-medium text-gray-700">
@@ -624,7 +679,7 @@ export default function AdminCourseRequests() {
 
                         {/* Comments Section */}
                         <div>
-                          <h4 className="font-medium text-gray-900 mb-3">
+                          <h4 className="font-medium text-sm sm:text-base text-gray-900 mb-2 sm:mb-3">
                             Comments
                           </h4>
 
@@ -639,15 +694,15 @@ export default function AdminCourseRequests() {
                                   }
                                   placeholder="Add an admin comment..."
                                   rows={3}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent resize-none"
+                                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent resize-none"
                                 />
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => handleAddComment(request.id)}
                                     disabled={!newComment.trim()}
-                                    className="px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-main/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                                    className="px-3 sm:px-4 py-2 bg-primary-main text-white text-sm sm:text-base rounded-lg hover:bg-primary-main/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                                   >
-                                    <Send className="w-4 h-4 mr-2" />
+                                    <Send className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                                     Add Comment
                                   </button>
                                   <button
@@ -655,7 +710,7 @@ export default function AdminCourseRequests() {
                                       setCommentingOn(null);
                                       setNewComment("");
                                     }}
-                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                    className="px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-sm sm:text-base rounded-lg hover:bg-gray-50 transition-colors"
                                   >
                                     Cancel
                                   </button>
@@ -664,21 +719,21 @@ export default function AdminCourseRequests() {
                             ) : (
                               <button
                                 onClick={() => setCommentingOn(request.id)}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+                                className="px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 text-sm sm:text-base rounded-lg hover:bg-gray-50 transition-colors flex items-center"
                               >
-                                <MessageCircle className="w-4 h-4 mr-2" />
+                                <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                                 Add Comment
                               </button>
                             )}
                           </div>
 
                           {/* Comments List */}
-                          <div className="space-y-4 max-h-60 overflow-y-auto">
+                          <div className="space-y-3 sm:space-y-4 max-h-60 overflow-y-auto">
                             {requestComments.length > 0 ? (
                               requestComments.map((comment: any) => (
                                 <div
                                   key={comment.id}
-                                  className={`p-4 rounded-lg border ${
+                                  className={`p-3 sm:p-4 rounded-lg border ${
                                     comment.isAdminComment
                                       ? "bg-blue-50 border-blue-200"
                                       : "bg-gray-50 border-gray-200"
@@ -686,8 +741,8 @@ export default function AdminCourseRequests() {
                                 >
                                   <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <span className="font-medium text-gray-900">
+                                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                                        <span className="font-medium text-xs sm:text-sm text-gray-900">
                                           {comment.author?.name || "Unknown"}
                                         </span>
                                         {comment.isAdminComment && (
@@ -701,7 +756,7 @@ export default function AdminCourseRequests() {
                                           ).toLocaleString()}
                                         </span>
                                       </div>
-                                      <p className="text-gray-700">
+                                      <p className="text-sm sm:text-base text-gray-700">
                                         {comment.content}
                                       </p>
                                     </div>
@@ -722,12 +777,12 @@ export default function AdminCourseRequests() {
               })}
 
               {requests.length === 0 && (
-                <div className="p-12 text-center">
-                  <FileText className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="p-8 sm:p-12 text-center">
+                  <FileText className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                     No course requests found
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-sm sm:text-base text-gray-600">
                     {searchTerm || statusFilter !== "all"
                       ? "Try adjusting your search or filter criteria"
                       : "No course requests have been submitted yet"}
@@ -740,11 +795,11 @@ export default function AdminCourseRequests() {
 
         {/* Pagination */}
         {totalPages > 1 && !loading && (
-          <div className="flex justify-center items-center gap-2">
+          <div className="flex justify-center items-center gap-1 sm:gap-2">
             <button
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -766,7 +821,7 @@ export default function AdminCourseRequests() {
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-2 text-sm rounded-lg ${
+                    className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg ${
                       currentPage === pageNum
                         ? "bg-primary-main text-white"
                         : "border border-gray-300 hover:bg-gray-50"
@@ -783,7 +838,7 @@ export default function AdminCourseRequests() {
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }
               disabled={currentPage === totalPages}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -794,17 +849,17 @@ export default function AdminCourseRequests() {
       {/* Status Update Modal */}
       {statusModal.open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 border-b sticky top-0 bg-white">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Update Status
               </h2>
-              <p className="text-gray-600 mt-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
                 Change the status of this course request
               </p>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   New Status
@@ -817,7 +872,7 @@ export default function AdminCourseRequests() {
                       status: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
                 >
                   <option value="">Select status...</option>
                   {statusActions.map((action: any) => (
@@ -842,7 +897,7 @@ export default function AdminCourseRequests() {
                       }))
                     }
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
                     placeholder="Explain why this request was rejected..."
                   />
                 </div>
@@ -862,7 +917,7 @@ export default function AdminCourseRequests() {
                         implementedCourseId: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
                     placeholder="Enter the implemented course ID..."
                   />
                 </div>
@@ -881,13 +936,13 @@ export default function AdminCourseRequests() {
                     }))
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-main focus:border-transparent"
                   placeholder="Add internal notes about this decision..."
                 />
               </div>
             </div>
 
-            <div className="p-6 border-t flex gap-4">
+            <div className="p-4 sm:p-6 border-t flex gap-2 sm:gap-4 sticky bottom-0 bg-white">
               <button
                 onClick={() => {
                   setStatusModal({
@@ -902,14 +957,14 @@ export default function AdminCourseRequests() {
                     implementedCourseId: "",
                   });
                 }}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleStatusUpdate}
                 disabled={!statusUpdate.status}
-                className="flex-1 px-4 py-2 bg-primary-main text-white rounded-lg hover:bg-primary-main/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-primary-main text-white rounded-lg hover:bg-primary-main/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Update Status
               </button>
